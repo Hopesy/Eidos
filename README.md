@@ -51,8 +51,23 @@ pnpm install
 
 ### 2. 启动开发环境
 
+默认启动：
+
 ```powershell
 pnpm dev
+```
+
+指定 `3001` 端口启动：
+
+```powershell
+$env:PORT='3001'
+pnpm dev
+```
+
+Windows `cmd` 也可以使用：
+
+```bat
+set PORT=3001 && pnpm dev
 ```
 
 可选环境变量：
@@ -64,15 +79,21 @@ $env:REFRESH_ACCOUNT_INTERVAL_MINUTE='5'
 
 - `CHATGPT2API_AUTH_KEY`：设置后启用接口鉴权；不设置则本地默认免鉴权
 - `REFRESH_ACCOUNT_INTERVAL_MINUTE`：限制账号后台刷新轮询间隔，默认 `5`
+- `PORT`：开发服务监听端口，未设置时 Next.js 默认使用 `3000`
 
 默认访问：
 
 - Web UI: `http://127.0.0.1:3000`
+- 若以上文方式指定端口，则访问：`http://127.0.0.1:3001`
 - API 示例:
   - `POST /auth/login`
   - `GET /api/accounts`
   - `POST /api/accounts/refresh`
   - `POST /v1/images/generations`
+  - `POST /v1/images/edits`
+  - `POST /v1/images/upscale`
+  - `GET /api/config`
+  - `GET /api/requests`
 
 ---
 

@@ -1,0 +1,147 @@
+{
+  "taskId": "019dbae1-fa91-714b-8ed1-0c46bf7394ab",
+  "todos": [
+    {
+      "id": "5f9c4725b366d14edb42538fa7722fa6",
+      "content": "盘点当前 Eidos 项目的技术栈、现有页面与 API 能力",
+      "status": "completed"
+    },
+    {
+      "id": "2de98154c8114d9267530ce6b82ee93a",
+      "content": "盘点参考项目 ChatGpt-Image-Studio-main 的页面结构、核心组件与功能范围",
+      "status": "completed"
+    },
+    {
+      "id": "664c021d89c56614e6f7c31bd2c89574",
+      "content": "明确移植边界与实现策略，识别缺失接口与数据模型差异",
+      "status": "completed"
+    },
+    {
+      "id": "a2b4d116c09e4200d0e7912c604f692c",
+      "content": "产出详细迁移方案并保存到 .tocodex/plans/",
+      "status": "completed"
+    },
+    {
+      "id": "1a9c8f3b3b63537b18a45ebed1c8c521",
+      "content": "与用户确认迁移范围后，申请切换到 code 模式实施",
+      "status": "completed"
+    },
+    {
+      "id": "50b8318068f9a1c93d76cdc40929f57b",
+      "content": "阶段一：数据层 - src/lib/api.ts 扩展",
+      "status": "completed"
+    },
+    {
+      "id": "b97fc464b97aff43dddfc1683881a2b4",
+      "content": "阶段一：数据层 - src/store/image-conversations.ts 升级",
+      "status": "completed"
+    },
+    {
+      "id": "453c14a60acd44341d2ca8528698eeb7",
+      "content": "阶段一：数据层 - src/store/image-active-tasks.ts 新建",
+      "status": "completed"
+    },
+    {
+      "id": "f57369d3ceab1a753f2c1a63d68c3867",
+      "content": "阶段一：数据层 - src/store/sync-status-cache.ts 新建",
+      "status": "completed"
+    },
+    {
+      "id": "3a822ef73356461e14f9816be9f19fdf",
+      "content": "阶段二：布局导航 - top-nav.tsx 重构侧边栏",
+      "status": "completed"
+    },
+    {
+      "id": "9738d6465cd19c5914ef0cdc15562e34",
+      "content": "阶段二：布局导航 - layout.tsx 侧边栏布局",
+      "status": "completed"
+    },
+    {
+      "id": "f98c72c124ac1f0b8e7f3b84372b3a23",
+      "content": "阶段二：页面 - src/app/page.tsx 重定向",
+      "status": "completed"
+    },
+    {
+      "id": "dd34e94323ba828b5fdd5f1812a8338c",
+      "content": "阶段三：新增组件 - src/components/app-image.tsx",
+      "status": "completed"
+    },
+    {
+      "id": "087342d5dcfeb32e06b36f41de4b6215",
+      "content": "阶段三：新增组件 - src/components/image-edit-modal.tsx",
+      "status": "completed"
+    },
+    {
+      "id": "c2261b5c3e9d12ab1c5bb926950612f7",
+      "content": "阶段四：页面 - src/app/login/page.tsx",
+      "status": "completed"
+    },
+    {
+      "id": "31ced15f3a224355271b02f809f0d4f4",
+      "content": "阶段四补充：src/app/image/page.tsx 升级为参考项目完整版并适配 Eidos store/API 差异",
+      "status": "completed"
+    },
+    {
+      "id": "6fd75f482c4f064948848aec89369842",
+      "content": "阶段四补充：src/app/accounts/page.tsx 覆盖为参考项目版本",
+      "status": "completed"
+    },
+    {
+      "id": "d5b859bcb4b0952d608ad9686783abcd",
+      "content": "阶段四：页面 - src/app/settings/page.tsx",
+      "status": "completed"
+    },
+    {
+      "id": "fdaff8ecafb295aa9e7e4131dda88da6",
+      "content": "阶段四：页面 - src/app/requests/page.tsx",
+      "status": "completed"
+    },
+    {
+      "id": "5ec507cf0f8e9fbf9fb4ef81b405ecec",
+      "content": "阶段五：API Routes 新建（accounts import/quota、sync、config、requests、images edits/upscale）",
+      "status": "completed"
+    },
+    {
+      "id": "e681503a9042e3f78577fac78c0e2a22",
+      "content": "阶段五：API Routes 修改 src/app/v1/images/generations/route.ts",
+      "status": "completed"
+    },
+    {
+      "id": "4c5c35c745a13fe73a6e1178043024c3",
+      "content": "构建验证通过（pnpm build exit 0）",
+      "status": "completed"
+    },
+    {
+      "id": "b9a78e7151d4c5ca8ca93c737bf107b9",
+      "content": "重新构建验证账号管理页覆盖后的结果",
+      "status": "completed"
+    },
+    {
+      "id": "bfb054a56f98924cdde296ccdc48b8b9",
+      "content": "重新构建验证 image 页面升级后的结果",
+      "status": "completed"
+    },
+    {
+      "id": "dc028d8fc79259f19d3da2c4c8e57dfd",
+      "content": "架构清理 1：重命名 api.ts 中 ImageMode -> ImageProviderMode，更新 settings/page.tsx 引用",
+      "status": "completed"
+    },
+    {
+      "id": "2936cc4756d6dd071701295386ccdf7a",
+      "content": "架构清理 2：删除死代码 account-import-dialog.tsx 与空目录 src/server/routes/",
+      "status": "completed"
+    },
+    {
+      "id": "bf34a3b0223d1acb79d92ca6f00b9d31",
+      "content": "架构清理 3：修复 src/app/image/page.tsx 并接入 _components/",
+      "status": "completed"
+    },
+    {
+      "id": "c4187902cc718978b5a88c3e61ac0c78",
+      "content": "最终构建验证（架构清理后）",
+      "status": "completed"
+    }
+  ],
+  "lastUpdated": 1777003976670,
+  "status": "active"
+}

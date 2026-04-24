@@ -1,0 +1,27 @@
+{
+  "taskId": "019dbafe-55ce-72a9-9dbc-2295b43087c8",
+  "todos": [
+    {
+      "id": "03dd257887f3092d23049ed972a032bc",
+      "content": "分析图片工作台相关类型、API 与现有组件接口",
+      "status": "completed"
+    },
+    {
+      "id": "c6b1849aad7b07de89df98a0d1f4bcbf",
+      "content": "设计精简但完整的页面状态与交互流",
+      "status": "in_progress"
+    },
+    {
+      "id": "6b4cb493202606f55d7c5eb2f37ed996",
+      "content": "重写 [`src/app/image/page.tsx`](src/app/image/page.tsx) 为可编译实现",
+      "status": "pending"
+    },
+    {
+      "id": "57128f2463a4a036241a218e98e820be",
+      "content": "检查关键依赖与类型兼容性，确保实现闭环",
+      "status": "pending"
+    }
+  ],
+  "lastUpdated": 1776958779909,
+  "status": "active"
+}

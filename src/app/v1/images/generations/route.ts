@@ -15,17 +15,24 @@ export async function POST(request: NextRequest) {
       prompt?: string;
       model?: string;
       n?: number;
+      response_format?: string;
+      size?: string;
     };
+
     const prompt = String(body.prompt || "").trim();
     if (!prompt) {
       throw new ApiError(400, "prompt is required");
     }
+
     const model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
     const count = Number.isInteger(body.n) ? Number(body.n) : 1;
     if (count < 1 || count > 4) {
       throw new ApiError(400, "n must be between 1 and 4");
     }
-    return jsonOk(await generateWithPool(prompt, model, count));
+
+    const result = await generateWithPool(prompt, model, count);
+
+    return jsonOk(result);
   } catch (error) {
     if (error instanceof ImageGenerationError) {
       return jsonError(new ApiError(502, error.message));

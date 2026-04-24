@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import "./globals.css";
 import { TopNav } from "@/components/top-nav";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ChatGPT 号池管理",
-  description: "ChatGPT account pool management dashboard",
+  title: "ChatGpt Image Studio",
+  description: "ChatGpt Image Studio workspace",
 };
 
 export default function RootLayout({
@@ -17,13 +17,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="antialiased">
         <ThemeProvider>
           <Toaster position="top-center" richColors />
-          <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,oklch(0.9911_0_0),transparent_45%),radial-gradient(circle_at_bottom_right,oklch(0.8348_0.1302_160.908_/_0.16),transparent_35%)] px-4 py-3 sm:px-6 lg:px-8">
-            <div className="mx-auto flex max-w-[1440px] flex-col gap-5">
+          <main className="h-screen overflow-hidden bg-[#f6f5f2] px-3 py-3 text-stone-900 sm:px-4 sm:py-4">
+            <div className="mx-auto flex h-full max-w-[1600px] gap-3 lg:gap-4">
               <TopNav />
-              {children}
+              <div className="min-w-0 flex-1 overflow-hidden">
+                {children}
+              </div>
             </div>
           </main>
         </ThemeProvider>
