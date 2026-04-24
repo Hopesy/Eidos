@@ -1,3 +1,4 @@
+# Dependencies
 node_modules
 .pnp
 .pnp.*
@@ -6,19 +7,38 @@ node_modules
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# Build outputs
 .next
 out
 build
 dist
 coverage
+
+# Editor / OS
 .idea
+.vscode
 .DS_Store
+Thumbs.db
+
+# Certificates & secrets
 *.pem
+.env*
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.env*
+
+# Deploy
 .vercel
+
+# TypeScript incremental build
 *.tsbuildinfo
-data
+
+# Runtime data directory (server-generated at runtime)
+data/
+
+# AI assistant workspace metadata
+.tocodex/
