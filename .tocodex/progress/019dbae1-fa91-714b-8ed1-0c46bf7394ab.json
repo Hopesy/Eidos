@@ -140,8 +140,118 @@
       "id": "c4187902cc718978b5a88c3e61ac0c78",
       "content": "最终构建验证（架构清理后）",
       "status": "completed"
+    },
+    {
+      "id": "78faf6389f88e0c89d4c6166edfac65f",
+      "content": "UI 细节打磨：top-nav.tsx 改为浅色主题（参考项目风格）",
+      "status": "completed"
+    },
+    {
+      "id": "108120f11c597719764e81ff81f7f877",
+      "content": "UI 细节打磨：layout.tsx 修正背景色、min-h-0、max-w 等",
+      "status": "completed"
+    },
+    {
+      "id": "1063de8b3b168bb9cc5c45e54e6deab6",
+      "content": "UI 细节打磨：login/page.tsx 对齐参考项目样式与内容",
+      "status": "completed"
+    },
+    {
+      "id": "8441e4d5518723e29cab52838d7dcb4c",
+      "content": "最终构建验证（UI 打磨后）",
+      "status": "completed"
+    },
+    {
+      "id": "a4b3c96de9b4da5b341799291a8807a3",
+      "content": "UI 打磨：requests/page.tsx 对齐参考项目样式",
+      "status": "completed"
+    },
+    {
+      "id": "ee5a899776efdf89fced803e4738e68f",
+      "content": "UI 打磨：settings/page.tsx 对齐参考项目样式",
+      "status": "completed"
+    },
+    {
+      "id": "d0fac0b40b782988ec2977d4465408dd",
+      "content": "最终构建验证（settings+requests 打磨后）",
+      "status": "completed"
+    },
+    {
+      "id": "32537b2e1a862be0ad5730142699fa12",
+      "content": "调整侧边导航栏宽度更窄",
+      "status": "completed"
+    },
+    {
+      "id": "4070efc2ee17f1b59c6af7a1c4563111",
+      "content": "调整历史记录侧栏宽度更窄",
+      "status": "completed"
+    },
+    {
+      "id": "af08104cd861598618f3f8823818fbbc",
+      "content": "调整图片工作台布局为画廊在上、输入框在下",
+      "status": "completed"
+    },
+    {
+      "id": "c2753efc1c9f63520a1466c3531a4eec",
+      "content": "构建验证（布局调整后）",
+      "status": "completed"
+    },
+    {
+      "id": "6a48c1cb47e87f0914d8c858b0c584f1",
+      "content": "优化图片工作台标题文案与图标同排展示",
+      "status": "completed"
+    },
+    {
+      "id": "a7c76d01eef74998a66df1cb7b58e1da",
+      "content": "优化侧边栏按钮选中交互与视觉反馈",
+      "status": "completed"
+    },
+    {
+      "id": "fdd6346527c7510e4fa7b7ee45b80f64",
+      "content": "压缩图片工作台整体高度占用",
+      "status": "completed"
+    },
+    {
+      "id": "5be56b9629fa7516801be78400d05262",
+      "content": "调整\"收起历史\"按钮位置",
+      "status": "completed"
+    },
+    {
+      "id": "ac12aeb1f08996c4c5866f98666a801d",
+      "content": "构建验证（本轮 UI 优化后）",
+      "status": "completed"
+    },
+    {
+      "id": "52f1f1ebbf3cc841e3919e631d5ed2b7",
+      "content": "模型标识 \"模型 gpt-image-2\" 样式美化",
+      "status": "completed"
+    },
+    {
+      "id": "11c2862344ef8184852f4695054a7ab9",
+      "content": "侧边栏折叠态（仅图标）交互优化",
+      "status": "completed"
+    },
+    {
+      "id": "66e2861dc3b5ded4bad204b173088e14",
+      "content": "删除空状态页的文案，只保留图片案例",
+      "status": "completed"
+    },
+    {
+      "id": "ad919266818c1481cc80eb27934e76d0",
+      "content": "构建验证",
+      "status": "completed"
+    },
+    {
+      "id": "62aaed61d7de6e2967957eac089be780",
+      "content": "收紧侧边栏卡片、历史记录卡片与工作区之间的间距",
+      "status": "completed"
+    },
+    {
+      "id": "f51e2c9df7c6d84dae3c25632fc44d06",
+      "content": "继续收紧卡片间距、减小主卡圆角、缩小聊天消息左右边距",
+      "status": "completed"
     }
   ],
-  "lastUpdated": 1777003976670,
+  "lastUpdated": 1777012067963,
   "status": "active"
 }

@@ -186,9 +186,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
+    font-size: 95%;
+    /* ~15.2px base, slightly smaller than default */
     letter-spacing: var(--tracking-normal);
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }

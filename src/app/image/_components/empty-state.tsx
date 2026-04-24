@@ -22,16 +22,7 @@ export type EmptyStateProps = {
 
 export function EmptyState({ examples, onApplyExample }: EmptyStateProps) {
     return (
-        <div className="mx-auto flex max-w-[1080px] flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-            <div className="max-w-[760px]">
-                <div className="inline-flex size-14 items-center justify-center rounded-[20px] bg-stone-950 text-white shadow-sm">
-                    <Sparkles className="size-5" />
-                </div>
-                <h1 className="mt-6 text-3xl font-semibold tracking-tight text-stone-950 lg:text-5xl">
-                    从一个提示词，开始完整的图像工作流。
-                </h1>
-            </div>
-
+        <div className="mx-auto flex max-w-[1080px] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
             <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-4">
                 {examples.map((example) => (
                     <button

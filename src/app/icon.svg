@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background rounded square -->
+  <rect width="32" height="32" rx="8" fill="#0c0a09"/>
+  <!-- Sparkles icon centered, white -->
+  <path d="M16 6 L17.2 12.8 L24 14 L17.2 15.2 L16 22 L14.8 15.2 L8 14 L14.8 12.8 Z" fill="white" opacity="0.95"/>
+  <path d="M22 8 L22.6 10.4 L25 11 L22.6 11.6 L22 14 L21.4 11.6 L19 11 L21.4 10.4 Z" fill="white" opacity="0.7"/>
+  <path d="M10 20 L10.4 21.6 L12 22 L10.4 22.4 L10 24 L9.6 22.4 L8 22 L9.6 21.6 Z" fill="white" opacity="0.7"/>
+</svg>

@@ -26,6 +26,7 @@ export default function LoginPage() {
       toast.error("请输入 密钥");
       return;
     }
+
     setIsSubmitting(true);
     try {
       await login(normalizedAuthKey);
@@ -41,132 +42,106 @@ export default function LoginPage() {
 
   return (
     <div className="grid h-full min-h-0 w-full place-items-center overflow-y-auto">
-      {/* 卡片容器 */}
-      <div className="w-full max-w-[1120px] px-4 py-8">
-        <div className="overflow-hidden rounded-3xl border border-border/60 shadow-2xl lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-          {/* ── 左侧：品牌面板 ── */}
-          <div className="relative flex flex-col justify-between gap-8 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-10 text-white lg:p-12">
-            {/* 装饰光晕 */}
-            <div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-primary/20 blur-[120px]" />
-            <div className="pointer-events-none absolute -bottom-16 -right-16 size-56 rounded-full bg-indigo-500/15 blur-[100px]" />
+      <div className="grid w-full max-w-[1120px] overflow-hidden rounded-[32px] border border-stone-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.78),_rgba(255,255,255,0.18)_38%,_rgba(28,25,23,0.08)_100%),linear-gradient(155deg,#111827_0%,#1f2937_52%,#374151_100%)] p-8 text-white lg:flex lg:flex-col lg:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-white/12 backdrop-blur">
+              <Sparkles className="size-4" />
+            </span>
+            <div>
+              <div className="text-sm font-semibold tracking-tight">EIDOS</div>
+              <div className="mt-1 text-xs text-white/65">轻量、克制、连续处理的 EIDOS 工作区</div>
+            </div>
+          </div>
 
-            {/* 品牌 */}
-            <div className="relative z-10 space-y-6">
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-                <Sparkles className="size-4 text-amber-400" />
-                <span>ChatGPT Image Studio</span>
-              </div>
-
-              <h2 className="text-3xl font-bold leading-tight tracking-tight lg:text-4xl">
-                AI 驱动的
-                <br />
-                图片创意工作台
-              </h2>
-
-              <p className="max-w-sm text-sm leading-relaxed text-zinc-400">
-                将 ChatGPT 强大的图像生成能力封装为简洁的创作界面，助你高效产出视觉内容。
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="text-sm font-medium uppercase tracking-[0.24em] text-white/55">EIDOS</div>
+              <h1 className="max-w-[420px] text-[40px] font-semibold leading-[1.1] tracking-tight">
+                在一个界面里完成生成、编辑、放大与账号调度。
+              </h1>
+              <p className="max-w-[430px] text-sm leading-7 text-white/72">
+                登录后直接进入图片工作台。最近任务、选区编辑、额度信息和账号同步都会保持在同一套工作流里。
               </p>
             </div>
 
-            {/* 能力卡片 */}
-            <div className="relative z-10 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3">
               {[
-                {
-                  title: "多模型支持",
-                  desc: "支持 gpt-image-1 等模型，灵活切换以满足不同创作需求。",
-                },
-                {
-                  title: "批量与并发",
-                  desc: "多账号负载均衡、并发生图，大幅提升生产效率。",
-                },
-                {
-                  title: "安全管控",
-                  desc: "密钥鉴权 + 速率控制，保障接口安全与可用性。",
-                },
-              ].map((item) => (
+                ["生成", "从提示词或参考图开始"],
+                ["编辑", "继续改图，保留上下文"],
+                ["管理", "查看额度与同步状态"],
+              ].map(([title, desc]) => (
                 <div
-                  key={item.title}
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-4 backdrop-blur-sm"
+                  key={title}
+                  className="rounded-2xl border border-white/12 bg-white/6 p-4 backdrop-blur-sm"
                 >
-                  <p className="text-sm font-semibold">{item.title}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                    {item.desc}
-                  </p>
+                  <div className="text-sm font-semibold">{title}</div>
+                  <div className="mt-2 text-xs leading-6 text-white/65">{desc}</div>
                 </div>
               ))}
             </div>
-
-            {/* 底部说明 */}
-            <p className="relative z-10 text-xs leading-relaxed text-zinc-500">
-              本项目仅限学习与研究用途，请遵守 OpenAI 使用政策。
-            </p>
           </div>
 
-          {/* ── 右侧：登录表单 ── */}
-          <div className="flex flex-col justify-center gap-8 bg-card p-10 lg:p-12">
-            {/* 图标 + 标题 */}
+          <div className="text-xs text-white/50">进入后默认落在图片工作台，可继续切换到账号管理。</div>
+        </div>
+
+        <div className="flex items-center justify-center px-5 py-8 sm:px-8 lg:px-10">
+          <div className="w-full max-w-[420px] space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-sm">
+              <div className="inline-flex size-14 items-center justify-center rounded-[18px] bg-stone-950 text-white shadow-sm">
                 <LockKeyhole className="size-5" />
               </div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                  登录工作区
-                </h1>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <h1 className="text-3xl font-semibold tracking-tight text-stone-950">登录工作区</h1>
+                <p className="text-sm leading-7 text-stone-500">
                   输入后端密钥，进入图片工作台与账号管理界面。
                 </p>
               </div>
             </div>
 
-            {/* 密码输入 */}
             <div className="space-y-3">
-              <label
-                htmlFor="auth-key"
-                className="block text-sm font-medium text-foreground"
-              >
+              <label htmlFor="auth-key" className="block text-sm font-medium text-stone-700">
                 密钥
               </label>
               <Input
                 id="auth-key"
                 type="password"
                 value={authKey}
-                onChange={(e) => setAuthKey(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                onChange={(event) => setAuthKey(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
                     void handleLogin();
                   }
                 }}
-                placeholder="请输入后端配置的 AUTH_KEY"
-                className="h-12 rounded-2xl px-4"
+                placeholder="请输入密钥"
+                className="h-13 rounded-2xl border-stone-200 bg-stone-50 px-4 shadow-none focus-visible:ring-1"
               />
             </div>
 
-            {/* 提交按钮 */}
             <Button
-              className="h-12 w-full rounded-2xl"
+              className="h-13 w-full rounded-2xl bg-stone-950 text-white hover:bg-stone-800"
               onClick={() => void handleLogin()}
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <LoaderCircle className="mr-2 size-4 animate-spin" />
-              ) : null}
+              {isSubmitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
               进入工作区
             </Button>
 
-            {/* 说明卡片 */}
-            <div className="rounded-2xl border border-border/60 bg-muted/40 px-5 py-4">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                使用同一个密钥即可访问图片生成接口和后台管理页，不需要额外登录步骤。
-              </p>
+            <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-xs leading-6 text-stone-500">
+              使用同一个密钥即可访问图片生成接口和后台管理页，不需要额外登录步骤。
             </div>
 
-            {/* 风险提示卡片 */}
-            <div className="flex gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
-              <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
-              <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                本项目仅供个人学习、技术研究与非商业交流使用。使用者须自行承担因使用本项目产生的一切风险与法律责任，项目作者不对任何直接或间接后果负责。
-              </p>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-950">
+              <div className="flex items-center gap-2 font-medium">
+                <CircleAlert className="size-4" />
+                使用与风险提示
+              </div>
+              <div className="mt-2">
+                本项目仅供个人学习、技术研究与非商业交流使用，严禁用于违法违规、批量滥用或其他不当用途。
+              </div>
+              <div className="mt-1">
+                项目基于对相关 AI 图像能力的研究与封装实现，存在账号被限制、临时封禁或永久封禁的风险。请勿使用常用、大号或高价值账号测试。
+              </div>
             </div>
           </div>
         </div>

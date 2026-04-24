@@ -10,17 +10,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { fetchRequestLogs, type RequestLogItem } from "@/lib/api";
 
 function formatTime(value: string) {
-    if (!value) return "—";
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("zh-CN", {
+    if (Number.isNaN(date.getTime())) {
+        return value || "—";
+    }
+    return new Intl.DateTimeFormat("zh-CN", {
         month: "2-digit",
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-        hour12: false,
-    });
+    }).format(date);
 }
 
 export default function RequestsPage() {
@@ -33,145 +33,138 @@ export default function RequestsPage() {
             const data = await fetchRequestLogs();
             setItems(data.items);
         } catch (error) {
-            const message = error instanceof Error ? error.message : "加载请求日志失败";
-            toast.error(message);
+            toast.error(error instanceof Error ? error.message : "读取调用请求失败");
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        loadItems();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        void loadItems();
     }, []);
 
     return (
         <section className="h-full overflow-y-auto">
-            <div className="mx-auto max-w-screen-2xl space-y-4 p-6">
-                {/* 顶部介绍卡片 */}
-                <Card>
-                    <CardContent className="flex items-center justify-between gap-4 py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <Activity className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h1 className="text-lg font-semibold leading-tight">调用请求</h1>
-                                <p className="text-sm text-muted-foreground">
-                                    查看最近的 API 调用请求记录，包括操作类型、路由、账号、模型及结果。
-                                </p>
+            <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-1 py-1">
+                <div className="rounded-[30px] border border-stone-200 bg-white px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex items-start gap-4">
+                                <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-[18px] bg-stone-950 text-white shadow-sm">
+                                    <Activity className="size-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h1 className="text-2xl font-semibold tracking-tight text-stone-950">调用请求</h1>
+                                    <p className="mt-2 max-w-[840px] text-sm leading-7 text-stone-500">
+                                        这里记录最近的图片请求实际走向，便于判断当前请求到底是
+                                        <span className="mx-1 rounded bg-stone-100 px-1.5 py-0.5 text-stone-700">官方直连</span>
+                                        还是
+                                        <span className="mx-1 rounded bg-stone-100 px-1.5 py-0.5 text-stone-700">CPA</span>
+                                        。
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         <Button
+                            type="button"
                             variant="outline"
-                            size="sm"
-                            onClick={loadItems}
+                            className="h-10 rounded-full border-stone-200 bg-white px-4 text-stone-700 shadow-none"
+                            onClick={() => void loadItems()}
                             disabled={isLoading}
-                            className="shrink-0"
                         >
-                            <RefreshCw className={`mr-1.5 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                            刷新
+                            {isLoading ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                            刷新记录
                         </Button>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                {/* 表格卡片 */}
-                <Card>
+                <Card className="border-stone-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.05)]">
                     <CardContent className="p-0">
-                        {items.length === 0 && !isLoading ? (
-                            <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
-                                <Activity className="h-10 w-10 opacity-30" />
-                                <span className="text-sm">还没有调用记录</span>
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[1120px] text-left">
+                                <thead className="border-b border-stone-100 bg-stone-50/80 text-[11px] uppercase tracking-[0.18em] text-stone-400">
+                                    <tr>
+                                        <th className="whitespace-nowrap px-4 py-3">时间</th>
+                                        <th className="whitespace-nowrap px-4 py-3">操作</th>
+                                        <th className="whitespace-nowrap px-4 py-3">模式</th>
+                                        <th className="whitespace-nowrap px-4 py-3">方向</th>
+                                        <th className="whitespace-nowrap px-4 py-3">路由</th>
+                                        <th className="whitespace-nowrap px-4 py-3">接口</th>
+                                        <th className="whitespace-nowrap px-4 py-3">账号</th>
+                                        <th className="whitespace-nowrap px-4 py-3">模型</th>
+                                        <th className="whitespace-nowrap px-4 py-3">结果</th>
+                                        <th className="px-4 py-3">错误</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {isLoading
+                                        ? Array.from({ length: 8 }).map((_, i) => (
+                                            <tr key={i} className="animate-pulse border-b border-stone-100/80">
+                                                {Array.from({ length: 10 }).map((__, j) => (
+                                                    <td key={j} className="px-4 py-3">
+                                                        <div className="h-4 w-20 rounded bg-stone-100" />
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))
+                                        : items.map((item) => (
+                                            <tr key={item.id} className="border-b border-stone-100/80 text-sm text-stone-600 hover:bg-stone-50/70">
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <div className="font-medium text-stone-700">{formatTime(item.startedAt)}</div>
+                                                    <div className="text-xs text-stone-400">{item.finishedAt ? formatTime(item.finishedAt) : "进行中"}</div>
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-3">{item.operation || "—"}</td>
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <Badge variant="secondary" className="rounded-md bg-stone-100 text-stone-700">
+                                                        {item.imageMode || "studio"}
+                                                    </Badge>
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <Badge variant={item.direction === "cpa" ? "info" : "success"} className="rounded-md px-2 py-1">
+                                                        {item.direction === "cpa" ? "CPA" : "官方"}
+                                                    </Badge>
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-3">{item.route || "—"}</td>
+                                                <td className="whitespace-nowrap px-4 py-3">{item.endpoint || "—"}</td>
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <div className="truncate text-stone-700" title={item.accountEmail || item.accountFile || ""}>
+                                                        {item.accountEmail || "—"}
+                                                    </div>
+                                                    <div className="truncate text-xs text-stone-400" title={item.accountFile || ""}>
+                                                        {item.accountType ? `${item.accountType} · ${item.accountFile || "—"}` : item.accountFile || "—"}
+                                                    </div>
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <div className="text-stone-700">{item.requestedModel || "—"}</div>
+                                                    <div className="text-xs text-stone-400">{item.upstreamModel || "—"}</div>
+                                                </td>
+                                                <td className="whitespace-nowrap px-4 py-3">
+                                                    <Badge variant={item.success ? "success" : "danger"} className="rounded-md px-2 py-1">
+                                                        {item.success ? "成功" : "失败"}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="max-w-[320px] truncate text-xs text-stone-500" title={item.error || ""}>
+                                                        {item.error || "—"}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {!isLoading && items.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+                                <div className="rounded-2xl bg-stone-100 p-3 text-stone-500">
+                                    <Activity className="size-5" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-stone-700">还没有调用记录</p>
+                                    <p className="text-sm text-stone-500">发起一次图片请求后，这里会显示它到底走的是官方还是 CPA。</p>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b bg-muted/40 text-xs text-muted-foreground">
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">时间</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">操作</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">模式</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">方向</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">路由</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">接口</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">账号</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">模型</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">结果</th>
-                                            <th className="whitespace-nowrap px-4 py-3 text-left font-medium">错误</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y">
-                                        {isLoading
-                                            ? Array.from({ length: 8 }).map((_, i) => (
-                                                <tr key={i} className="animate-pulse">
-                                                    {Array.from({ length: 10 }).map((__, j) => (
-                                                        <td key={j} className="px-4 py-3">
-                                                            <div className="h-4 w-20 rounded bg-muted" />
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))
-                                            : items.map((item) => (
-                                                <tr
-                                                    key={item.id}
-                                                    className="transition-colors hover:bg-muted/30"
-                                                >
-                                                    {/* 时间 */}
-                                                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground">
-                                                        {formatTime(item.startedAt)}
-                                                    </td>
-                                                    {/* 操作 */}
-                                                    <td className="whitespace-nowrap px-4 py-3">
-                                                        <span className="font-medium">{item.operation || "—"}</span>
-                                                    </td>
-                                                    {/* 模式 */}
-                                                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                                                        {item.imageMode || "—"}
-                                                    </td>
-                                                    {/* 方向 */}
-                                                    <td className="whitespace-nowrap px-4 py-3">
-                                                        {item.direction === "cpa" ? (
-                                                            <Badge variant="info">CPA</Badge>
-                                                        ) : (
-                                                            <Badge variant="success">官方</Badge>
-                                                        )}
-                                                    </td>
-                                                    {/* 路由 */}
-                                                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                                                        {item.route || "—"}
-                                                    </td>
-                                                    {/* 接口 */}
-                                                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                                                        {item.endpoint || "—"}
-                                                    </td>
-                                                    {/* 账号 */}
-                                                    <td className="max-w-[160px] truncate px-4 py-3 text-muted-foreground">
-                                                        <span title={item.accountEmail ?? item.accountFile ?? undefined}>
-                                                            {item.accountEmail ?? item.accountFile ?? "—"}
-                                                        </span>
-                                                    </td>
-                                                    {/* 模型 */}
-                                                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                                                        {item.upstreamModel ?? item.requestedModel ?? "—"}
-                                                    </td>
-                                                    {/* 结果 */}
-                                                    <td className="whitespace-nowrap px-4 py-3">
-                                                        {item.success ? (
-                                                            <Badge variant="success">成功</Badge>
-                                                        ) : (
-                                                            <Badge variant="danger">失败</Badge>
-                                                        )}
-                                                    </td>
-                                                    {/* 错误 */}
-                                                    <td className="max-w-[200px] truncate px-4 py-3 text-xs text-rose-500">
-                                                        <span title={item.error ?? undefined}>{item.error ?? "—"}</span>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        ) : null}
                     </CardContent>
                 </Card>
             </div>
