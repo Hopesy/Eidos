@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-    CircleHelp,
-    LoaderCircle,
-    RefreshCcw,
-    RefreshCw,
-    Save,
-    Settings2,
-} from "lucide-react";
+import { CircleHelp, LoaderCircle, RefreshCcw, RefreshCw, Save, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,61 +15,73 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    fetchConfig,
-    fetchDefaultConfig,
-    updateConfig,
-    type ConfigPayload,
-    type ImageProviderMode,
-} from "@/lib/api";
+import { fetchConfig, fetchDefaultConfig, updateConfig, type ConfigPayload, type ImageProviderMode } from "@/lib/api";
 import { clearCachedSyncStatus } from "@/store/sync-status-cache";
 
-// ─── 工具函数 ─────────────────────────────────────────────────────────────────
-
-function joinDisplayPath(...parts: (string | undefined | null)[]): string {
-    return parts.filter(Boolean).join(" / ");
-}
-
 function firstNonEmptyValue<T>(...values: (T | undefined | null)[]): T | undefined {
-    for (const v of values) {
-        if (v !== undefined && v !== null && v !== ("" as unknown as T)) {
-            return v;
-        }
-    }
-    return undefined;
+    return values.find((v): v is T => v !== undefined && v !== null && (v as unknown) !== "");
 }
 
 function defaultConfigPayload(): ConfigPayload {
     return {
-        app: { authKey: "" },
-        server: { port: 3000, host: "0.0.0.0" },
-        chatgpt: { baseUrl: "https://chatgpt.com", timeout: 60000 },
-        accounts: { defaultQuota: 5, autoRefresh: true, refreshInterval: 30 },
-        storage: { type: "local", path: "./data" },
-        sync: { enabled: false, provider: "", interval: 300, direction: "both" },
-        proxy: { enabled: false, url: "" },
-        cpa: { enabled: false, baseUrl: "" },
-        log: { level: "info", maxItems: 1000 },
-        paths: { data: "./data", logs: "./logs" },
-    };
+        image: {
+            mode: "studio",
+        },
+        chatgpt: {
+            baseUrl: "",
+            timeout: 60000,
+        },
+        cpa: {
+            enabled: false,
+            baseUrl: "",
+        },
+        proxy: {
+            enabled: false,
+            url: "",
+        },
+        server: {
+            host: "0.0.0.0",
+            port: 3000,
+        },
+        log: {
+            level: "info",
+            maxItems: 1000,
+        },
+        app: {
+            authKey: "",
+        },
+        accounts: {
+            defaultQuota: 5,
+            autoRefresh: false,
+            refreshInterval: 30,
+        },
+        storage: {
+            type: "local",
+            path: "./data",
+        },
+        sync: {
+            enabled: false,
+            provider: "",
+            direction: "both",
+            interval: 300,
+        },
+        paths: {
+            data: "",
+            logs: "",
+        },
+    } as ConfigPayload;
 }
 
-// ─── 内部子组件 ───────────────────────────────────────────────────────────────
-
 function HintTooltip({ text }: { text: string }) {
-    const [visible, setVisible] = useState(false);
     return (
-        <span className="relative inline-flex items-center">
+        <span className="relative inline-flex items-center group">
             <CircleHelp
-                className="size-3.5 text-stone-400 hover:text-stone-600 cursor-pointer transition-colors"
-                onMouseEnter={() => setVisible(true)}
-                onMouseLeave={() => setVisible(false)}
+                className="size-4 text-stone-400 transition-colors hover:text-stone-600"
+                aria-hidden="true"
             />
-            {visible && (
-                <span className="absolute left-5 top-0 z-50 w-56 rounded-md bg-stone-800 px-2.5 py-1.5 text-xs text-stone-100 shadow-lg">
-                    {text}
-                </span>
-            )}
+            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block">
+                {text}
+            </span>
         </span>
     );
 }
@@ -85,9 +90,9 @@ function TooltipDetails({ items }: { items: { label: string; value: string }[] }
     return (
         <dl className="mt-1 space-y-0.5 text-xs text-stone-500">
             {items.map(({ label, value }) => (
-                <div key={label} className="flex gap-1">
-                    <dt className="font-medium text-stone-600">{label}:</dt>
-                    <dd className="font-mono break-all">{value || "—"}</dd>
+                <div key={label} className="grid grid-cols-[96px_minmax(0,1fr)] gap-2">
+                    <dt className="text-stone-400">{label}</dt>
+                    <dd className="break-all text-stone-700">{value || "—"}</dd>
                 </div>
             ))}
         </dl>
@@ -95,91 +100,90 @@ function TooltipDetails({ items }: { items: { label: string; value: string }[] }
 }
 
 function LabelWithHint({
+    id,
     label,
     hint,
-    htmlFor,
 }: {
+    id: string;
     label: string;
     hint?: string;
-    htmlFor?: string;
 }) {
     return (
-        <label
-            htmlFor={htmlFor}
-            className="flex items-center gap-1.5 text-sm font-medium text-stone-700"
-        >
-            {label}
-            {hint && <HintTooltip text={hint} />}
+        <label htmlFor={id} className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-700">
+            <span>{label}</span>
+            {hint ? <HintTooltip text={hint} /> : null}
         </label>
     );
 }
 
 function ConfigSection({
     title,
+    description,
     children,
 }: {
     title: string;
+    description: string;
     children: React.ReactNode;
 }) {
     return (
-        <Card className="border-stone-200 shadow-sm rounded-xl">
-            <CardContent className="pt-5 pb-6 px-6">
-                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-stone-800 border-b border-stone-100 pb-2">
-                    <Settings2 className="size-4 text-stone-400" />
-                    {title}
-                </h3>
-                <div className="space-y-4">{children}</div>
+        <Card className="border-stone-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.05)] rounded-[28px]">
+            <CardContent className="px-6 py-6">
+                <div className="mb-5">
+                    <h2 className="text-base font-semibold tracking-tight text-stone-900">{title}</h2>
+                    <p className="mt-1 text-sm leading-6 text-stone-500">{description}</p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">{children}</div>
             </CardContent>
         </Card>
     );
 }
 
 function Field({
+    id,
     label,
     hint,
     children,
-    id,
 }: {
+    id: string;
     label: string;
     hint?: string;
     children: React.ReactNode;
-    id?: string;
 }) {
     return (
-        <div className="grid grid-cols-[1fr_2fr] items-center gap-4">
-            <LabelWithHint label={label} hint={hint} htmlFor={id} />
-            <div>{children}</div>
+        <div>
+            <LabelWithHint id={id} label={label} hint={hint} />
+            {children}
         </div>
     );
 }
 
 function ToggleField({
+    id,
     label,
     hint,
     checked,
     onCheckedChange,
-    id,
 }: {
+    id: string;
     label: string;
     hint?: string;
     checked: boolean;
-    onCheckedChange: (val: boolean) => void;
-    id: string;
+    onCheckedChange: (checked: boolean) => void;
 }) {
     return (
-        <div className="flex items-center gap-3">
-            <Checkbox
-                id={id}
-                checked={checked}
-                onCheckedChange={(v) => onCheckedChange(!!v)}
-                className="rounded"
-            />
-            <LabelWithHint label={label} hint={hint} htmlFor={id} />
+        <div className="rounded-2xl border border-stone-200 bg-stone-50/70 p-4 md:col-span-2">
+            <div className="flex items-center gap-3">
+                <Checkbox id={id} checked={checked} onCheckedChange={(value) => onCheckedChange(Boolean(value))} />
+                <div className="min-w-0">
+                    <label htmlFor={id} className="text-sm font-medium text-stone-700">
+                        {label}
+                    </label>
+                    {hint ? <p className="mt-1 text-xs leading-5 text-stone-500">{hint}</p> : null}
+                </div>
+            </div>
         </div>
     );
 }
-
-// ─── 主页面 ───────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
     const [config, setConfig] = useState<ConfigPayload>(defaultConfigPayload());
@@ -195,23 +199,23 @@ export default function SettingsPage() {
     );
 
     async function loadConfig() {
-      try {
-        const [cfgRes, defRes] = await Promise.all([fetchConfig(), fetchDefaultConfig()]);
-        if (cfgRes) {
-          setConfig(cfgRes as ConfigPayload);
-          setSavedConfig(cfgRes as ConfigPayload);
+        try {
+            const [cfgRes, defRes] = await Promise.all([fetchConfig(), fetchDefaultConfig()]);
+            if (cfgRes) {
+                setConfig(cfgRes as ConfigPayload);
+                setSavedConfig(cfgRes as ConfigPayload);
+            }
+            if (defRes) {
+                setDefaultConfig(defRes as ConfigPayload);
+            }
+        } catch {
+            toast.error("读取配置失败");
         }
-        if (defRes) {
-          setDefaultConfig(defRes as ConfigPayload);
-        }
-      } catch {
-        toast.error("读取配置失败");
-      }
     }
 
     useEffect(() => {
         setLoading(true);
-        loadConfig().finally(() => setLoading(false));
+        void loadConfig().finally(() => setLoading(false));
     }, []);
 
     async function handleReload() {
@@ -234,11 +238,11 @@ export default function SettingsPage() {
     async function saveConfig() {
         setSaving(true);
         try {
-          const res = await updateConfig(config);
-          if (res) {
-            setSavedConfig(res as ConfigPayload);
-            setConfig(res as ConfigPayload);
-          }
+            const res = await updateConfig(config);
+            if (res) {
+                setSavedConfig(res as ConfigPayload);
+                setConfig(res as ConfigPayload);
+            }
             clearCachedSyncStatus();
             toast.success("配置已保存");
         } catch {
@@ -248,7 +252,6 @@ export default function SettingsPage() {
         }
     }
 
-    // 通用 setter 辅助函数
     function setSection<K extends keyof ConfigPayload>(
         section: K,
         patch: Partial<NonNullable<ConfigPayload[K]>>,
@@ -262,7 +265,7 @@ export default function SettingsPage() {
     if (loading) {
         return (
             <div className="flex h-screen items-center justify-center text-stone-400">
-                <LoaderCircle className="size-6 animate-spin mr-2" />
+                <LoaderCircle className="mr-2 size-6 animate-spin" />
                 <span className="text-sm">加载配置中…</span>
             </div>
         );
@@ -272,67 +275,61 @@ export default function SettingsPage() {
         (config.image as { mode?: ImageProviderMode } | undefined)?.mode ?? "studio";
 
     return (
-        <div className="min-h-screen bg-stone-50 p-6">
-            <div className="mx-auto max-w-3xl space-y-6">
-                {/* 页面标题 + 操作栏 */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Settings2 className="size-5 text-stone-600" />
-                        <h1 className="text-xl font-semibold text-stone-800">配置管理</h1>
-                        {isDirty && (
-                            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                                未保存
-                            </span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1.5 text-stone-600 hover:text-stone-800"
-                            onClick={handleReload}
-                            disabled={reloading || saving}
-                        >
-                            {reloading ? (
-                                <LoaderCircle className="size-4 animate-spin" />
-                            ) : (
-                                <RefreshCw className="size-4" />
-                            )}
-                            重新读取
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1.5 border-stone-300 text-stone-600 hover:text-stone-800"
-                            onClick={restoreDefaults}
-                            disabled={saving}
-                        >
-                            <RefreshCcw className="size-4" />
-                            恢复默认
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="gap-1.5 bg-stone-800 text-white hover:bg-stone-700"
-                            onClick={saveConfig}
-                            disabled={saving || !isDirty}
-                        >
-                            {saving ? (
-                                <LoaderCircle className="size-4 animate-spin" />
-                            ) : (
-                                <Save className="size-4" />
-                            )}
-                            保存配置
-                        </Button>
+        <section className="h-full overflow-y-auto">
+            <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-1 py-1">
+                <div className="rounded-[30px] border border-stone-200 bg-white px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex items-start gap-4">
+                                <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-[18px] bg-stone-950 text-white shadow-sm">
+                                    <Settings2 className="size-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h1 className="text-2xl font-semibold tracking-tight text-stone-950">配置管理</h1>
+                                    <p className="mt-2 max-w-[820px] text-sm leading-7 text-stone-500">
+                                        所有字段都先在页面本地编辑，只有点击“保存配置”后才会写入
+                                        <span className="mx-1 rounded bg-stone-100 px-1.5 py-0.5 text-stone-700">data/config.toml</span>
+                                        并立即在后端生效。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-10 rounded-full border-stone-200 bg-white px-3 text-[13px] text-stone-700 shadow-none"
+                                onClick={() => void handleReload()}
+                                disabled={reloading || saving}
+                            >
+                                {reloading ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                                重新读取
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-10 rounded-full border-stone-200 bg-white px-3 text-[13px] text-stone-700 shadow-none"
+                                onClick={restoreDefaults}
+                                disabled={saving}
+                            >
+                                <RefreshCcw className="size-4" />
+                                恢复默认
+                            </Button>
+                            <Button
+                                type="button"
+                                className="h-10 rounded-full bg-stone-950 px-3 text-[13px] text-white hover:bg-stone-800"
+                                onClick={() => void saveConfig()}
+                                disabled={saving || !isDirty}
+                            >
+                                {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
+                                保存配置
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                {/* ── Section 1: 图片模式 ── */}
-                <ConfigSection title="图片模式">
-                    <Field
-                        id="image-mode"
-                        label="图像模式"
-                        hint="studio=官方 Studio，cpa=代理模式，mix=自动混合"
-                    >
+                <ConfigSection title="图片模式" description="控制图片请求到底走官方直连、CPA 代理，还是按账号类型自动混合。">
+                    <Field id="image-mode" label="图像模式" hint="studio=官方 Studio，cpa=代理模式，mix=自动混合">
                         <Select
                             value={imageMode}
                             onValueChange={(v) =>
@@ -342,7 +339,7 @@ export default function SettingsPage() {
                                 }))
                             }
                         >
-                            <SelectTrigger id="image-mode" className="w-full border-stone-300">
+                            <SelectTrigger id="image-mode" className="h-11 w-full rounded-2xl border-stone-200 bg-white shadow-none focus-visible:ring-0">
                                 <SelectValue placeholder="选择图像模式" />
                             </SelectTrigger>
                             <SelectContent>
@@ -353,10 +350,10 @@ export default function SettingsPage() {
                         </Select>
                     </Field>
 
-                    <Field id="chatgpt-base-url" label="ChatGPT 接口地址" hint="ChatGPT 服务的基础 URL">
+                    <Field id="chatgpt-base-url" label="图像接口地址" hint="上游图像服务的基础 URL">
                         <Input
                             id="chatgpt-base-url"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.chatgpt?.baseUrl ?? ""}
                             onChange={(e) => setSection("chatgpt", { baseUrl: e.target.value })}
                             placeholder="https://chatgpt.com"
@@ -367,18 +364,15 @@ export default function SettingsPage() {
                         <Input
                             id="chatgpt-timeout"
                             type="number"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.chatgpt?.timeout ?? 60000}
-                            onChange={(e) =>
-                                setSection("chatgpt", { timeout: Number(e.target.value) })
-                            }
+                            onChange={(e) => setSection("chatgpt", { timeout: Number(e.target.value) })}
                             placeholder="60000"
                         />
                     </Field>
                 </ConfigSection>
 
-                {/* ── Section 2: CPA 配置 ── */}
-                <ConfigSection title="CPA 配置">
+                <ConfigSection title="CPA 配置" description="管理 CPA 图片代理与本地 HTTP 代理开关，控制请求是否经由中转服务发送。">
                     <ToggleField
                         id="cpa-enabled"
                         label="启用 CPA 模式"
@@ -390,7 +384,7 @@ export default function SettingsPage() {
                     <Field id="cpa-base-url" label="CPA 接口地址" hint="CPA 代理服务的基础 URL">
                         <Input
                             id="cpa-base-url"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={(config.cpa as { enabled?: boolean; baseUrl?: string } | undefined)?.baseUrl ?? ""}
                             onChange={(e) => setSection("cpa", { baseUrl: e.target.value })}
                             placeholder="https://your-cpa-proxy.example.com"
@@ -409,7 +403,7 @@ export default function SettingsPage() {
                     <Field id="proxy-url" label="代理地址" hint="HTTP/HTTPS 代理 URL">
                         <Input
                             id="proxy-url"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={(config.proxy as { enabled?: boolean; url?: string } | undefined)?.url ?? ""}
                             onChange={(e) => setSection("proxy", { url: e.target.value })}
                             placeholder="http://127.0.0.1:7890"
@@ -418,12 +412,11 @@ export default function SettingsPage() {
                     </Field>
                 </ConfigSection>
 
-                {/* ── Section 3: 基础运行配置 ── */}
-                <ConfigSection title="基础运行配置">
+                <ConfigSection title="基础运行配置" description="配置服务监听地址、日志输出等级和运行时内存日志保留上限。">
                     <Field id="server-host" label="监听主机" hint="服务器监听的主机地址">
                         <Input
                             id="server-host"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.server?.host ?? ""}
                             onChange={(e) => setSection("server", { host: e.target.value })}
                             placeholder="0.0.0.0"
@@ -434,11 +427,9 @@ export default function SettingsPage() {
                         <Input
                             id="server-port"
                             type="number"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.server?.port ?? 3000}
-                            onChange={(e) =>
-                                setSection("server", { port: Number(e.target.value) })
-                            }
+                            onChange={(e) => setSection("server", { port: Number(e.target.value) })}
                             placeholder="3000"
                         />
                     </Field>
@@ -448,7 +439,7 @@ export default function SettingsPage() {
                             value={(config.log as { level?: string; maxItems?: number } | undefined)?.level ?? "info"}
                             onValueChange={(v) => setSection("log", { level: v })}
                         >
-                            <SelectTrigger id="log-level" className="w-full border-stone-300">
+                            <SelectTrigger id="log-level" className="h-11 w-full rounded-2xl border-stone-200 bg-white shadow-none focus-visible:ring-0">
                                 <SelectValue placeholder="选择日志级别" />
                             </SelectTrigger>
                             <SelectContent>
@@ -464,7 +455,7 @@ export default function SettingsPage() {
                         <Input
                             id="log-max-items"
                             type="number"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={(config.log as { level?: string; maxItems?: number } | undefined)?.maxItems ?? 1000}
                             onChange={(e) => setSection("log", { maxItems: Number(e.target.value) })}
                             placeholder="1000"
@@ -472,17 +463,12 @@ export default function SettingsPage() {
                     </Field>
                 </ConfigSection>
 
-                {/* ── Section 4: 账号与存储配置 ── */}
-                <ConfigSection title="账号与存储配置">
-                    <Field
-                        id="app-auth-key"
-                        label="访问密钥 (AuthKey)"
-                        hint="保护管理界面的 API 密钥，留空则不鉴权"
-                    >
+                <ConfigSection title="账号与存储配置" description="管理访问密钥、账号默认配额、自动刷新与本地持久化策略。">
+                    <Field id="app-auth-key" label="访问密钥 (AuthKey)" hint="保护管理界面的 API 密钥，留空则不鉴权">
                         <Input
                             id="app-auth-key"
                             type="password"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.app?.authKey ?? ""}
                             onChange={(e) => setSection("app", { authKey: e.target.value })}
                             placeholder="留空则不鉴权"
@@ -493,11 +479,9 @@ export default function SettingsPage() {
                         <Input
                             id="accounts-default-quota"
                             type="number"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.accounts?.defaultQuota ?? 5}
-                            onChange={(e) =>
-                                setSection("accounts", { defaultQuota: Number(e.target.value) })
-                            }
+                            onChange={(e) => setSection("accounts", { defaultQuota: Number(e.target.value) })}
                             placeholder="5"
                         />
                     </Field>
@@ -510,19 +494,13 @@ export default function SettingsPage() {
                         onCheckedChange={(v) => setSection("accounts", { autoRefresh: v })}
                     />
 
-                    <Field
-                        id="accounts-refresh-interval"
-                        label="刷新间隔（分钟）"
-                        hint="自动刷新账号状态的间隔时间"
-                    >
+                    <Field id="accounts-refresh-interval" label="刷新间隔（分钟）" hint="自动刷新账号状态的间隔时间">
                         <Input
                             id="accounts-refresh-interval"
                             type="number"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={config.accounts?.refreshInterval ?? 30}
-                            onChange={(e) =>
-                                setSection("accounts", { refreshInterval: Number(e.target.value) })
-                            }
+                            onChange={(e) => setSection("accounts", { refreshInterval: Number(e.target.value) })}
                             placeholder="30"
                             disabled={!config.accounts?.autoRefresh}
                         />
@@ -533,7 +511,7 @@ export default function SettingsPage() {
                             value={(config.storage as { type?: string; path?: string } | undefined)?.type ?? "local"}
                             onValueChange={(v) => setSection("storage", { type: v })}
                         >
-                            <SelectTrigger id="storage-type" className="w-full border-stone-300">
+                            <SelectTrigger id="storage-type" className="h-11 w-full rounded-2xl border-stone-200 bg-white shadow-none focus-visible:ring-0">
                                 <SelectValue placeholder="选择存储类型" />
                             </SelectTrigger>
                             <SelectContent>
@@ -547,7 +525,7 @@ export default function SettingsPage() {
                     <Field id="storage-path" label="存储路径" hint="本地文件存储的根目录路径">
                         <Input
                             id="storage-path"
-                            className="border-stone-300"
+                            className="h-11 rounded-2xl border-stone-200 bg-white shadow-none"
                             value={(config.storage as { type?: string; path?: string } | undefined)?.path ?? ""}
                             onChange={(e) => setSection("storage", { path: e.target.value })}
                             placeholder="./data"
@@ -555,51 +533,39 @@ export default function SettingsPage() {
                     </Field>
                 </ConfigSection>
 
-                {/* ── Section 5: 路径信息（只读）── */}
-                <ConfigSection title="路径信息（只读）">
-                    <div className="rounded-lg bg-stone-50 border border-stone-200 p-4 space-y-2">
-                        <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-3">
-                            运行时路径（由系统自动解析，不可手动修改）
-                        </p>
+                <ConfigSection title="路径信息（只读）" description="展示系统解析后的运行目录与同步摘要，便于快速排查配置落点。">
+                    <div className="rounded-2xl border border-stone-200 bg-stone-50/70 p-4">
+                        <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-stone-400">运行时路径</p>
                         <TooltipDetails
                             items={[
                                 {
                                     label: "数据目录",
                                     value:
-                                        firstNonEmptyValue(
-                                            (config.paths as { data?: string; logs?: string } | undefined)?.data,
-                                            config.storage?.path,
-                                        ) ?? "—",
+                                        String(
+                                            firstNonEmptyValue(
+                                                (config.paths as { data?: string; logs?: string } | undefined)?.data,
+                                                config.storage?.path,
+                                            ) ?? "—",
+                                        ),
                                 },
                                 {
                                     label: "日志目录",
-                                    value:
-                                        firstNonEmptyValue(
-                                            (config.paths as { data?: string; logs?: string } | undefined)?.logs,
-                                        ) ?? "—",
-                                },
-                                {
-                                    label: "完整路径",
-                                    value: joinDisplayPath(
-                                        (config.paths as { data?: string; logs?: string } | undefined)?.data,
-                                        (config.paths as { data?: string; logs?: string } | undefined)?.logs,
-                                    ) || "—",
+                                    value: String(
+                                        firstNonEmptyValue((config.paths as { data?: string; logs?: string } | undefined)?.logs) ?? "—",
+                                    ),
                                 },
                                 {
                                     label: "存储类型",
-                                    value:
-                                        firstNonEmptyValue(
-                                            (config.storage as { type?: string; path?: string } | undefined)?.type,
-                                        ) ?? "local",
+                                    value: String(
+                                        firstNonEmptyValue((config.storage as { type?: string; path?: string } | undefined)?.type) ?? "local",
+                                    ),
                                 },
                             ]}
                         />
                     </div>
 
-                    <div className="rounded-lg bg-stone-50 border border-stone-200 p-4">
-                        <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-3">
-                            同步配置摘要
-                        </p>
+                    <div className="rounded-2xl border border-stone-200 bg-stone-50/70 p-4">
+                        <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-stone-400">同步配置摘要</p>
                         <TooltipDetails
                             items={[
                                 {
@@ -608,23 +574,23 @@ export default function SettingsPage() {
                                 },
                                 {
                                     label: "同步提供商",
-                                    value:
+                                    value: String(
                                         firstNonEmptyValue(
-                                            (config.sync as { enabled?: boolean; provider?: string; interval?: number; direction?: string } | undefined)?.provider,
+                                            (config.sync as { enabled?: boolean; provider?: string; interval?: number; direction?: string } | undefined)
+                                                ?.provider,
                                         ) ?? "未配置",
+                                    ),
                                 },
                                 {
                                     label: "同步方向",
-                                    value:
-                                        firstNonEmptyValue(
-                                            config.sync?.direction,
-                                        ) ?? "both",
+                                    value: String(firstNonEmptyValue(config.sync?.direction) ?? "both"),
                                 },
                                 {
                                     label: "同步间隔（秒）",
                                     value: String(
                                         firstNonEmptyValue(
-                                            (config.sync as { enabled?: boolean; provider?: string; interval?: number; direction?: string } | undefined)?.interval,
+                                            (config.sync as { enabled?: boolean; provider?: string; interval?: number; direction?: string } | undefined)
+                                                ?.interval,
                                         ) ?? 300,
                                     ),
                                 },
@@ -633,6 +599,6 @@ export default function SettingsPage() {
                     </div>
                 </ConfigSection>
             </div>
-        </div>
+        </section>
     );
 }

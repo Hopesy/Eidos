@@ -63,7 +63,7 @@ export function HistorySidebar({
   onClearHistory,
 }: HistorySidebarProps) {
   return (
-    <aside className="order-2 overflow-hidden rounded-[28px] border border-stone-200 bg-[#f8f8f7] shadow-[0_8px_30px_rgba(15,23,42,0.04)] lg:order-none lg:min-h-0">
+    <aside className="order-2 w-full overflow-hidden rounded-[18px] border border-stone-200 bg-[#f8f8f7] shadow-[0_8px_30px_rgba(15,23,42,0.04)] lg:order-none lg:min-h-0">
       <div className="flex h-full min-h-0 flex-col">
         {/* 头部 */}
         <div className="border-b border-stone-200/80 px-4 py-4">

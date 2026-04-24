@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
 import { ComposerPanel, type ImageModelOption, type ModeOption } from "./_components/composer-panel";
+import { ImageIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { ConversationTurn } from "./_components/conversation-turn";
 import { EmptyState, type InspirationExample } from "./_components/empty-state";
 import { HistorySidebar } from "./_components/history-sidebar";
@@ -1281,10 +1282,10 @@ export default function ImagePage() {
   return (
     <section
       className={cn(
-        "grid grid-cols-1 gap-3",
+        "grid grid-cols-1 gap-1.5",
         historyCollapsed
           ? "lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)]"
-          : "lg:h-full lg:min-h-0 lg:grid-cols-[320px_minmax(0,1fr)]",
+          : "lg:h-full lg:min-h-0 lg:grid-cols-[280px_minmax(0,1fr)]",
       )}
     >
       {!historyCollapsed ? (
@@ -1303,45 +1304,46 @@ export default function ImagePage() {
         />
       ) : null}
 
-      <div className="order-1 flex flex-col overflow-visible rounded-[30px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden">
-        <ComposerPanel
-          historyCollapsed={historyCollapsed}
-          onToggleHistoryCollapsed={() => setHistoryCollapsed((current) => !current)}
-          selectedConversationTitle={selectedConversation?.title ?? null}
-          imageModel={imageModel}
-          imageModelOptions={imageModelOptions as ImageModelOption[]}
-          modeOptions={modeOptions as ModeOption[]}
-          mode={mode}
-          onModeChange={setMode}
-          onImageModelChange={setImageModel}
-          hasGenerateReferences={hasGenerateReferences}
-          imageCount={imageCount}
-          onImageCountChange={setImageCount}
-          upscaleScale={upscaleScale}
-          upscaleOptions={upscaleOptions}
-          onUpscaleScaleChange={setUpscaleScale}
-          availableQuota={availableQuota}
-          sourceImages={sourceImages}
-          onRemoveSourceImage={removeSourceImage}
-          onOpenImageInNewTab={openImageInNewTab}
-          textareaRef={textareaRef}
-          imagePrompt={imagePrompt}
-          onImagePromptChange={setImagePrompt}
-          onPromptPaste={handlePromptPaste}
-          onSubmit={() => {
-            void handleSubmit();
-          }}
-          isSubmitting={isSubmitting}
-          uploadInputRef={uploadInputRef}
-          maskInputRef={maskInputRef}
-          onUploadFiles={(files, role) => {
-            void appendFiles(files, role);
-          }}
-        />
+      <div className="order-1 flex flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden">
+        <div className="shrink-0 border-b border-stone-200/80 px-5 py-3 sm:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[14px] bg-stone-950 text-white shadow-sm">
+                <ImageIcon className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-[15px] font-semibold tracking-tight text-stone-950">图片工作台</h1>
+                  <span className="hidden truncate text-[13px] text-stone-400 sm:inline">从一个提示词，开始完整的图像工作流</span>
+                  {selectedConversation?.title ? (
+                    <span className="truncate rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
+                      {selectedConversation.title}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden items-center gap-1.5 rounded-full bg-stone-950/[0.06] px-3 py-1.5 text-xs font-medium text-stone-700 xl:inline-flex">
+                <span className="size-1.5 rounded-full bg-stone-400" />
+                {imageModel}
+              </span>
+              <button
+                type="button"
+                onClick={() => setHistoryCollapsed((current) => !current)}
+                className="inline-flex size-8 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 hover:text-stone-800"
+                title={historyCollapsed ? "展开历史" : "收起历史"}
+              >
+                {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div
           ref={resultsViewportRef}
-          className="hide-scrollbar overflow-visible bg-[#fcfcfb] lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+          className="hide-scrollbar min-h-0 flex-1 overflow-visible bg-[#fcfcfb] lg:overflow-y-auto"
         >
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
@@ -1372,6 +1374,40 @@ export default function ImagePage() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="shrink-0">
+          <ComposerPanel
+            imageModel={imageModel}
+            imageModelOptions={imageModelOptions as ImageModelOption[]}
+            modeOptions={modeOptions as ModeOption[]}
+            mode={mode}
+            onModeChange={setMode}
+            onImageModelChange={setImageModel}
+            hasGenerateReferences={hasGenerateReferences}
+            imageCount={imageCount}
+            onImageCountChange={setImageCount}
+            upscaleScale={upscaleScale}
+            upscaleOptions={upscaleOptions}
+            onUpscaleScaleChange={setUpscaleScale}
+            availableQuota={availableQuota}
+            sourceImages={sourceImages}
+            onRemoveSourceImage={removeSourceImage}
+            onOpenImageInNewTab={openImageInNewTab}
+            textareaRef={textareaRef}
+            imagePrompt={imagePrompt}
+            onImagePromptChange={setImagePrompt}
+            onPromptPaste={handlePromptPaste}
+            onSubmit={() => {
+              void handleSubmit();
+            }}
+            isSubmitting={isSubmitting}
+            uploadInputRef={uploadInputRef}
+            maskInputRef={maskInputRef}
+            onUploadFiles={(files, role) => {
+              void appendFiles(files, role);
+            }}
+          />
         </div>
       </div>
 

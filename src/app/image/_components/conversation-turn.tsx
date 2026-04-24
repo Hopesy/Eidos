@@ -87,7 +87,7 @@ export function ConversationTurn({
         <div className="space-y-4">
             {/* 用户消息 */}
             <div className="flex justify-end">
-                <div className="flex w-full max-w-[78%] flex-col items-end gap-4">
+                <div className="flex w-full max-w-[94%] flex-col items-end gap-3">
                     {turn.sourceImages && turn.sourceImages.length > 0 ? (
                         <div className="flex flex-wrap justify-end gap-2.5">
                             {turn.sourceImages.map((source) => (
@@ -113,7 +113,7 @@ export function ConversationTurn({
                             ))}
                         </div>
                     ) : null}
-                    <div className="max-w-full rounded-[28px] bg-[#f2f2f1] px-5 py-4 text-[15px] leading-7 text-stone-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+                    <div className="max-w-full rounded-[16px] bg-[#f2f2f1] px-3 py-2.5 text-[15px] leading-7 text-stone-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
                         {turn.prompt || "无额外提示词"}
                     </div>
                 </div>
@@ -171,7 +171,7 @@ export function ConversationTurn({
                                                 className="block h-auto max-h-[360px] w-auto max-w-full"
                                             />
                                         </button>
-                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-4 py-3">
+                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-3 py-2.5">
                                             <button
                                                 type="button"
                                                 className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
@@ -213,7 +213,7 @@ export function ConversationTurn({
                                         <div className="flex flex-1 items-center justify-center bg-rose-50 px-6 py-8 text-center text-sm leading-7 text-rose-600">
                                             {image.error || "处理失败"}
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-4 py-3">
+                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-3 py-2.5">
                                             <button
                                                 type="button"
                                                 className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"

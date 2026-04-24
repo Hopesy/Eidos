@@ -6,8 +6,11 @@ import { TopNav } from "@/components/top-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ChatGpt Image Studio",
-  description: "ChatGpt Image Studio workspace",
+  title: "EIDOS",
+  description: "EIDOS — AI 图片工作区",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -20,12 +23,16 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <Toaster position="top-center" richColors />
-          <main className="h-screen overflow-hidden bg-[#f6f5f2] px-3 py-3 text-stone-900 sm:px-4 sm:py-4">
-            <div className="mx-auto flex h-full max-w-[1600px] gap-3 lg:gap-4">
+          <main
+            className="box-border h-screen min-h-0 overflow-hidden bg-[#f5f5f3] p-1.5 text-stone-900 lg:p-1.5"
+            style={{
+              fontFamily:
+                '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif',
+            }}
+          >
+            <div className="mx-auto flex h-full min-h-0 max-w-[1680px] flex-col gap-1.5 lg:flex-row lg:gap-1.5">
               <TopNav />
-              <div className="min-w-0 flex-1 overflow-hidden">
-                {children}
-              </div>
+              <div className="min-h-0 min-w-0 flex-1 overflow-hidden">{children}</div>
             </div>
           </main>
         </ThemeProvider>
