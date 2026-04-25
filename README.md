@@ -6,7 +6,7 @@
 - 组件：标准 shadcn/ui 组件基线
 - 主题：已按 `tweakcn` 的 **Supabase** 风格变量整理，后续换主题只需要继续替换 CSS variables
 - 服务端：Next.js Route Handlers 承载登录、账号管理、额度刷新与 OpenAI 兼容图片接口
-- 存储：本地 `data/accounts.json`
+- 存储：结构化数据写入本地 SQLite `data/eidos.db`；图片文件写入 `data/images/`，上传源图/遮罩写入 `data/uploads/`
 - 运行时：纯 Node.js / Next.js，不再包含 Python 入口、依赖或服务层
 
 ---
@@ -28,12 +28,12 @@
 
 ```text
 .
-├─ data/
+├─ data/                  # SQLite 数据库、图片文件、上传源图、迁移备份
 ├─ public/                 # 静态资源
 ├─ src/
 │  ├─ app/                # 页面 + Route Handlers
 │  ├─ components/         # shadcn/ui + 页面布局
-│  └─ server/             # 服务端业务 / 存储 / 上游调用
+│  └─ server/             # 服务端业务 / SQLite 存储 / 文件存储 / 上游调用
 ├─ package.json
 ├─ next.config.ts
 └─ tsconfig.json
@@ -138,3 +138,4 @@ Authorization: Bearer <auth-key>
 ## 说明
 
 本项目仅供学习与研究交流。请遵循 OpenAI 的使用条款及当地法律法规，不得用于非法用途。
+

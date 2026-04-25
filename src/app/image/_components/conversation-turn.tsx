@@ -1,13 +1,16 @@
 "use client";
 
 import {
+    AlertCircle,
     Brush,
     Clock3,
     Copy,
+    ImageIcon,
     LoaderCircle,
     RotateCcw,
     Sparkles,
     ZoomIn,
+    Download,
 } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
@@ -34,6 +37,7 @@ function buildConversationSourceLabel(source: StoredSourceImage) {
 }
 
 function buildImageDataUrl(image: StoredImage) {
+    if (image.url) return image.url;
     if (!image.b64_json) return "";
     return `data:image/png;base64,${image.b64_json}`;
 }
@@ -88,9 +92,9 @@ export function ConversationTurn({
             {/* 用户消息 */}
             <div className="flex justify-end">
                 <div className="flex w-full max-w-[94%] flex-col items-end gap-3">
-                    {turn.sourceImages && turn.sourceImages.length > 0 ? (
+                    {turn.sourceImages && turn.sourceImages.filter((s) => !s.hiddenInConversation).length > 0 ? (
                         <div className="flex flex-wrap justify-end gap-2.5">
-                            {turn.sourceImages.map((source) => (
+                            {turn.sourceImages.filter((s) => !s.hiddenInConversation).map((source) => (
                                 <div
                                     key={source.id}
                                     className="w-[136px] overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm"
@@ -120,33 +124,28 @@ export function ConversationTurn({
             </div>
 
             {/* AI 响应 */}
-            <div className="space-y-4">
+            <div className="space-y-3">
                 <div className="flex items-center gap-3 px-1">
                     <span className="flex size-9 items-center justify-center rounded-2xl bg-stone-950 text-white">
                         <Sparkles className="size-4" />
                     </span>
-                    <div>
+                    <div className="flex flex-col gap-0.5">
                         <div className="text-sm font-semibold tracking-tight text-stone-900">Eidos</div>
+                        <div className="flex items-center gap-2 text-[11px] text-stone-400">
+                            <span>{turn.model}</span>
+                            <span className="text-stone-300">·</span>
+                            <span className="flex items-center gap-0.5">
+                                <Clock3 className="size-3" />
+                                {formatConversationTime(turn.createdAt)}
+                            </span>
+                        </div>
                     </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 px-1 text-xs text-stone-500">
-                    <span className="rounded-full bg-stone-100 px-3 py-1.5">{modeLabelMap[turn.mode]}</span>
-                    <span className="rounded-full bg-stone-100 px-3 py-1.5">{turn.model}</span>
-                    <span className="rounded-full bg-stone-100 px-3 py-1.5">{turn.count} 张</span>
-                    {turn.scale ? (
-                        <span className="rounded-full bg-stone-100 px-3 py-1.5">{turn.scale}</span>
-                    ) : null}
-                    <span className="rounded-full bg-stone-100 px-3 py-1.5">
-                        <Clock3 className="mr-1 inline size-3.5" />
-                        {formatConversationTime(turn.createdAt)}
-                    </span>
                 </div>
 
                 {turn.images.length > 0 ? (
                     <div
                         className={cn(
-                            "grid gap-4",
+                            "grid gap-3",
                             turn.images.length === 1 ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2",
                         )}
                     >
@@ -154,12 +153,21 @@ export function ConversationTurn({
                             <div
                                 key={image.id}
                                 className={cn(
-                                    "overflow-hidden rounded-[22px] border border-stone-200 bg-white shadow-sm",
+                                    "overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm",
                                     turn.images.length === 1 && "w-fit max-w-full justify-self-start",
                                 )}
                             >
-                                {image.status === "success" && image.b64_json ? (
-                                    <div>
+                                {image.status === "success" && image.text ? (
+                                    /* ── 纯文字回复态 ── */
+                                    <div className="flex max-w-[320px] flex-col gap-2 px-4 py-3.5">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-400">
+                                            <Sparkles className="size-3" />
+                                            AI 回复
+                                        </div>
+                                        <p className="whitespace-pre-wrap text-sm leading-6 text-stone-700">{image.text}</p>
+                                    </div>
+                                ) : image.status === "success" && (image.url || image.b64_json) ? (
+                                    <div className="group relative">
                                         <button
                                             type="button"
                                             className="block w-full cursor-zoom-in"
@@ -171,10 +179,11 @@ export function ConversationTurn({
                                                 className="block h-auto max-h-[360px] w-auto max-w-full"
                                             />
                                         </button>
-                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-3 py-2.5">
+                                        {/* hover 浮层操作条 */}
+                                        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-1 rounded-b-[20px] bg-gradient-to-t from-black/50 to-transparent px-2.5 py-2 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
                                             <button
                                                 type="button"
-                                                className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+                                                className="inline-flex size-7 items-center justify-center rounded-lg text-white transition hover:bg-white/25 hover:text-white"
                                                 onClick={() =>
                                                     onOpenSelectionEditor(
                                                         conversationId,
@@ -184,63 +193,98 @@ export function ConversationTurn({
                                                     )
                                                 }
                                                 title="选区编辑"
-                                                aria-label="选区编辑"
                                             >
-                                                <Brush className="size-4" />
+                                                <Brush className="size-3.5" />
                                             </button>
                                             <button
                                                 type="button"
-                                                className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+                                                className="inline-flex size-7 items-center justify-center rounded-lg text-white transition hover:bg-white/25 hover:text-white"
                                                 onClick={() => onSeedFromResult(conversationId, image, "edit")}
-                                                title="引用编辑"
-                                                aria-label="引用编辑"
+                                                title="继续编辑"
                                             >
-                                                <Copy className="size-4" />
+                                                <Copy className="size-3.5" />
                                             </button>
                                             <button
                                                 type="button"
-                                                className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
+                                                className="inline-flex size-7 items-center justify-center rounded-lg text-white transition hover:bg-white/25 hover:text-white"
                                                 onClick={() => onSeedFromResult(conversationId, image, "upscale")}
                                                 title="放大"
-                                                aria-label="放大"
                                             >
-                                                <ZoomIn className="size-4" />
+                                                <ZoomIn className="size-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="ml-auto inline-flex size-7 items-center justify-center rounded-lg text-white transition hover:bg-white/25 hover:text-white"
+                                                onClick={() => onOpenImageInNewTab(buildImageDataUrl(image))}
+                                                title="查看原图"
+                                            >
+                                                <Download className="size-3.5" />
                                             </button>
                                         </div>
                                     </div>
                                 ) : image.status === "error" ? (
-                                    <div className="flex min-h-[320px] flex-col">
-                                        <div className="flex flex-1 items-center justify-center bg-rose-50 px-6 py-8 text-center text-sm leading-7 text-rose-600">
-                                            {image.error || "处理失败"}
+                                    /* ── 错误态 ── */
+                                    <div className="flex min-h-[240px] min-w-[240px] flex-col">
+                                        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
+                                            <div className="flex size-12 items-center justify-center rounded-2xl bg-rose-50">
+                                                <AlertCircle className="size-5 text-rose-500" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-rose-600">处理失败</p>
+                                                <p className="line-clamp-3 max-w-[280px] text-xs leading-5 text-stone-500">
+                                                    {image.error || "未知错误"}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-2 border-t border-stone-100 px-3 py-2.5">
+                                        <div className="border-t border-stone-100 px-3 py-2.5">
                                             <button
                                                 type="button"
-                                                className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200 bg-white text-rose-600 transition hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
                                                 onClick={() => onRetryTurn(conversationId, turn)}
                                                 disabled={isSubmitting}
-                                                title={isSubmitting ? "处理中" : "重试"}
                                                 aria-label="重试"
                                             >
-                                                <RotateCcw className="size-4" />
+                                                <RotateCcw className={cn("size-3.5", isSubmitting && "animate-spin")} />
+                                                {isSubmitting ? "处理中" : "重试"}
                                             </button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 bg-stone-50 px-6 py-8 text-center text-stone-500">
-                                        <div className="rounded-full bg-white p-3 shadow-sm">
-                                            <LoaderCircle className="size-5 animate-spin" />
+                                    /* ── 处理中态 ── */
+                                    <div className="relative flex min-h-[240px] min-w-[240px] flex-col items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#f5f5f4,transparent_55%),linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] px-6 py-8 text-center">
+                                        <div className="absolute inset-x-8 top-8 h-24 rounded-full bg-stone-200/40 blur-3xl" />
+                                        <div className="absolute inset-0 opacity-60">
+                                            <div className="absolute left-6 top-6 h-16 w-16 animate-pulse rounded-[20px] border border-stone-200/70 bg-white/80" />
+                                            <div className="absolute right-8 top-12 h-10 w-10 animate-pulse rounded-[14px] border border-stone-200/60 bg-white/70 [animation-delay:300ms]" />
+                                            <div className="absolute bottom-8 left-1/2 h-20 w-20 -translate-x-1/2 animate-pulse rounded-[24px] border border-stone-200/70 bg-white/80 [animation-delay:600ms]" />
                                         </div>
-                                        <p className="text-sm font-medium text-stone-700">
-                                            {isProcessing && processingStatus
-                                                ? `${processingStatus.title}${waitingDots}`
-                                                : "正在处理图片..."}
-                                        </p>
-                                        <p className="text-xs leading-6 text-stone-400">
-                                            {isProcessing && processingStatus
-                                                ? `${processingStatus.detail} · 已等待 ${formatProcessingDuration(submitElapsedSeconds)}`
-                                                : "图片处理通常需要几十秒，请稍候"}
-                                        </p>
+                                        <div className="relative z-10 flex flex-col items-center gap-4">
+                                            <div className="relative">
+                                                <div className="absolute inset-[-10px] rounded-[24px] border border-stone-200/70 animate-pulse" />
+                                                <div className="relative flex size-16 items-center justify-center rounded-[22px] border border-stone-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+                                                    <div className="absolute inset-2 rounded-[16px] bg-[linear-gradient(135deg,#fafaf9,#f1f5f9)]" />
+                                                    <div className="relative flex items-center justify-center">
+                                                        {isProcessing ? (
+                                                            <LoaderCircle className="size-5 animate-spin text-stone-600" />
+                                                        ) : (
+                                                            <ImageIcon className="size-5 text-stone-400" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <p className="text-sm font-semibold text-stone-700">
+                                                    {isProcessing && processingStatus
+                                                        ? processingStatus.title
+                                                        : "正在创建占位图…"}
+                                                </p>
+                                                <p className="text-xs leading-5 text-stone-400">
+                                                    {isProcessing && processingStatus
+                                                        ? processingStatus.detail
+                                                        : "已接收请求，正在准备图像画布"}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -251,3 +295,4 @@ export function ConversationTurn({
         </div>
     );
 }
+

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
 import { ComposerPanel, type ImageModelOption, type ModeOption } from "./_components/composer-panel";
-import { ImageIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { ConversationTurn } from "./_components/conversation-turn";
 import { EmptyState, type InspirationExample } from "./_components/empty-state";
 import { HistorySidebar } from "./_components/history-sidebar";
@@ -179,6 +179,9 @@ function makeId() {
 }
 
 function buildImageDataUrl(image: StoredImage) {
+  if (image.url) {
+    return image.url;
+  }
   if (!image.b64_json) {
     return "";
   }
@@ -241,7 +244,11 @@ function mergeResultImages(
   conversationId: string,
   items: Array<{
     b64_json?: string;
+    url?: string;
+    image_id?: string;
+    file_path?: string;
     revised_prompt?: string;
+    text?: string;
     file_id?: string;
     gen_id?: string;
     conversation_id?: string;
@@ -251,11 +258,13 @@ function mergeResultImages(
   expected: number,
 ) {
   const results: StoredImage[] = items.map((item, index) =>
-    item.b64_json
+    (item.url || item.b64_json)
       ? {
         id: `${conversationId}-${index}`,
         status: "success",
-        b64_json: item.b64_json,
+        ...(item.url ? { url: item.url } : { b64_json: item.b64_json }),
+        image_id: item.image_id,
+        file_path: item.file_path,
         revised_prompt: item.revised_prompt,
         file_id: item.file_id,
         gen_id: item.gen_id,
@@ -263,20 +272,19 @@ function mergeResultImages(
         parent_message_id: item.parent_message_id,
         source_account_id: item.source_account_id,
       }
-      : {
-        id: `${conversationId}-${index}`,
-        status: "error",
-        error: "接口没有返回图片数据",
-      },
+      : item.text
+        ? {
+          id: `${conversationId}-${index}`,
+          status: "success",
+          text: item.text,
+        }
+        : {
+          id: `${conversationId}-${index}`,
+          status: "error",
+          error: "接口没有返回图片数据",
+        },
   );
 
-  while (results.length < expected) {
-    results.push({
-      id: `${conversationId}-${results.length}`,
-      status: "error",
-      error: "接口返回的图片数量不足",
-    });
-  }
   return results;
 }
 
@@ -373,6 +381,39 @@ function buildInpaintSourceReference(image: StoredImage): InpaintSourceReference
   };
 }
 
+function humanizeError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error ?? "处理图片失败");
+  const lower = raw.toLowerCase();
+  if (lower.includes("fetch failed") || lower.includes("failed to fetch") || lower.includes("network") || lower.includes("econnrefused")) {
+    return "网络连接失败，请检查网络或服务是否正常运行";
+  }
+  if (lower.includes("暂无可用账号")) {
+    return raw; // 已经是友好文案，直接返回
+  }
+  if (lower.includes("no available tokens") || lower.includes("accounts.json")) {
+    return "暂无可用账号，请先在账号管理页面添加并启用账号";
+  }
+  if (lower.includes("timeout") || lower.includes("timed out") || lower.includes("超时")) {
+    return "请求超时，图像生成耗时较长，请稍后重试";
+  }
+  if (lower.includes("rate limit") || lower.includes("429")) {
+    return "请求过于频繁，请稍后再试";
+  }
+  if (lower.includes("unauthorized") || lower.includes("401") || lower.includes("token") && lower.includes("invalid")) {
+    return "账号授权已失效，请在账号管理页面刷新账号状态";
+  }
+  if (lower.includes("403") || lower.includes("forbidden")) {
+    return "无访问权限，账号可能被限制使用";
+  }
+  if (lower.includes("500") || lower.includes("502") || lower.includes("503") || lower.includes("service unavailable")) {
+    return "上游服务暂时不可用，请稍后重试";
+  }
+  if (lower.includes("content policy") || lower.includes("safety") || lower.includes("违规")) {
+    return "提示词可能违反内容政策，请修改后重试";
+  }
+  return raw;
+}
+
 function extractErrorCode(error: unknown) {
   if (typeof error !== "object" || !error) {
     return "";
@@ -408,10 +449,24 @@ export default function ImagePage() {
   const didLoadQuotaRef = useRef(false);
   const mountedRef = useRef(true);
   const draftSelectionRef = useRef(false);
+  const requestAbortControllerRef = useRef<AbortController | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resultsViewportRef = useRef<HTMLDivElement>(null);
+
+  const scrollResultsToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const viewport = resultsViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      viewport.scrollTo({
+        top: viewport.scrollHeight,
+        behavior,
+      });
+    });
+  };
 
   const [mode, setMode] = useState<ImageMode>("generate");
   const [imagePrompt, setImagePrompt] = useState("");
@@ -549,8 +604,9 @@ export default function ImagePage() {
     const frame = window.requestAnimationFrame(() => {
       syncRuntimeTaskState(selectedConversationId);
     });
+    // 任务状态变化时只同步 runtime 状态（submitting / activeRequest），
+    // 不再从磁盘全量刷新 conversations，避免覆盖 optimistic update
     const unsubscribe = subscribeImageTasks(() => {
-      void refreshHistory({ silent: true });
       window.requestAnimationFrame(() => {
         syncRuntimeTaskState(selectedConversationId);
       });
@@ -583,11 +639,15 @@ export default function ImagePage() {
     if (!selectedConversation && !isSubmitting) {
       return;
     }
-    resultsViewportRef.current?.scrollTo({
-      top: resultsViewportRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    scrollResultsToBottom(selectedConversation ? "smooth" : "auto");
   }, [selectedConversation, isSubmitting]);
+
+  useEffect(() => {
+    if (!selectedConversation) {
+      return;
+    }
+    scrollResultsToBottom(isSubmitting ? "smooth" : "auto");
+  }, [selectedConversation?.id, selectedConversationTurns, isSubmitting]);
 
   useEffect(() => {
     if (!isSubmitting || submitStartedAt === null) {
@@ -939,7 +999,7 @@ export default function ImagePage() {
         toast.success("图片已按选区编辑");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "处理图片失败";
+      const message = humanizeError(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -989,21 +1049,9 @@ export default function ImagePage() {
       return;
     }
 
-    const turnId = makeId();
-    const now = new Date().toISOString();
-    const draftTurn = createConversationTurn({
-      turnId,
-      title: buildConversationTitle(turnMode, prompt, turnScale || upscaleScale),
-      mode: turnMode,
-      prompt,
-      model: turn.model,
-      count: expectedCount,
-      scale: turnScale,
-      sourceImages: turnSourceImages,
-      images: createLoadingImages(expectedCount, turnId),
-      createdAt: now,
-      status: "generating",
-    });
+    // ── 重试时复用原有 turn id，直接在原地重置为 loading 状态 ──
+    const turnId = turn.id;
+    const loadingImages = createLoadingImages(expectedCount, turnId);
 
     const startedAt = Date.now();
     setIsSubmitting(true);
@@ -1027,9 +1075,19 @@ export default function ImagePage() {
     });
 
     try {
+      // 把旧 turn 原地重置为 generating/loading
       await updateConversation(conversationId, (current) => ({
         ...current,
-        turns: [...(current.turns ?? []), draftTurn],
+        turns: (current.turns ?? []).map((item) =>
+          item.id === turnId
+            ? {
+              ...item,
+              status: "generating" as const,
+              error: undefined,
+              images: loadingImages,
+            }
+            : item,
+        ),
       }));
 
       let resultItems: StoredImage[] = [];
@@ -1082,7 +1140,7 @@ export default function ImagePage() {
         toast.success(turnMode === "generate" ? "图片已生成" : turnMode === "edit" ? "图片已编辑" : "图片已放大");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "处理图片失败";
+      const message = humanizeError(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((item) =>
@@ -1131,7 +1189,36 @@ export default function ImagePage() {
     const conversationId = selectedConversationId ?? makeId();
     const turnId = makeId();
     const now = new Date().toISOString();
-    const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
+
+    // 如果是同一会话内的连续生成（无用户手动上传图）、自动继承上一轮成功图作为参考图
+    const prevSuccessImage: StoredSourceImage | null = (() => {
+      if (mode !== "generate" || imageSources.length > 0 || !selectedConversationId) {
+        return null;
+      }
+      const conv = conversations.find((item) => item.id === selectedConversationId) ?? null;
+      if (!conv) return null;
+      const turns = conv.turns ?? [];
+      for (let i = turns.length - 1; i >= 0; i--) {
+        const successImg = (turns[i].images ?? []).find(
+          (img) => img.status === "success" && (img.url || img.b64_json),
+        );
+        const inheritedSrc = successImg ? buildImageDataUrl(successImg) : "";
+        if (inheritedSrc) {
+          return {
+            id: makeId(),
+            role: "image" as const,
+            name: `context-${successImg?.id ?? makeId()}.png`,
+            dataUrl: inheritedSrc,
+            hiddenInConversation: true,
+          };
+        }
+      }
+      return null;
+    })();
+
+    // 携带上下文参考图时走参考图生成，否则走纯文字生成
+    const effectiveImageSources = prevSuccessImage ? [...imageSources, prevSuccessImage] : imageSources;
+    const expectedCount = mode === "generate" && effectiveImageSources.length === 0 ? parsedCount : 1;
     const draftTurn = createConversationTurn({
       turnId,
       title: buildConversationTitle(mode, prompt, upscaleScale),
@@ -1140,13 +1227,16 @@ export default function ImagePage() {
       model: imageModel,
       count: expectedCount,
       scale: mode === "upscale" ? upscaleScale : undefined,
-      sourceImages,
+      sourceImages: effectiveImageSources,
       images: createLoadingImages(expectedCount, turnId),
       createdAt: now,
       status: "generating",
     });
 
     const startedAt = Date.now();
+    const abortController = new AbortController();
+    requestAbortControllerRef.current = abortController;
+    const signal = abortController.signal;
     setIsSubmitting(true);
     setActiveRequest({
       conversationId,
@@ -1170,9 +1260,62 @@ export default function ImagePage() {
     });
 
     try {
+      // 先同步更新本地列表，让历史栏和主区域立刻出现占位消息
+      if (mountedRef.current) {
+        setConversations((prev) => {
+          const existing = prev.find((item) => item.id === conversationId) ?? null;
+          const nextConversation = normalizeConversation(
+            existing
+              ? {
+                ...existing,
+                title: draftTurn.title,
+                mode: draftTurn.mode,
+                prompt: draftTurn.prompt,
+                model: draftTurn.model,
+                count: draftTurn.count,
+                scale: draftTurn.scale,
+                sourceImages: draftTurn.sourceImages,
+                images: draftTurn.images,
+                createdAt: draftTurn.createdAt,
+                status: draftTurn.status,
+                error: draftTurn.error,
+                turns: [...(existing.turns ?? []), draftTurn],
+              }
+              : {
+                id: conversationId,
+                title: draftTurn.title,
+                mode: draftTurn.mode,
+                prompt: draftTurn.prompt,
+                model: draftTurn.model,
+                count: draftTurn.count,
+                scale: draftTurn.scale,
+                sourceImages: draftTurn.sourceImages,
+                images: draftTurn.images,
+                createdAt: draftTurn.createdAt,
+                status: draftTurn.status,
+                error: draftTurn.error,
+                turns: [draftTurn],
+              },
+          );
+          const next = [nextConversation, ...prev.filter((item) => item.id !== conversationId)];
+          return next.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }
+
       if (selectedConversationId) {
         await updateConversation(conversationId, (current) => ({
           ...current,
+          title: draftTurn.title,
+          mode: draftTurn.mode,
+          prompt: draftTurn.prompt,
+          model: draftTurn.model,
+          count: draftTurn.count,
+          scale: draftTurn.scale,
+          sourceImages: draftTurn.sourceImages,
+          images: draftTurn.images,
+          createdAt: draftTurn.createdAt,
+          status: draftTurn.status,
+          error: draftTurn.error,
           turns: [...(current.turns ?? []), draftTurn],
         }));
       } else {
@@ -1195,14 +1338,16 @@ export default function ImagePage() {
 
       let resultItems: StoredImage[] = [];
       if (mode === "generate") {
-        if (imageSources.length > 0) {
+        if (effectiveImageSources.length > 0) {
           const files = await Promise.all(
-            imageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`)),
+            effectiveImageSources.map((item, index) =>
+              dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`),
+            ),
           );
-          const data = await editImage({ prompt, images: files, model: imageModel });
+          const data = await editImage({ prompt, images: files, model: imageModel, signal });
           resultItems = mergeResultImages(turnId, data.data || [], 1);
         } else {
-          const data = await generateImage(prompt, imageModel, parsedCount);
+          const data = await generateImage(prompt, imageModel, parsedCount, signal);
           resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
         }
       }
@@ -1212,13 +1357,13 @@ export default function ImagePage() {
           imageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `image-${index + 1}.png`)),
         );
         const maskFile = maskSource ? await dataUrlToFile(maskSource.dataUrl, maskSource.name || "mask.png") : null;
-        const data = await editImage({ prompt, images: files, mask: maskFile, model: imageModel });
+        const data = await editImage({ prompt, images: files, mask: maskFile, model: imageModel, signal });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
       }
 
       if (mode === "upscale") {
         const file = await dataUrlToFile(imageSources[0].dataUrl, imageSources[0].name || "upscale.png");
-        const data = await upscaleImage({ image: file, prompt, scale: Number.parseInt(upscaleScale, 10), model: imageModel });
+        const data = await upscaleImage({ image: file, prompt, scale: Number.parseInt(upscaleScale, 10), model: imageModel, signal });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
       }
 
@@ -1243,8 +1388,10 @@ export default function ImagePage() {
       } else {
         toast.success(
           mode === "generate"
-            ? imageSources.length > 0
-              ? "参考图生成已完成"
+            ? effectiveImageSources.length > 0
+              ? prevSuccessImage
+                ? "已基于上一轮结果续写生成"
+                : "参考图生成已完成"
               : "图片已生成"
             : mode === "edit"
               ? "图片已编辑"
@@ -1252,7 +1399,28 @@ export default function ImagePage() {
         );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "处理图片失败";
+      if (error instanceof Error && (error.name === "CanceledError" || error.name === "AbortError" || error.message.includes("canceled"))) {
+        // 用户主动取消，不写入错误状态，只清除 loading 状态
+        await updateConversation(conversationId, (current) => ({
+          ...current,
+          turns: (current.turns ?? []).map((turn) =>
+            turn.id === turnId
+              ? {
+                ...turn,
+                status: "error" as const,
+                error: "已取消生成",
+                images: turn.images.map((image) => ({
+                  ...image,
+                  status: "error" as const,
+                  error: "已取消生成",
+                })),
+              }
+              : turn,
+          ),
+        }));
+        return;
+      }
+      const message = humanizeError(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -1272,11 +1440,16 @@ export default function ImagePage() {
       }));
       toast.error(message);
     } finally {
+      requestAbortControllerRef.current = null;
       finishImageTask(conversationId, turnId);
       setIsSubmitting(false);
       setActiveRequest(null);
       setSubmitStartedAt(null);
     }
+  };
+
+  const handleCancel = () => {
+    requestAbortControllerRef.current?.abort();
   };
 
   return (
@@ -1285,7 +1458,7 @@ export default function ImagePage() {
         "grid grid-cols-1 gap-1.5",
         historyCollapsed
           ? "lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)]"
-          : "lg:h-full lg:min-h-0 lg:grid-cols-[280px_minmax(0,1fr)]",
+          : "lg:h-full lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)]",
       )}
     >
       {!historyCollapsed ? (
@@ -1305,39 +1478,26 @@ export default function ImagePage() {
       ) : null}
 
       <div className="order-1 flex flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden">
-        <div className="shrink-0 border-b border-stone-200/80 px-5 py-3 sm:px-6">
+        <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-[14px] bg-stone-950 text-white shadow-sm">
-                <ImageIcon className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-[15px] font-semibold tracking-tight text-stone-950">图片工作台</h1>
-                  <span className="hidden truncate text-[13px] text-stone-400 sm:inline">从一个提示词，开始完整的图像工作流</span>
-                  {selectedConversation?.title ? (
-                    <span className="truncate rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-600">
-                      {selectedConversation.title}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="shrink-0 text-sm font-medium text-stone-900">图片工作台</h1>
+              <span className="text-stone-300">/</span>
+              {selectedConversation?.title ? (
+                <span className="truncate text-xs text-stone-500">{selectedConversation.title}</span>
+              ) : (
+                <span className="truncate text-xs text-stone-400">新会话草稿</span>
+              )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="hidden items-center gap-1.5 rounded-full bg-stone-950/[0.06] px-3 py-1.5 text-xs font-medium text-stone-700 xl:inline-flex">
-                <span className="size-1.5 rounded-full bg-stone-400" />
-                {imageModel}
-              </span>
-              <button
-                type="button"
-                onClick={() => setHistoryCollapsed((current) => !current)}
-                className="inline-flex size-8 items-center justify-center rounded-xl border border-stone-200 bg-white text-stone-500 transition hover:bg-stone-50 hover:text-stone-800"
-                title={historyCollapsed ? "展开历史" : "收起历史"}
-              >
-                {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setHistoryCollapsed((current) => !current)}
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
+              title={historyCollapsed ? "展开历史" : "收起历史"}
+            >
+              {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+            </button>
           </div>
         </div>
 
@@ -1401,6 +1561,7 @@ export default function ImagePage() {
             onSubmit={() => {
               void handleSubmit();
             }}
+            onCancel={handleCancel}
             isSubmitting={isSubmitting}
             uploadInputRef={uploadInputRef}
             maskInputRef={maskInputRef}
@@ -1427,3 +1588,6 @@ export default function ImagePage() {
     </section>
   );
 }
+
+
+

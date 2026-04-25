@@ -3,6 +3,7 @@
 import localforage from "localforage";
 
 import type { ImageModel } from "@/lib/api";
+import { httpRequest } from "@/lib/request";
 
 // ─────────────────────────────────────────────
 // Types
@@ -15,13 +16,22 @@ export type StoredSourceImage = {
   role: "image" | "mask";
   name: string;
   dataUrl: string;
+  /** 自动继承上下文时设为 true，渲染时隐藏，不向用户展示 */
+  hiddenInConversation?: boolean;
+  image_id?: string;
+  file_path?: string;
 };
 
 export type StoredImage = {
   id: string;
   status?: "loading" | "success" | "error";
   b64_json?: string;
+  url?: string;
+  image_id?: string;
+  file_path?: string;
+  revised_prompt?: string;
   error?: string;
+  text?: string;
   // Extended fields for multi-turn / edit / upscale support
   file_id?: string;
   gen_id?: string;
@@ -65,44 +75,50 @@ export type ImageConversation = {
 };
 
 // ─────────────────────────────────────────────
-// Storage instance
+// Server-backed persistence
 // ─────────────────────────────────────────────
 
-const imageConversationStorage = localforage.createInstance({
+
+const legacyImageConversationStorage = localforage.createInstance({
   name: "chatgpt2api-studio",
   storeName: "image_conversations",
 });
 
 const IMAGE_CONVERSATIONS_KEY = "items";
-
-// ─────────────────────────────────────────────
-// In-memory cache
-// ─────────────────────────────────────────────
-
 let cachedConversations: ImageConversation[] | null = null;
-let loadPromise: Promise<ImageConversation[]> | null = null;
+let legacyMigrationPromise: Promise<void> | null = null;
 
-/** Pending write: the latest list that should be flushed to storage. */
-let writeQueue: ImageConversation[] | null = null;
-let writePending = false;
-
-async function flushWriteQueue(): Promise<void> {
-  if (writePending) return;
-  writePending = true;
-  // Yield to allow multiple synchronous callers to coalesce.
-  await Promise.resolve();
-  const snapshot = writeQueue;
-  writeQueue = null;
-  writePending = false;
-  if (snapshot !== null) {
-    await imageConversationStorage.setItem(IMAGE_CONVERSATIONS_KEY, snapshot);
-    cachedConversations = snapshot;
-  }
+function sortConversations(items: ImageConversation[]): ImageConversation[] {
+  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-function scheduleWrite(items: ImageConversation[]): void {
-  writeQueue = items;
-  flushWriteQueue();
+async function migrateLegacyLocalHistoryIfNeeded(serverItems: ImageConversation[]): Promise<ImageConversation[] | null> {
+  if (serverItems.length > 0) return null;
+  if (!legacyMigrationPromise) {
+    legacyMigrationPromise = (async () => {
+      const legacyItems = await legacyImageConversationStorage.getItem<ImageConversation[]>(IMAGE_CONVERSATIONS_KEY);
+      const normalized = sortConversations((legacyItems || []).map(normalizeConversation));
+      if (normalized.length === 0) return;
+      for (const item of normalized) {
+        await httpRequest<{ item: ImageConversation }>("/api/image-conversations", {
+          method: "POST",
+          body: item,
+        });
+      }
+      await legacyImageConversationStorage.removeItem(IMAGE_CONVERSATIONS_KEY);
+    })();
+  }
+  await legacyMigrationPromise;
+  const migrated = await httpRequest<{ items: ImageConversation[] }>("/api/image-conversations");
+  return sortConversations((migrated.items || []).map(normalizeConversation));
+}
+
+async function fetchConversations(): Promise<ImageConversation[]> {
+  const response = await httpRequest<{ items: ImageConversation[] }>("/api/image-conversations");
+  const items = sortConversations((response.items || []).map(normalizeConversation));
+  const migrated = await migrateLegacyLocalHistoryIfNeeded(items);
+  cachedConversations = migrated ?? items;
+  return cachedConversations;
 }
 
 // ─────────────────────────────────────────────
@@ -119,7 +135,7 @@ export function normalizeStoredImage(image: StoredImage): StoredImage {
   }
   return {
     ...image,
-    status: image.b64_json ? "success" : "loading",
+    status: image.b64_json || image.url ? "success" : "loading",
   };
 }
 
@@ -138,7 +154,6 @@ export function normalizeConversation(
   const hasTurns =
     Array.isArray(conversation.turns) && conversation.turns.length > 0;
 
-  // Build a legacy turn from root fields when there are no turns yet.
   const legacyTurn: ImageConversationTurn | null = !hasTurns
     ? normalizeTurn({
       id: `${conversation.id}-legacy`,
@@ -169,89 +184,80 @@ export function normalizeConversation(
   };
 }
 
-function sortConversations(items: ImageConversation[]): ImageConversation[] {
-  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-// ─────────────────────────────────────────────
-// Core load (with cache)
-// ─────────────────────────────────────────────
-
-async function loadConversations(): Promise<ImageConversation[]> {
-  if (cachedConversations !== null) return cachedConversations;
-
-  if (!loadPromise) {
-    loadPromise = imageConversationStorage
-      .getItem<ImageConversation[]>(IMAGE_CONVERSATIONS_KEY)
-      .then((raw) => {
-        const items = sortConversations(
-          (raw || []).map(normalizeConversation),
-        );
-        cachedConversations = items;
-        loadPromise = null;
-        return items;
-      });
-  }
-
-  return loadPromise;
-}
-
 // ─────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────
 
 export async function listImageConversations(): Promise<ImageConversation[]> {
-  return loadConversations();
+  if (cachedConversations !== null) return cachedConversations;
+  return fetchConversations();
 }
 
 export async function getImageConversation(
   id: string,
 ): Promise<ImageConversation | null> {
-  const items = await loadConversations();
-  return items.find((item) => item.id === id) ?? null;
+  try {
+    const response = await httpRequest<{ item: ImageConversation }>(`/api/image-conversations/${encodeURIComponent(id)}`);
+    return normalizeConversation(response.item);
+  } catch {
+    const items = await listImageConversations();
+    return items.find((item) => item.id === id) ?? null;
+  }
 }
 
 export async function saveImageConversation(
   conversation: ImageConversation,
 ): Promise<void> {
-  const items = await loadConversations();
   const normalized = normalizeConversation(conversation);
-  const next = sortConversations([
-    normalized,
-    ...items.filter((item) => item.id !== conversation.id),
-  ]);
-  cachedConversations = next;
-  scheduleWrite(next);
+  const response = await httpRequest<{ item: ImageConversation }>("/api/image-conversations", {
+    method: "POST",
+    body: normalized,
+  });
+  const saved = normalizeConversation(response.item);
+  const items = cachedConversations ?? [];
+  cachedConversations = sortConversations([saved, ...items.filter((item) => item.id !== saved.id)]);
 }
 
 export async function updateImageConversation(
   id: string,
   updater: (prev: ImageConversation) => ImageConversation,
 ): Promise<ImageConversation> {
-  const items = await loadConversations();
-  const existing = items.find((item) => item.id === id);
-  if (!existing) {
-    throw new Error(`ImageConversation not found: ${id}`);
-  }
-  const updated = normalizeConversation(updater(existing));
-  const next = sortConversations([
-    updated,
-    ...items.filter((item) => item.id !== id),
-  ]);
-  cachedConversations = next;
-  scheduleWrite(next);
-  return updated;
+  const existing = await getImageConversation(id);
+  const base: ImageConversation = existing ?? {
+    id,
+    title: "",
+    mode: "generate",
+    prompt: "",
+    model: "gpt-image-1",
+    count: 1,
+    scale: undefined,
+    sourceImages: [],
+    images: [],
+    turns: [],
+    createdAt: new Date().toISOString(),
+    status: "generating",
+  };
+
+  const updated = normalizeConversation(updater(base));
+  const response = await httpRequest<{ item: ImageConversation }>(`/api/image-conversations/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: updated,
+  });
+  const saved = normalizeConversation(response.item);
+  const items = cachedConversations ?? [];
+  cachedConversations = sortConversations([saved, ...items.filter((item) => item.id !== id)]);
+  return saved;
 }
 
 export async function deleteImageConversation(id: string): Promise<void> {
-  const items = await loadConversations();
-  const next = items.filter((item) => item.id !== id);
-  cachedConversations = next;
-  scheduleWrite(next);
+  await httpRequest(`/api/image-conversations/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const items = cachedConversations ?? [];
+  cachedConversations = items.filter((item) => item.id !== id);
 }
 
 export async function clearImageConversations(): Promise<void> {
+  await httpRequest("/api/image-conversations", { method: "DELETE" });
   cachedConversations = [];
-  writeQueue = null;
-  await imageConversationStorage.removeItem(IMAGE_CONVERSATIONS_KEY);
+  await legacyImageConversationStorage.removeItem(IMAGE_CONVERSATIONS_KEY);
 }
+

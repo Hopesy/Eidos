@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
+import { addRequestLog } from "@/server/request-log-store";
 
 import { fetchRemoteAccountInfo, generateImageResult, ImageGenerationError, isTokenInvalidError } from "@/server/providers/openai-client";
-import { getRuntimeConfig } from "@/server/config";
+import { logger } from "@/server/logger";
+import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
 import type { AccountRecord, AccountRefreshError, AccountStatus, AccountType, PublicAccount } from "@/server/types";
 
 let nextIndex = 0;
-let watcherStarted = false;
 
 function cleanToken(value: unknown) {
   return String(value || "").trim();
@@ -327,12 +328,21 @@ export async function fetchAccountRemoteInfo(accessToken: string) {
 export async function refreshAccountState(accessToken: string): Promise<AccountRecord | null> {
   try {
     const info = await fetchAccountRemoteInfo(accessToken);
-    return await updateAccount(accessToken, info);
+    const result = await updateAccount(accessToken, info);
+    logger.info("account-service", "账号刷新成功", {
+      email: info.email,
+      type: info.type,
+      quota: info.quota,
+      status: info.status,
+    });
+    return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("/backend-api/me failed: HTTP 401")) {
+      logger.warn("account-service", "账号 401 异常，标记禁用", { token: accessToken.slice(0, 16) + "..." });
       return updateAccount(accessToken, { status: "异常", quota: 0 });
     }
+    logger.error("account-service", "账号刷新失败", { message, token: accessToken.slice(0, 16) + "..." });
     return null;
   }
 }
@@ -378,10 +388,17 @@ export async function refreshAccounts(accessTokens: string[]) {
 
 export async function getAvailableAccessToken(excludedTokens?: Set<string>) {
   const accounts = await listRecords();
-  const available = accounts.filter((item) => isImageAccountAvailable(item) && !excludedTokens?.has(item.access_token));
-  if (available.length === 0) {
-    throw new Error("No available tokens found in data/accounts.json");
+  // 过滤：未被禁用 + 未在排除集合中（quota=0 的新导入账号也允许参与，刷新后再判断实际余量）
+  const candidates = accounts.filter(
+    (item) => item.status !== "禁用" && !excludedTokens?.has(item.access_token),
+  );
+  if (candidates.length === 0) {
+    throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
   }
+
+  // 优先使用已有 quota 的账号（避免对每个新账号都发起远端请求拖慢速度）
+  const withQuota = candidates.filter((item) => item.quota > 0);
+  const available = withQuota.length > 0 ? withQuota : candidates;
 
   while (available.length > 0) {
     const account = available[nextIndex % available.length];
@@ -395,26 +412,64 @@ export async function getAvailableAccessToken(excludedTokens?: Set<string>) {
     available.splice(0, available.length, ...nextAccounts);
   }
 
-  throw new Error("No available tokens found in data/accounts.json");
+  throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
 }
 
-export async function generateWithPool(prompt: string, model: string, count: number) {
+export async function generateWithPool(
+  prompt: string,
+  model: string,
+  count: number,
+  options: { route?: string; operation?: string } = {},
+) {
+  const startedAt = new Date().toISOString();
+  const startTime = Date.now();
   let created: number | null = null;
   const data: Array<Record<string, unknown>> = [];
+  const lastErrors: string[] = [];
+  let lastAccountEmail: string | undefined;
+  let lastAccountType: string | undefined;
 
-  for (let index = 1; index <= count; index += 1) {
+  const route = options.route ?? "generations";
+  const operation = options.operation ?? "generate";
+
+  logger.info("account-service", "开始图片生成", { model, count, prompt: prompt.slice(0, 80) });
+
+  let requestIndex = 1;
+  while (data.length < count) {
     const attempted = new Set<string>();
+    const needed = count - data.length;
+    logger.info("account-service", `第 ${requestIndex} 次请求，还需 ${needed} 张`, { model });
+
+    let succeeded = false;
     while (true) {
       let requestToken = "";
       try {
         requestToken = await getAvailableAccessToken(attempted);
-      } catch {
+      } catch (noTokenErr) {
+        const msg = noTokenErr instanceof Error ? noTokenErr.message : String(noTokenErr);
+        lastErrors.push(msg);
+        logger.warn("account-service", `第 ${requestIndex} 次请求：无可用 token`, { reason: msg });
         break;
       }
 
+      const tokenHint = requestToken.slice(0, 16) + "...";
+      logger.info("account-service", `第 ${requestIndex} 次请求：使用 token`, { token: tokenHint, model });
+
       try {
         const account = await getAccount(requestToken);
-        const result = await generateImageResult(requestToken, prompt, model, account);
+        if (account) {
+          lastAccountEmail = account.email ?? undefined;
+          lastAccountType = account.type ?? undefined;
+        }
+        const result = await generateImageResult(requestToken, prompt, model, account) as { created: number; data: Array<Record<string, unknown>> };
+        result.data = await persistImageResponseItems(result.data, {
+          route,
+          operation,
+          model,
+          prompt,
+          accountEmail: account?.email ?? null,
+          accountType: account?.type ?? null,
+        }, { keepBase64: true });
         await markImageResult(requestToken, true);
         if (created === null) {
           created = Number(result.created || Math.floor(Date.now() / 1000));
@@ -422,27 +477,72 @@ export async function generateWithPool(prompt: string, model: string, count: num
         if (Array.isArray(result.data)) {
           data.push(...result.data);
         }
+        logger.info("account-service", `第 ${requestIndex} 次请求：成功，累计 ${data.length}/${count} 张`, {
+          token: tokenHint,
+          elapsedMs: Date.now() - startTime,
+        });
+        succeeded = true;
         break;
       } catch (error) {
         await markImageResult(requestToken, false);
         const message = error instanceof Error ? error.message : String(error);
+        lastErrors.push(message);
+        logger.error("account-service", `第 ${requestIndex} 次请求：失败`, { token: tokenHint, error: message.slice(0, 200) });
         if (isTokenInvalidError(message)) {
+          logger.warn("account-service", "Token 无效，自动移除", { token: tokenHint });
           await removeToken(requestToken);
           attempted.add(requestToken);
           continue;
         }
-        if (error instanceof ImageGenerationError) {
-          break;
-        }
-        throw error;
+        break;
       }
+    }
+
+    requestIndex += 1;
+    // 若本次请求未成功（无可用 token 或非 token 问题错误），退出外循环避免死循环
+    if (!succeeded) {
+      break;
     }
   }
 
+  const finishedAt = new Date().toISOString();
+  const durationMs = Date.now() - startTime;
+
   if (data.length === 0) {
-    throw new ImageGenerationError("image generation failed");
+    const detail = lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts";
+    const errMsg = `image generation failed: ${detail}`;
+    logger.error("account-service", "图片生成全部失败", { model, count, detail, elapsedMs: durationMs });
+    addRequestLog({
+      startedAt,
+      finishedAt,
+      endpoint: `POST /v1/images/${route}`,
+      operation,
+      route,
+      model,
+      count,
+      success: false,
+      error: detail.slice(0, 300),
+      durationMs,
+      accountEmail: lastAccountEmail,
+      accountType: lastAccountType,
+    });
+    throw new ImageGenerationError(errMsg);
   }
 
+  logger.info("account-service", "图片生成完成", { model, count, got: data.length, elapsedMs: durationMs });
+  addRequestLog({
+    startedAt,
+    finishedAt,
+    endpoint: `POST /v1/images/${route}`,
+    operation,
+    route,
+    model,
+    count,
+    success: true,
+    durationMs,
+    accountEmail: lastAccountEmail,
+    accountType: lastAccountType,
+  });
   return {
     created: created ?? Math.floor(Date.now() / 1000),
     data,
@@ -450,16 +550,7 @@ export async function generateWithPool(prompt: string, model: string, count: num
 }
 
 export async function ensureAccountWatcherStarted() {
-  if (watcherStarted || process.env.NODE_ENV === "test") {
-    return;
-  }
-
-  watcherStarted = true;
-  const config = await getRuntimeConfig();
-  setInterval(async () => {
-    const limitedTokens = await listLimitedTokens();
-    if (limitedTokens.length > 0) {
-      await refreshAccounts(limitedTokens);
-    }
-  }, config.refreshAccountIntervalMinute * 60 * 1000).unref?.();
+  // 定期自动刷新已禁用，账号状态由用户手动刷新
 }
+
+

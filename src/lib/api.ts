@@ -108,7 +108,10 @@ export type AccountQuotaResponse = {
 
 export type ImageResponseItem = {
   url?: string;
+  image_id?: string;
+  file_path?: string;
   b64_json?: string;
+  text?: string;
   revised_prompt?: string;
   file_id?: string;
   gen_id?: string;
@@ -133,17 +136,14 @@ export type RequestLogItem = {
   finishedAt: string;
   endpoint: string;
   operation: string;
-  imageMode: ImageProviderMode | string;
-  direction: "official" | "cpa" | string;
   route: string;
-  accountType?: string;
-  accountEmail?: string;
-  accountFile?: string;
-  requestedModel?: string;
-  upstreamModel?: string;
-  preferred: boolean;
+  model: string;
+  count: number;
   success: boolean;
   error?: string;
+  durationMs: number;
+  accountEmail?: string;
+  accountType?: string;
 };
 
 // ─── 版本信息类型 ─────────────────────────────────────────────────────────────
@@ -197,6 +197,8 @@ export type ConfigPayload = {
   cpa?: {
     enabled?: boolean;
     baseUrl?: string;
+    managementKey?: string;
+    providerType?: string;
     [key: string]: unknown;
   };
   log?: {
@@ -329,7 +331,7 @@ export async function fetchSyncStatus() {
   return httpRequest<SyncStatusResponse>("/api/sync/status");
 }
 
-export async function runSync(direction: "pull" | "push") {
+export async function runSync(direction: "pull" | "push" | "both") {
   return httpRequest<SyncRunResult>("/api/sync/run", {
     method: "POST",
     body: { direction },
@@ -373,6 +375,7 @@ export async function generateImage(
   prompt: string,
   model: ImageModel = "gpt-image-1",
   count = 1,
+  signal?: AbortSignal,
 ) {
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/generations",
@@ -384,6 +387,7 @@ export async function generateImage(
         n: count,
         response_format: "b64_json",
       },
+      signal,
     },
   );
 }
@@ -396,8 +400,9 @@ export async function editImage(params: {
   mask?: File | null;
   sourceReference?: InpaintSourceReference | null;
   model?: ImageModel;
+  signal?: AbortSignal;
 }) {
-  const { prompt, images, mask, sourceReference, model = "gpt-image-1" } =
+  const { prompt, images, mask, sourceReference, model = "gpt-image-1", signal } =
     params;
   const formData = new FormData();
   formData.append("prompt", prompt);
@@ -426,6 +431,7 @@ export async function editImage(params: {
     {
       method: "POST",
       body: formData,
+      signal,
     },
   );
 }
@@ -437,8 +443,9 @@ export async function upscaleImage(params: {
   prompt?: string;
   scale?: number;
   model?: ImageModel;
+  signal?: AbortSignal;
 }) {
-  const { image, prompt, scale, model = "gpt-image-1" } = params;
+  const { image, prompt, scale, model = "gpt-image-1", signal } = params;
   const formData = new FormData();
   formData.append("image", image);
   formData.append("model", model);
@@ -454,6 +461,8 @@ export async function upscaleImage(params: {
     {
       method: "POST",
       body: formData,
+      signal,
     },
   );
 }
+

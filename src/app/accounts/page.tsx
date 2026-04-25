@@ -6,19 +6,17 @@ import type { ComponentProps } from "react";
 import {
   Ban,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   CircleAlert,
   CircleOff,
   Copy,
   FileUp,
   LoaderCircle,
   Pencil,
+  RefreshCcw,
   RefreshCw,
   Search,
   Shield,
   Trash2,
-  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -104,15 +102,6 @@ const syncMeta: Record<
   remote_only: { label: "远端独有", badge: "info" },
   remote_deleted: { label: "远端已删", badge: "danger" },
 };
-
-const metricCards = [
-  { key: "total", label: "账户总数", color: "text-stone-900", icon: UserRound },
-  { key: "active", label: "正常账户", color: "text-emerald-600", icon: CheckCircle2 },
-  { key: "limited", label: "限流账户", color: "text-orange-500", icon: CircleAlert },
-  { key: "abnormal", label: "异常账户", color: "text-rose-500", icon: CircleOff },
-  { key: "disabled", label: "禁用账户", color: "text-stone-500", icon: Ban },
-  { key: "quota", label: "剩余额度", color: "text-blue-500", icon: RefreshCw },
-] as const;
 
 function formatCompact(value: number) {
   if (value >= 1000) {
@@ -247,8 +236,6 @@ export default function AccountsPage() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<AccountType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<AccountStatus | "all">("all");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState("10");
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [editType, setEditType] = useState<AccountType>("Free");
   const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
@@ -262,7 +249,7 @@ export default function AccountsPage() {
   const [accountQuotaMap, setAccountQuotaMap] = useState<Record<string, AccountQuotaResponse>>({});
   const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
   const [isSyncLoading, setIsSyncLoading] = useState(true);
-  const [syncRunningDirection, setSyncRunningDirection] = useState<"pull" | "push" | null>(null);
+  const [syncRunningDirection, setSyncRunningDirection] = useState<"pull" | "push" | "both" | null>(null);
 
   const loadAccounts = async (silent = false) => {
     if (!silent) {
@@ -347,10 +334,7 @@ export default function AccountsPage() {
     });
   }, [accounts, query, statusFilter, typeFilter]);
 
-  const pageCount = Math.max(1, Math.ceil(filteredAccounts.length / Number(pageSize)));
-  const safePage = Math.min(page, pageCount);
-  const startIndex = (safePage - 1) * Number(pageSize);
-  const currentRows = filteredAccounts.slice(startIndex, startIndex + Number(pageSize));
+  const currentRows = filteredAccounts;
   const allCurrentSelected = currentRows.length > 0 && currentRows.every((row) => selectedIds.includes(row.id));
 
   const summary = useMemo(() => {
@@ -382,20 +366,6 @@ export default function AccountsPage() {
     }, {});
   }, [syncView.accounts]);
 
-  const paginationItems = useMemo(() => {
-    const items: (number | "...")[] = [];
-    const start = Math.max(1, safePage - 1);
-    const end = Math.min(pageCount, safePage + 1);
-
-    if (start > 1) items.push(1);
-    if (start > 2) items.push("...");
-    for (let current = start; current <= end; current += 1) items.push(current);
-    if (end < pageCount - 1) items.push("...");
-    if (end < pageCount) items.push(pageCount);
-
-    return items;
-  }, [pageCount, safePage]);
-
   const handleImportFiles = async (files: FileList | null) => {
     const normalizedFiles = files ? Array.from(files) : [];
     if (normalizedFiles.length === 0) {
@@ -407,7 +377,6 @@ export default function AccountsPage() {
       const data = await importAccountFiles(normalizedFiles);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
-      setPage(1);
       await loadSync({ silent: true, force: true });
 
       const failedMessage = data.failed?.[0]?.error;
@@ -438,7 +407,12 @@ export default function AccountsPage() {
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
       await loadSync({ silent: true, force: true });
-      toast.success(`删除 ${data.removed ?? 0} 个账户`);
+      const removed = data.removed ?? 0;
+      if (syncView.configured) {
+        toast.success(`本地已删除 ${removed} 个账户；若这些账号已同步到 CPA 远端，仍需在远端管理端删除，否则后续执行 pull / both 可能重新出现。`);
+      } else {
+        toast.success(`本地已删除 ${removed} 个账户`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "删除账户失败";
       toast.error(message);
@@ -498,7 +472,7 @@ export default function AccountsPage() {
     }
   };
 
-  const handleRunSync = async (direction: "pull" | "push") => {
+  const handleRunSync = async (direction: "pull" | "push" | "both") => {
     setSyncRunningDirection(direction);
     try {
       const result = await runSync(direction);
@@ -508,7 +482,11 @@ export default function AccountsPage() {
         toast.error(result.error);
         return;
       }
-      if (direction === "pull") {
+      if (direction === "both") {
+        toast.success(
+          `CPA 同步完成：拉取 ${result.downloaded} 个，推送 ${result.uploaded} 个，状态对齐 ${result.disabled_aligned} 个`,
+        );
+      } else if (direction === "pull") {
         toast.success(`从 CPA 同步完成：拉取 ${result.downloaded} 个账号，状态对齐 ${result.disabled_aligned}`);
       } else {
         toast.success(`同步至 CPA 完成：推送 ${result.uploaded} 个账号，状态对齐 ${result.disabled_aligned}`);
@@ -572,6 +550,14 @@ export default function AccountsPage() {
             <h1 className="text-2xl font-semibold tracking-tight text-stone-950">号池管理</h1>
           </div>
         </div>
+        {!isSyncLoading && !syncView.configured ? (
+          <div className="flex items-center gap-1.5 self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-600">
+            <span>CPA 同步未配置</span>
+            <Link href="/settings" className="font-medium underline underline-offset-2 hover:text-amber-800">
+              前往配置
+            </Link>
+          </div>
+        ) : null}
       </section>
 
       <input
@@ -660,10 +646,33 @@ export default function AccountsPage() {
       <section className="mt-6 space-y-4">
         <Card className="rounded-2xl border-white/80 bg-white/90 shadow-sm">
           <CardContent className="space-y-4 p-5">
+            {/* 账号统计 + 标题 + 操作按钮 */}
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold tracking-tight">CPA 同步</h2>
-                <p className="text-sm text-stone-500">通过 `CLIProxyAPI /v0/management/auth-files` 双向同步本地 auth 文件。</p>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold tracking-tight">CPA 同步</h2>
+                  <p className="text-sm text-stone-500">查看本地账号与 CPA 远端状态，并执行双向同步。</p>
+                </div>
+                <div className="flex flex-wrap items-stretch gap-2">
+                  {([
+                    { label: "账户总数", value: summary.total, color: "text-stone-900", ring: "border-stone-200" },
+                    { label: "正常", value: summary.active, color: "text-emerald-600", ring: "border-emerald-100" },
+                    { label: "限流", value: summary.limited, color: "text-amber-500", ring: "border-amber-100" },
+                    { label: "异常", value: summary.abnormal, color: "text-red-400", ring: "border-red-100/60" },
+                    { label: "禁用", value: summary.disabled, color: "text-stone-400", ring: "border-stone-200" },
+                  ] as const).map(({ label, value, color, ring }) => (
+                    <div
+                      key={label}
+                      className={cn(
+                        "min-w-[88px] rounded-2xl border bg-stone-50/80 px-3 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.04)]",
+                        ring,
+                      )}
+                    >
+                      <div className="text-[11px] font-medium leading-none text-stone-400">{label}</div>
+                      <div className={cn("mt-2 text-lg font-semibold tabular-nums leading-none", color)}>{value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Button
@@ -673,40 +682,24 @@ export default function AccountsPage() {
                   disabled={isSyncLoading || syncRunningDirection !== null}
                 >
                   <RefreshCw className={cn("size-4", isSyncLoading ? "animate-spin" : "")} />
-                  刷新同步状态
+                  刷新
                 </Button>
                 <Button
                   className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
-                  onClick={() => void handleRunSync("pull")}
+                  onClick={() => void handleRunSync("both")}
                   disabled={!syncView.configured || isSyncLoading || syncRunningDirection !== null}
                 >
-                  {syncRunningDirection === "pull" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                  从 CPA 同步
-                </Button>
-                <Button
-                  className="h-10 rounded-xl bg-stone-900 px-4 text-white hover:bg-stone-800"
-                  onClick={() => void handleRunSync("push")}
-                  disabled={!syncView.configured || isSyncLoading || syncRunningDirection !== null}
-                >
-                  {syncRunningDirection === "push" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                  同步至 CPA
+                  {syncRunningDirection !== null ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    <RefreshCcw className="size-4" />
+                  )}
+                  {syncRunningDirection !== null ? "同步中..." : "同步 CPA"}
                 </Button>
               </div>
             </div>
 
-            {isSyncLoading ? (
-              <div className="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 text-sm leading-6 text-stone-500">
-                正在读取 CPA 同步状态...
-              </div>
-            ) : !syncView.configured ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-700">
-                后端还没有配置 CPA 同步。请前往
-                <Link href="/settings" className="mx-1 font-medium underline decoration-amber-400 underline-offset-4">
-                  配置管理
-                </Link>
-                开启 <code>sync.enabled = true</code>，并填写 <code>sync.base_url</code> 与 <code>sync.management_key</code>。
-              </div>
-            ) : (
+            {isSyncLoading ? null : !syncView.configured ? null : (
               <>
                 <div className="grid gap-3 md:grid-cols-5">
                   {([
@@ -731,10 +724,32 @@ export default function AccountsPage() {
                   ) : null}
                   {syncView.lastRun ? (
                     <Badge variant={syncView.lastRun.ok ? "success" : "danger"} className="rounded-lg px-3 py-1">
-                      最近一次同步：{new Date(syncView.lastRun.finished_at).toLocaleString("zh-CN")}
+                      最近一次同步：{new Date(syncView.lastRun.finished_at).toLocaleString("zh-CN")} · {syncView.lastRun.direction || "both"}
                     </Badge>
                   ) : null}
                 </div>
+
+                {syncView.lastRun ? (
+                  <div className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-4">
+                    <div className="mb-2 text-sm font-medium text-stone-700">最近一次同步结果</div>
+                    <div className="grid gap-3 md:grid-cols-4">
+                      {[
+                        ["拉取", syncView.lastRun.downloaded],
+                        ["推送", syncView.lastRun.uploaded],
+                        ["状态对齐", syncView.lastRun.disabled_aligned],
+                        ["失败", (syncView.lastRun.download_failed || 0) + (syncView.lastRun.upload_failed || 0) + (syncView.lastRun.disabled_align_failed || 0)],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-2xl border border-stone-100 bg-white px-4 py-3">
+                          <div className="text-xs font-medium text-stone-400">{label}</div>
+                          <div className="mt-2 text-lg font-semibold tracking-tight text-stone-900">{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {syncView.lastRun.error ? (
+                      <div className="mt-3 text-sm text-rose-600">{syncView.lastRun.error}</div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {syncView.accounts.length > 0 ? (
                   <div className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-4">
@@ -762,30 +777,6 @@ export default function AccountsPage() {
         </Card>
       </section>
 
-      <section className="mt-5 space-y-4">
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-          {metricCards.map((item) => {
-            const Icon = item.icon;
-            const value = summary[item.key];
-            return (
-              <Card key={item.key} className="rounded-2xl border-white/80 bg-white/90 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="mb-4 flex items-start justify-between">
-                    <span className="text-xs font-medium text-stone-400">{item.label}</span>
-                    <Icon className="size-4 text-stone-400" />
-                  </div>
-                  <div className={cn("text-[1.75rem] font-semibold tracking-tight", item.color)}>
-                    <span className={typeof value === "number" ? "" : "text-[1.1rem]"}>
-                      {typeof value === "number" ? formatCompact(value) : value}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
       <section className="mt-5 space-y-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
@@ -802,7 +793,6 @@ export default function AccountsPage() {
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
-                  setPage(1);
                 }}
                 placeholder="搜索邮箱 / 文件名 / 备注"
                 className="h-10 rounded-xl border-stone-200 bg-white/85 pl-10"
@@ -812,7 +802,6 @@ export default function AccountsPage() {
               value={typeFilter}
               onValueChange={(value) => {
                 setTypeFilter(value as AccountType | "all");
-                setPage(1);
               }}
             >
               <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
@@ -830,7 +819,6 @@ export default function AccountsPage() {
               value={statusFilter}
               onValueChange={(value) => {
                 setStatusFilter(value as AccountStatus | "all");
-                setPage(1);
               }}
             >
               <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
@@ -889,7 +877,7 @@ export default function AccountsPage() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="h-8 rounded-lg px-3 text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                  className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
                   onClick={() => void handleDeleteTokens(abnormalTokens)}
                   disabled={abnormalTokens.length === 0 || isDeleting}
                 >
@@ -898,12 +886,12 @@ export default function AccountsPage() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="h-8 rounded-lg px-3 text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                  className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
                   onClick={() => void handleDeleteTokens(selectedTokens)}
                   disabled={selectedTokens.length === 0 || isDeleting}
                 >
                   {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  删除所选
+                  删除本地所选
                 </Button>
                 {selectedIds.length > 0 ? (
                   <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
@@ -913,29 +901,25 @@ export default function AccountsPage() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1120px] text-left">
-                <thead className="border-b border-stone-100 text-[11px] text-stone-400 uppercase tracking-[0.18em]">
+            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-375px)]">
+              <table className="w-full min-w-[1060px] text-left">
+                <thead className="border-b border-stone-100/80 bg-stone-50/60">
                   <tr>
-                    <th className="w-12 px-4 py-3 text-center">
+                    <th className="w-10 px-3 py-2 text-center">
                       <Checkbox checked={allCurrentSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
                     </th>
-                    <th className="w-80 px-4 py-3 whitespace-nowrap">账号 / Token</th>
-                    <th className="w-28 px-4 py-3 text-center whitespace-nowrap">类型</th>
-                    <th className="w-24 px-4 py-3 text-center whitespace-nowrap">状态</th>
-                    <th className="w-28 px-4 py-3 text-center whitespace-nowrap">同步</th>
-                    <th className="w-32 px-4 py-3 text-center whitespace-nowrap">图片额度</th>
-                    <th className="w-44 px-4 py-3 text-center whitespace-nowrap">图片重置</th>
-                    <th className="w-18 px-4 py-3 text-center whitespace-nowrap">成功</th>
-                    <th className="w-18 px-4 py-3 text-center whitespace-nowrap">失败</th>
-                    <th className="w-24 px-4 py-3 text-center whitespace-nowrap">操作</th>
+                    <th className="w-72 px-3 py-2 text-left text-[11px] font-medium text-stone-400 whitespace-nowrap">账号 / Token</th>
+                    <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">状态</th>
+                    <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">类型</th>
+                    <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片额度</th>
+                    <th className="w-40 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片重置</th>
+                    <th className="w-28 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentRows.map((account) => {
                     const status = statusMeta[account.status];
                     const StatusIcon = status.icon;
-                    const syncState = (account.fileName ? syncMap[account.fileName]?.status : undefined) || account.syncStatus;
                     const liveQuota = accountQuotaMap[account.id];
                     const imageGenLimit = extractImageGenLimit(account);
                     const imageGenRemaining = liveQuota?.image_gen_remaining ?? imageGenLimit.remaining;
@@ -945,9 +929,10 @@ export default function AccountsPage() {
                     return (
                       <tr
                         key={account.id}
-                        className="border-b border-stone-100/80 text-sm text-stone-600 transition-colors hover:bg-stone-50/70"
+                        className="group border-b border-stone-100/80 text-sm transition-colors hover:bg-stone-50/60"
                       >
-                        <td className="px-4 py-3 text-center">
+                        {/* 复选框 */}
+                        <td className="px-3 py-1.5 text-center">
                           <Checkbox
                             checked={selectedIds.includes(account.id)}
                             onCheckedChange={(checked) => {
@@ -957,76 +942,84 @@ export default function AccountsPage() {
                             }}
                           />
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2 whitespace-nowrap">
-                            <span className="font-medium tracking-tight text-stone-700">{maskToken(account.access_token)}</span>
+
+                        {/* Token + Email */}
+                        <td className="px-3 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[13px] font-semibold tracking-tight text-stone-800">
+                              {maskToken(account.access_token)}
+                            </span>
                             <button
                               type="button"
-                              className="rounded-lg p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                              className="shrink-0 rounded p-0.5 text-stone-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-stone-100 hover:text-stone-600"
                               onClick={() => {
                                 void navigator.clipboard.writeText(account.access_token);
                                 toast.success("token 已复制");
                               }}
                             >
-                              <Copy className="size-4" />
+                              <Copy className="size-3.5" />
                             </button>
                           </div>
-                          <div className="mt-1 space-y-0.5 text-xs">
-                            <div className="truncate text-stone-500" title={account.email ?? ""}>
-                              {account.email ?? "—"}
-                            </div>
-                            <div className="truncate text-stone-400" title={account.fileName}>
-                              {account.fileName}
-                            </div>
+                          <div className="mt-0.5 flex flex-col gap-px">
+                            {account.email ? (
+                              <span className="truncate text-[11px] leading-4 text-stone-500" title={account.email}>
+                                {account.email}
+                              </span>
+                            ) : null}
                             {account.note ? (
-                              <div className="truncate text-stone-400" title={account.note}>
+                              <span className="truncate text-[11px] leading-4 text-stone-400" title={account.note}>
                                 {account.note}
-                              </div>
+                              </span>
                             ) : null}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          <Badge variant="secondary" className="rounded-md bg-stone-100 text-stone-700">
-                            {account.type}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          <Badge variant={status.badge} className="inline-flex items-center gap-1 rounded-md px-2 py-1">
-                            <StatusIcon className="size-3.5" />
+
+                        {/* 状态 */}
+                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                              account.status === "正常" && "bg-emerald-50 text-emerald-700",
+                              account.status === "限流" && "bg-amber-50 text-amber-700",
+                              account.status === "异常" && "bg-red-50/60 text-red-400",
+                              account.status === "禁用" && "bg-stone-100 text-stone-400",
+                            )}
+                          >
+                            <StatusIcon className="size-3" />
                             {account.status}
-                          </Badge>
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                          {syncState ? (
-                            <Badge variant={syncMeta[syncState].badge} className="rounded-md px-2 py-1">
-                              {syncMeta[syncState].label}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-stone-400">—</span>
-                          )}
+
+                        {/* 类型 */}
+                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
+                          <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
+                            {account.type}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="info" className="rounded-md">
-                                {imageGenRemaining == null ? "—" : formatQuota(imageGenRemaining)}
-                              </Badge>
-                              <button
-                                type="button"
-                                className="rounded-lg p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
-                                onClick={() => void handleRefreshAccountQuota(account)}
-                                disabled={isQuotaRefreshing}
-                              >
-                                <RefreshCw className={cn("size-3.5", isQuotaRefreshing ? "animate-spin" : "")} />
-                              </button>
-                            </div>
-                            <div className="text-[11px] text-stone-400">本地额度 {formatQuota(account.quota)}</div>
+
+                        {/* 图片额度 */}
+                        <td className="px-3 py-1.5 text-center">
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="text-sm font-semibold tabular-nums text-stone-800">
+                              {imageGenRemaining == null ? "—" : formatQuota(imageGenRemaining)}
+                            </span>
+                            <span className="text-[11px] text-stone-400">/ {formatQuota(account.quota)}</span>
+                            <button
+                              type="button"
+                              className="rounded p-0.5 text-stone-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-stone-100 hover:text-stone-600"
+                              onClick={() => void handleRefreshAccountQuota(account)}
+                              disabled={isQuotaRefreshing}
+                            >
+                              <RefreshCw className={cn("size-3", isQuotaRefreshing ? "animate-spin" : "")} />
+                            </button>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center text-xs text-stone-500 whitespace-nowrap">
+
+                        {/* 图片重置 */}
+                        <td className="px-3 py-1.5 text-center text-xs text-stone-500 whitespace-nowrap">
                           {imageGenRestore.relative ? (
                             <div
-                              className="flex items-center justify-center gap-2"
+                              className="flex items-center justify-center gap-1.5"
                               title={imageGenRestore.absolute !== "—" ? imageGenRestore.absolute : undefined}
                             >
                               <span className="font-medium text-stone-700">{imageGenRestore.relative}</span>
@@ -1034,30 +1027,38 @@ export default function AccountsPage() {
                               <span className="font-mono tabular-nums text-stone-400">{imageGenRestore.absoluteShort}</span>
                             </div>
                           ) : (
-                            <div className="truncate font-mono tabular-nums text-stone-400" title={imageGenRestore.absolute}>
-                              {imageGenRestore.absoluteShort}
-                            </div>
+                            <span className="font-mono tabular-nums text-stone-400">{imageGenRestore.absoluteShort}</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center text-stone-500 whitespace-nowrap">{account.success}</td>
-                        <td className="px-4 py-3 text-center text-stone-500 whitespace-nowrap">{account.fail}</td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1 text-stone-400">
+
+                        {/* 操作 */}
+                        <td className="px-3 py-1.5 text-center">
+                          <div className="flex items-center justify-center gap-0.5 text-stone-400">
                             <button
                               type="button"
-                              className="rounded-lg p-2 transition hover:bg-stone-100 hover:text-stone-700"
+                              className="rounded-lg p-1.5 transition hover:bg-stone-100 hover:text-stone-700"
                               onClick={() => openEditDialog(account)}
                               disabled={isUpdating}
+                              title="编辑"
                             >
-                              <Pencil className="size-4" />
+                              <Pencil className="size-3.5" />
                             </button>
                             <button
                               type="button"
-                              className="rounded-lg p-2 transition hover:bg-rose-50 hover:text-rose-500"
+                              className="rounded-lg p-1.5 transition hover:bg-sky-50 hover:text-sky-500"
+                              onClick={() => void handleRefreshSelectedAccounts([account.access_token])}
+                              title="刷新状态"
+                            >
+                              <RefreshCw className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-lg p-1.5 transition hover:bg-rose-50 hover:text-rose-500"
                               onClick={() => void handleDeleteTokens([account.access_token])}
                               disabled={isDeleting}
+                              title="删除本地账户"
                             >
-                              <Trash2 className="size-4" />
+                              <Trash2 className="size-3.5" />
                             </button>
                           </div>
                         </td>
@@ -1080,73 +1081,6 @@ export default function AccountsPage() {
               ) : null}
             </div>
 
-            <div className="border-t border-stone-100 px-4 py-4">
-              <div className="flex items-center justify-center gap-3 overflow-x-auto whitespace-nowrap">
-                <div className="shrink-0 text-sm text-stone-500">
-                  显示第 {filteredAccounts.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + Number(pageSize), filteredAccounts.length)} 条，共 {filteredAccounts.length} 条
-                </div>
-
-                <span className="shrink-0 text-sm leading-none text-stone-500">
-                  {safePage} / {pageCount} 页
-                </span>
-                <Select
-                  value={pageSize}
-                  onValueChange={(value) => {
-                    setPageSize(value);
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-10 w-[108px] shrink-0 rounded-lg border-stone-200 bg-white text-sm leading-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10 / 页</SelectItem>
-                    <SelectItem value="20">20 / 页</SelectItem>
-                    <SelectItem value="50">50 / 页</SelectItem>
-                    <SelectItem value="100">100 / 页</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-10 shrink-0 rounded-lg border-stone-200 bg-white"
-                  disabled={safePage <= 1}
-                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                {paginationItems.map((item, index) =>
-                  item === "..." ? (
-                    <span key={`ellipsis-${index}`} className="px-1 text-sm text-stone-400">
-                      ...
-                    </span>
-                  ) : (
-                    <Button
-                      key={item}
-                      variant={item === safePage ? "default" : "outline"}
-                      className={cn(
-                        "h-10 min-w-10 shrink-0 rounded-lg px-3",
-                        item === safePage
-                          ? "bg-stone-950 text-white hover:bg-stone-800"
-                          : "border-stone-200 bg-white text-stone-700",
-                      )}
-                      onClick={() => setPage(item)}
-                    >
-                      {item}
-                    </Button>
-                  ),
-                )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-10 shrink-0 rounded-lg border-stone-200 bg-white"
-                  disabled={safePage >= pageCount}
-                  onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-                >
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </section>
