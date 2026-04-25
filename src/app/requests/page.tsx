@@ -28,20 +28,29 @@ function formatTime(value: string) {
 export default function RequestsPage() {
     const [items, setItems] = useState<RequestLogItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [resultFilter, setResultFilter] = useState<"all" | "success" | "failed">("all");
     const [operationFilter, setOperationFilter] = useState<"all" | "generate" | "edit" | "upscale">("all");
     const [pageSize, setPageSize] = useState<"20" | "50" | "100">("20");
     const [page, setPage] = useState(1);
 
-    const loadItems = async () => {
-        setIsLoading(true);
+    const loadItems = async (isRefresh = false) => {
+        if (isRefresh) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
         try {
             const data = await fetchRequestLogs();
             setItems(data.items);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "读取调用请求失败");
         } finally {
-            setIsLoading(false);
+            if (isRefresh) {
+                setIsRefreshing(false);
+            } else {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -96,113 +105,105 @@ export default function RequestsPage() {
     }, [page, totalPages]);
 
     return (
-        <section className="h-full overflow-y-auto">
-            <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-1 py-1">
-                <div className="rounded-[30px] border border-stone-200 bg-white px-5 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-6">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="min-w-0">
-                            <div className="flex items-start gap-4">
-                                <div className="inline-flex size-12 shrink-0 items-center justify-center rounded-[18px] bg-stone-950 text-white shadow-sm">
-                                    <Activity className="size-5" />
-                                </div>
-                                <div className="min-w-0">
-                                    <h1 className="text-2xl font-semibold tracking-tight text-stone-950">调用请求</h1>
-                                    <p className="mt-2 max-w-[840px] text-sm leading-7 text-stone-500">
-                                        这里展示最近持久化到
-                                        <span className="mx-1 rounded bg-stone-100 px-1.5 py-0.5 text-stone-700">data/eidos.db</span>
-                                        的图片请求历史。服务重启后记录仍会保留，便于回看账号、耗时和失败原因。
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-10 rounded-full border-stone-200 bg-white px-4 text-stone-700 shadow-none"
-                            onClick={() => void loadItems()}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                            刷新记录
-                        </Button>
+        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm" />
+                    <div className="flex-1 -translate-y-[10px]">
+                        <h1 className="text-[28px] font-bold tracking-tight text-stone-950">调用请求</h1>
+                        <p className="mt-1 text-[13px] leading-relaxed text-stone-500">查看图片生成请求历史与状态</p>
                     </div>
                 </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-full border-stone-300/60 bg-white px-4 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow"
+                    onClick={() => void loadItems(true)}
+                    disabled={isRefreshing}
+                >
+                    {isRefreshing ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                    刷新
+                </Button>
+            </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200/80 bg-gradient-to-br from-white to-stone-50/30 px-4 py-3.5 shadow-sm backdrop-blur-sm">
+                <div className="flex flex-wrap items-center gap-4">
                     {[
-                        ["总记录", String(summary.total)],
-                        ["成功", String(summary.success)],
-                        ["失败", String(summary.failed)],
-                        ["最近更新", summary.latest ? formatTime(summary.latest) : "—"],
-                    ].map(([label, value]) => (
-                        <Card key={label} className="border-stone-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.04)]">
-                            <CardContent className="px-4 py-4">
-                                <div className="text-xs font-medium text-stone-400">{label}</div>
-                                <div className="mt-2 text-xl font-semibold tracking-tight text-stone-900">{value}</div>
-                            </CardContent>
-                        </Card>
+                        { label: "总记录", value: String(summary.total), color: "stone" },
+                        { label: "成功", value: String(summary.success), color: "emerald" },
+                        { label: "失败", value: String(summary.failed), color: "rose" },
+                        { label: "最近", value: summary.latest ? formatTime(summary.latest) : "—", color: "blue" },
+                    ].map(({ label, value, color }) => (
+                        <div key={label} className="flex items-center gap-2">
+                            <div className={`size-2 rounded-full ${
+                                color === "emerald" ? "bg-emerald-500" :
+                                color === "rose" ? "bg-rose-500" :
+                                color === "blue" ? "bg-blue-500" :
+                                "bg-stone-400"
+                            }`} />
+                            <span className="text-[11px] font-medium text-stone-400">{label}</span>
+                            <span className={`text-sm font-semibold ${
+                                color === "emerald" ? "text-emerald-600" :
+                                color === "rose" ? "text-rose-600" :
+                                color === "blue" ? "text-blue-600" :
+                                "text-stone-900"
+                            }`}>{value}</span>
+                        </div>
                     ))}
                 </div>
-
-                <div className="rounded-[24px] border border-stone-200 bg-white px-5 py-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)]">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Select value={resultFilter} onValueChange={(value) => setResultFilter(value as typeof resultFilter)}>
-                                <SelectTrigger className="h-9 w-[140px] rounded-full border-stone-200 bg-stone-50/50 text-sm shadow-none transition-colors hover:bg-stone-100/50">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">全部结果</SelectItem>
-                                    <SelectItem value="success">仅成功</SelectItem>
-                                    <SelectItem value="failed">仅失败</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={operationFilter} onValueChange={(value) => setOperationFilter(value as typeof operationFilter)}>
-                                <SelectTrigger className="h-9 w-[140px] rounded-full border-stone-200 bg-stone-50/50 text-sm shadow-none transition-colors hover:bg-stone-100/50">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">全部操作</SelectItem>
-                                    <SelectItem value="generate">generate</SelectItem>
-                                    <SelectItem value="edit">edit</SelectItem>
-                                    <SelectItem value="upscale">upscale</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <div className="h-4 w-px bg-stone-200" />
-                            <Select value={pageSize} onValueChange={(value) => setPageSize(value as typeof pageSize)}>
-                                <SelectTrigger className="h-9 w-[110px] rounded-full border-stone-200 bg-stone-50/50 text-sm shadow-none transition-colors hover:bg-stone-100/50">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="20">20 条</SelectItem>
-                                    <SelectItem value="50">50 条</SelectItem>
-                                    <SelectItem value="100">100 条</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="text-sm text-stone-500">
-                            显示 <span className="font-medium text-stone-700">{pagedItems.length}</span> / <span className="font-medium text-stone-700">{filteredItems.length}</span> 条（共 {items.length}）
-                        </div>
-                    </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Select value={resultFilter} onValueChange={(value) => setResultFilter(value as typeof resultFilter)}>
+                        <SelectTrigger className="h-8 w-[110px] rounded-lg border-stone-200 text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">全部</SelectItem>
+                            <SelectItem value="success">成功</SelectItem>
+                            <SelectItem value="failed">失败</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={operationFilter} onValueChange={(value) => setOperationFilter(value as typeof operationFilter)}>
+                        <SelectTrigger className="h-8 w-[110px] rounded-lg border-stone-200 text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">全部操作</SelectItem>
+                            <SelectItem value="generate">generate</SelectItem>
+                            <SelectItem value="edit">edit</SelectItem>
+                            <SelectItem value="upscale">upscale</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={pageSize} onValueChange={(value) => setPageSize(value as typeof pageSize)}>
+                        <SelectTrigger className="h-8 w-[85px] rounded-lg border-stone-200 text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <span className="text-xs text-stone-500">{pagedItems.length} / {filteredItems.length}</span>
                 </div>
+            </div>
 
-                <Card className="border-stone-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.05)]">
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <table className="w-full min-w-[860px] text-left">
-                                <thead className="border-b border-stone-100 bg-stone-50/60">
-                                    <tr>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">时间</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">操作</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">接口</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">模型</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">数量</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">账号</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">耗时</th>
-                                        <th className="whitespace-nowrap px-4 py-2 text-[11px] font-medium text-stone-400">结果</th>
-                                        <th className="px-4 py-2 text-[11px] font-medium text-stone-400">错误</th>
-                                    </tr>
-                                </thead>
+            <Card className="border-stone-200/60 bg-white shadow-sm">
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[860px] text-left">
+                            <thead className="border-b border-stone-100 bg-stone-50/40">
+                                <tr>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">时间</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">操作</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">接口</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">模型</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">数量</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">账号</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">耗时</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">结果</th>
+                                    <th className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wide text-stone-400">错误</th>
+                                </tr>
+                            </thead>
                                 <tbody>
                                     {isLoading
                                         ? Array.from({ length: 8 }).map((_, i) => (
@@ -276,32 +277,33 @@ export default function RequestsPage() {
                     </CardContent>
                 </Card>
 
-                {!isLoading && filteredItems.length > 0 ? (
-                    <div className="flex flex-col gap-3 rounded-[24px] border border-stone-200 bg-white px-4 py-4 shadow-[0_12px_32px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm text-stone-500">第 {page} / {totalPages} 页</div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="h-10 rounded-full border-stone-200 bg-white px-4 text-stone-700 shadow-none"
-                                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                                disabled={page <= 1}
-                            >
-                                上一页
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="h-10 rounded-full border-stone-200 bg-white px-4 text-stone-700 shadow-none"
-                                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-                                disabled={page >= totalPages}
-                            >
-                                下一页
-                            </Button>
-                        </div>
+            {!isLoading && filteredItems.length > 0 && (
+                <div className="flex items-center justify-between rounded-2xl border border-stone-200/60 bg-white/50 px-4 py-3 backdrop-blur-sm">
+                    <span className="text-sm text-stone-500">第 {page} / {totalPages} 页</span>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-lg border-stone-200 px-3 text-xs"
+                            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                            disabled={page <= 1}
+                        >
+                            上一页
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-lg border-stone-200 px-3 text-xs"
+                            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                            disabled={page >= totalPages}
+                        >
+                            下一页
+                        </Button>
                     </div>
-                ) : null}
-            </div>
-        </section>
+                </div>
+            )}
+        </div>
     );
 }

@@ -5,7 +5,9 @@ import { httpRequest } from "@/lib/request";
 export type AccountType = "Free" | "Plus" | "Pro" | "Team";
 export type AccountStatus = "正常" | "限流" | "异常" | "禁用";
 export type ImageModel = "gpt-image-1" | "gpt-image-2";
-export type ImageProviderMode = "studio" | "cpa" | "mix";
+export type ImageGenerationSize = "auto" | "1024x1024" | "1536x1024" | "1024x1536";
+export type ImageGenerationQuality = "auto" | "low" | "medium" | "high";
+export type ImageApiStyle = "v1" | "responses";
 export type SyncStatus =
   | "synced"
   | "pending_upload"
@@ -157,29 +159,18 @@ export type VersionInfo = {
 // ─── 配置 Payload 类型 ───────────────────────────────────────────────────────
 
 export type ConfigPayload = {
-  app?: {
-    authKey?: string;
-    [key: string]: unknown;
-  };
-  server?: {
-    port?: number;
-    host?: string;
-    [key: string]: unknown;
-  };
   chatgpt?: {
+    enabled?: boolean;
     baseUrl?: string;
-    timeout?: number;
+    apiKey?: string;
+    apiStyle?: ImageApiStyle;
+    responsesModel?: string;
     [key: string]: unknown;
   };
   accounts?: {
     defaultQuota?: number;
     autoRefresh?: boolean;
     refreshInterval?: number;
-    [key: string]: unknown;
-  };
-  storage?: {
-    type?: string;
-    path?: string;
     [key: string]: unknown;
   };
   sync?: {
@@ -199,16 +190,6 @@ export type ConfigPayload = {
     baseUrl?: string;
     managementKey?: string;
     providerType?: string;
-    [key: string]: unknown;
-  };
-  log?: {
-    level?: string;
-    maxItems?: number;
-    [key: string]: unknown;
-  };
-  paths?: {
-    data?: string;
-    logs?: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -375,8 +356,13 @@ export async function generateImage(
   prompt: string,
   model: ImageModel = "gpt-image-1",
   count = 1,
-  signal?: AbortSignal,
+  options: {
+    size?: ImageGenerationSize;
+    quality?: ImageGenerationQuality;
+    signal?: AbortSignal;
+  } = {},
 ) {
+  const { size = "auto", quality = "auto", signal } = options;
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/generations",
     {
@@ -386,6 +372,8 @@ export async function generateImage(
         model,
         n: count,
         response_format: "b64_json",
+        size,
+        quality,
       },
       signal,
     },
@@ -400,14 +388,31 @@ export async function editImage(params: {
   mask?: File | null;
   sourceReference?: InpaintSourceReference | null;
   model?: ImageModel;
+  size?: ImageGenerationSize;
+  quality?: ImageGenerationQuality;
   signal?: AbortSignal;
 }) {
-  const { prompt, images, mask, sourceReference, model = "gpt-image-1", signal } =
+  const {
+    prompt,
+    images,
+    mask,
+    sourceReference,
+    model = "gpt-image-1",
+    size,
+    quality,
+    signal,
+  } =
     params;
   const formData = new FormData();
   formData.append("prompt", prompt);
   formData.append("model", model);
   formData.append("response_format", "b64_json");
+  if (size) {
+    formData.append("size", size);
+  }
+  if (quality) {
+    formData.append("quality", quality);
+  }
   images.forEach((img) => formData.append("image", img));
   if (mask) {
     formData.append("mask", mask);

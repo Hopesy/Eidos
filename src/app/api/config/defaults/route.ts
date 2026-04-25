@@ -10,20 +10,21 @@ export async function GET(request: NextRequest) {
         await requireAuthKey(request);
 
         return jsonOk({
-            app: { authKey: "" },
-            server: { host: "0.0.0.0", port: 3000 },
-            chatgpt: { baseUrl: "https://chatgpt.com", timeout: 60000 },
+            chatgpt: {
+                enabled: false,
+                baseUrl: "https://api.openai.com/v1",
+                apiKey: "",
+                apiStyle: "v1",
+                responsesModel: "gpt-5.5",
+            },
             accounts: {
                 defaultQuota: 50,
                 autoRefresh: true,
                 refreshInterval: 5,
             },
-            storage: { type: "sqlite", path: "data/eidos.db" },
             sync: { enabled: false, provider: "codex", direction: "both", interval: 300 },
             proxy: { enabled: false, url: "" },
-            cpa: { enabled: false, baseUrl: "" },
-            log: { level: "info", maxItems: 500 },
-            paths: { data: "data/eidos.db", logs: "logs", images: "data/images", uploads: "data/uploads" },
+            cpa: { enabled: false, baseUrl: "", managementKey: "", providerType: "codex" },
         });
     } catch (error) {
         return jsonError(error);

@@ -1,0 +1,111 @@
+- generic [active] [ref=e1]:
+  - region "Notifications alt+T"
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]:
+            - link [ref=e7] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e9]
+            - button "展开导航" [ref=e11]:
+              - img [ref=e12]
+          - navigation [ref=e15]:
+            - link "图片工作台" [ref=e16] [cursor=pointer]:
+              - /url: /image
+              - img [ref=e18]
+            - link "账号管理" [ref=e22] [cursor=pointer]:
+              - /url: /accounts
+              - img [ref=e24]
+            - link "配置管理" [ref=e26] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e28]
+            - link "调用请求" [ref=e31] [cursor=pointer]:
+              - /url: /requests
+              - img [ref=e33]
+          - generic [ref=e35]:
+            - link "读取中" [ref=e36] [cursor=pointer]:
+              - /url: https://github.com/peiyizhi0724/Eidos
+              - generic [ref=e37]: 读取中
+            - button "退出登录" [ref=e38]:
+              - img [ref=e39]
+      - generic [ref=e43]:
+        - complementary [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48]:
+                  - generic [ref=e49]: 历史
+                  - generic [ref=e50]: "0"
+                - generic [ref=e51]:
+                  - button "清空历史" [disabled]:
+                    - img
+              - button "新建对话" [ref=e52]:
+                - img
+                - text: 新建对话
+            - generic [ref=e54]:
+              - img [ref=e55]
+              - text: 读取中…
+        - generic [ref=e57]:
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - heading "图片工作台" [level=1] [ref=e61]
+              - generic [ref=e62]: /
+              - generic [ref=e63]: 新会话草稿
+            - button "收起历史" [ref=e64]:
+              - img [ref=e65]
+          - generic [ref=e70]:
+            - button "Prompt gpt-image-2 卡芙卡轮廓宇宙海报 请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、怀表之类的常规载体，而是由 AI 根据主题自行判断并选择一个最契合、最有象征意义、轮廓最强、最适合承载完整叙事世界的主轮廓载体。这个主轮廓可以是器物、建筑、门、塔、拱门、穹顶、楼梯井、长廊、雕像、侧脸、眼睛、手掌、头骨、羽翼、面具、镜面、王座、圆环、裂缝、光幕、阴影、几何结构、空间切面、舞台框景、抽象符号或其他更有创意与主题代表性的视觉轮廓，要求合理布局。优先选择最能放大主题气质的轮廓。画面的核心不是简单把世界装进某个物体里，而是让完整的主题世界自然生长在这个主轮廓之中。主轮廓必须清晰、优雅、有辨识度。整体构图需要具有强烈的收藏版海报气质与高级设计感。风格融合收藏版电影海报构图、高级叙事型视觉设计、梦幻水彩质感与纸张印刷品气质。色彩由 AI 根据主题自动判断。 适合高审美叙事海报、角色宇宙主题视觉、收藏版概念海报。" [ref=e71]:
+              - generic [ref=e73]:
+                - generic [ref=e74]:
+                  - generic [ref=e75]: Prompt
+                  - generic [ref=e76]: gpt-image-2
+                - generic [ref=e77]: 卡芙卡轮廓宇宙海报
+                - generic [ref=e78]: 请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、怀表之类的常规载体，而是由 AI 根据主题自行判断并选择一个最契合、最有象征意义、轮廓最强、最适合承载完整叙事世界的主轮廓载体。这个主轮廓可以是器物、建筑、门、塔、拱门、穹顶、楼梯井、长廊、雕像、侧脸、眼睛、手掌、头骨、羽翼、面具、镜面、王座、圆环、裂缝、光幕、阴影、几何结构、空间切面、舞台框景、抽象符号或其他更有创意与主题代表性的视觉轮廓，要求合理布局。优先选择最能放大主题气质的轮廓。画面的核心不是简单把世界装进某个物体里，而是让完整的主题世界自然生长在这个主轮廓之中。主轮廓必须清晰、优雅、有辨识度。整体构图需要具有强烈的收藏版海报气质与高级设计感。风格融合收藏版电影海报构图、高级叙事型视觉设计、梦幻水彩质感与纸张印刷品气质。色彩由 AI 根据主题自动判断。
+                - generic [ref=e79]: 适合高审美叙事海报、角色宇宙主题视觉、收藏版概念海报。
+            - button "Prompt gpt-image-2 青花瓷博物馆图鉴 请根据青花瓷自动生成一张博物馆图鉴式中文拆解信息图。要求整张图兼具真实写实主视觉、结构拆解、中文标注、材质说明、纹样寓意、色彩含义和核心特征总结。整体风格应为国家博物馆展板、历史服饰图鉴、文博专题信息图。背景采用米白、绢纸白、浅茶色等纸张质感，整体高级、克制、专业、可收藏。所有文字必须为简体中文。 适合文博专题、器物拆解、中文信息图和展板式视觉。" [ref=e80]:
+              - generic [ref=e82]:
+                - generic [ref=e83]:
+                  - generic [ref=e84]: Prompt
+                  - generic [ref=e85]: gpt-image-2
+                - generic [ref=e86]: 青花瓷博物馆图鉴
+                - generic [ref=e87]: 请根据青花瓷自动生成一张博物馆图鉴式中文拆解信息图。要求整张图兼具真实写实主视觉、结构拆解、中文标注、材质说明、纹样寓意、色彩含义和核心特征总结。整体风格应为国家博物馆展板、历史服饰图鉴、文博专题信息图。背景采用米白、绢纸白、浅茶色等纸张质感，整体高级、克制、专业、可收藏。所有文字必须为简体中文。
+                - generic [ref=e88]: 适合文博专题、器物拆解、中文信息图和展板式视觉。
+            - button "Prompt gpt-image-2 周芷若联动宣传图 《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，背景为夜晚古城墙，青砖城垛、灯笼照明、月光洒落，高细节，8K 品质。 适合古风角色联动、游戏活动主视觉、电影感人物宣传图。" [ref=e89]:
+              - generic [ref=e91]:
+                - generic [ref=e92]:
+                  - generic [ref=e93]: Prompt
+                  - generic [ref=e94]: gpt-image-2
+                - generic [ref=e95]: 周芷若联动宣传图
+                - generic [ref=e96]: 《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，背景为夜晚古城墙，青砖城垛、灯笼照明、月光洒落，高细节，8K 品质。
+                - generic [ref=e97]: 适合古风角色联动、游戏活动主视觉、电影感人物宣传图。
+            - button "Prompt gpt-image-2 地平线 8 深圳实机图 创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演出效果，包含具有深圳辨识度的城市天际线。构图中在合适位置放置《极限竞速 地平线 8》的 logo 及宣传文案。要求 8K 超高清，电影级光影。 适合游戏主视觉、次世代赛车截图、城市宣传感概念图。" [ref=e98]:
+              - generic [ref=e100]:
+                - generic [ref=e101]:
+                  - generic [ref=e102]: Prompt
+                  - generic [ref=e103]: gpt-image-2
+                - generic [ref=e104]: 地平线 8 深圳实机图
+                - generic [ref=e105]: 创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演出效果，包含具有深圳辨识度的城市天际线。构图中在合适位置放置《极限竞速 地平线 8》的 logo 及宣传文案。要求 8K 超高清，电影级光影。
+                - generic [ref=e106]: 适合游戏主视觉、次世代赛车截图、城市宣传感概念图。
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]:
+                - button "生成" [ref=e112]
+                - button "编辑" [ref=e113]
+                - button "放大" [ref=e114]
+              - generic [ref=e115]:
+                - combobox [ref=e116]:
+                  - img [ref=e117]
+                - combobox [ref=e119]
+                - generic [ref=e120]:
+                  - generic [ref=e121]: 张数
+                  - spinbutton [ref=e122]: "1"
+                - generic [ref=e123]: 剩余额度 加载中
+            - generic [ref=e124]:
+              - textbox "描述你想生成的画面，也可以先上传参考图" [ref=e126]
+              - generic [ref=e128]:
+                - button "上传参考图" [ref=e130]:
+                  - img
+                  - text: 上传参考图
+                - button "提交图片任务" [ref=e131]:
+                  - img [ref=e132]

@@ -59,6 +59,7 @@ import {
   type SyncStatusResponse,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { getCachedAccountsView, setCachedAccountsView } from "@/store/accounts-view-cache";
 import { getCachedSyncStatus, setCachedSyncStatus } from "@/store/sync-status-cache";
 
 const accountTypeOptions: { label: string; value: AccountType | "all" }[] = [
@@ -229,9 +230,10 @@ function normalizeSyncStatus(payload: SyncStatusResponse | null) {
 }
 
 export default function AccountsPage() {
+  const cachedAccountsView = getCachedAccountsView();
   const didLoadRef = useRef(false);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>(() => cachedAccountsView?.items ?? []);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<AccountType | "all">("all");
@@ -240,13 +242,15 @@ export default function AccountsPage() {
   const [editType, setEditType] = useState<AccountType>("Free");
   const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
   const [editQuota, setEditQuota] = useState("0");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !cachedAccountsView);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [quotaRefreshingId, setQuotaRefreshingId] = useState<string | null>(null);
-  const [accountQuotaMap, setAccountQuotaMap] = useState<Record<string, AccountQuotaResponse>>({});
+  const [accountQuotaMap, setAccountQuotaMap] = useState<Record<string, AccountQuotaResponse>>(
+    () => cachedAccountsView?.quotaMap ?? {},
+  );
   const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
   const [isSyncLoading, setIsSyncLoading] = useState(true);
   const [syncRunningDirection, setSyncRunningDirection] = useState<"pull" | "push" | "both" | null>(null);
@@ -317,8 +321,18 @@ export default function AccountsPage() {
       return;
     }
     didLoadRef.current = true;
-    void Promise.all([loadAccounts(), loadSync({ revalidate: true })]);
+    void Promise.all([loadAccounts(Boolean(cachedAccountsView)), loadSync({ revalidate: true })]);
   }, []);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+    setCachedAccountsView({
+      items: accounts,
+      quotaMap: accountQuotaMap,
+    });
+  }, [accountQuotaMap, accounts, isLoading]);
 
   const filteredAccounts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -540,14 +554,13 @@ export default function AccountsPage() {
   };
 
   return (
-    <div className="hide-scrollbar h-full min-h-0 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="inline-flex size-12 items-center justify-center rounded-[18px] bg-stone-950 text-white shadow-sm">
-            <Shield className="size-5" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-stone-950">号池管理</h1>
+    <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm" />
+          <div className="flex-1 -translate-y-[10px]">
+            <h1 className="text-[28px] font-bold tracking-tight text-stone-950">号池管理</h1>
+            <p className="mt-1 text-[13px] leading-relaxed text-stone-500">管理账号池与同步配置</p>
           </div>
         </div>
         {!isSyncLoading && !syncView.configured ? (
@@ -558,7 +571,7 @@ export default function AccountsPage() {
             </Link>
           </div>
         ) : null}
-      </section>
+      </div>
 
       <input
         ref={importInputRef}
@@ -643,12 +656,12 @@ export default function AccountsPage() {
         </DialogContent>
       </Dialog>
 
-      <section className="mt-6 space-y-4">
+      <section className="space-y-1.5">
         <Card className="rounded-2xl border-white/80 bg-white/90 shadow-sm">
-          <CardContent className="space-y-4 p-5">
+          <CardContent className="space-y-3 p-4">
             {/* 账号统计 + 标题 + 操作按钮 */}
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-4">
                 <div className="space-y-1">
                   <h2 className="text-lg font-semibold tracking-tight">CPA 同步</h2>
                   <p className="text-sm text-stone-500">查看本地账号与 CPA 远端状态，并执行双向同步。</p>
@@ -777,7 +790,7 @@ export default function AccountsPage() {
         </Card>
       </section>
 
-      <section className="mt-5 space-y-5">
+      <section className="mt-3.5 space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold tracking-tight">账户列表</h2>

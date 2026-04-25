@@ -1,7 +1,17 @@
 import { createHash } from "node:crypto";
 import { addRequestLog } from "@/server/request-log-store";
 
-import { fetchRemoteAccountInfo, generateImageResult, ImageGenerationError, isTokenInvalidError } from "@/server/providers/openai-client";
+import { getSavedConfig } from "@/server/config-store";
+import type { ImageApiStyle, ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import {
+  fetchRemoteAccountInfo,
+  generateImageResult,
+  generateImageResultWithApiService,
+  generateImageResultWithAttachments,
+  generateImageResultWithResponsesApiService,
+  ImageGenerationError,
+  isTokenInvalidError,
+} from "@/server/providers/openai-client";
 import { logger } from "@/server/logger";
 import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
@@ -39,6 +49,34 @@ function normalizeAccountType(value: unknown): AccountType | null {
     enterprise: "Team",
   };
   return mapping[normalized] ?? null;
+}
+
+export function getImageApiServiceConfig() {
+  const savedConfig = getSavedConfig() as
+    | {
+      chatgpt?: {
+        enabled?: boolean;
+        baseUrl?: string;
+        apiKey?: string;
+        apiStyle?: ImageApiStyle;
+        responsesModel?: string;
+      };
+    }
+    | null;
+  const enabled = Boolean(savedConfig?.chatgpt?.enabled);
+  const baseUrl = cleanToken(savedConfig?.chatgpt?.baseUrl) || "https://api.openai.com/v1";
+  const apiKey = cleanToken(savedConfig?.chatgpt?.apiKey);
+  const apiStyle = (cleanToken(savedConfig?.chatgpt?.apiStyle) || "v1") as ImageApiStyle;
+  const responsesModel = cleanToken(savedConfig?.chatgpt?.responsesModel) || "gpt-5.5";
+  if (!enabled || !apiKey) {
+    return null;
+  }
+  return {
+    baseUrl,
+    apiKey,
+    apiStyle,
+    responsesModel,
+  };
 }
 
 function searchAccountType(value: unknown): AccountType | null {
@@ -419,7 +457,12 @@ export async function generateWithPool(
   prompt: string,
   model: string,
   count: number,
-  options: { route?: string; operation?: string } = {},
+  options: {
+    route?: string;
+    operation?: string;
+    imageSize?: ImageGenerationSize;
+    imageQuality?: ImageGenerationQuality;
+  } = {},
 ) {
   const startedAt = new Date().toISOString();
   const startTime = Date.now();
@@ -431,8 +474,17 @@ export async function generateWithPool(
 
   const route = options.route ?? "generations";
   const operation = options.operation ?? "generate";
+  const imageSize = options.imageSize ?? "auto";
+  const imageQuality = options.imageQuality ?? "auto";
+  const imageApiService = getImageApiServiceConfig();
 
-  logger.info("account-service", "开始图片生成", { model, count, prompt: prompt.slice(0, 80) });
+  logger.info("account-service", "开始图片生成", {
+    model,
+    count,
+    size: imageSize,
+    quality: imageQuality,
+    prompt: prompt.slice(0, 80),
+  });
 
   let requestIndex = 1;
   while (data.length < count) {
@@ -461,7 +513,10 @@ export async function generateWithPool(
           lastAccountEmail = account.email ?? undefined;
           lastAccountType = account.type ?? undefined;
         }
-        const result = await generateImageResult(requestToken, prompt, model, account) as { created: number; data: Array<Record<string, unknown>> };
+        const result = await generateImageResult(requestToken, prompt, model, account, {
+          size: imageSize,
+          quality: imageQuality,
+        }) as { created: number; data: Array<Record<string, unknown>> };
         result.data = await persistImageResponseItems(result.data, {
           route,
           operation,
@@ -505,6 +560,53 @@ export async function generateWithPool(
     }
   }
 
+  if (data.length < count && imageApiService) {
+    const needed = count - data.length;
+    logger.info("account-service", "本地账号不足，切换图像 API 服务补齐", {
+      model,
+      needed,
+      endpoint: imageApiService.baseUrl,
+    });
+    try {
+      const result = (imageApiService.apiStyle === "responses"
+        ? await generateImageResultWithResponsesApiService(imageApiService, prompt, model, needed, {
+          size: imageSize,
+          quality: imageQuality,
+        })
+        : await generateImageResultWithApiService(imageApiService, prompt, model, needed, {
+          size: imageSize,
+          quality: imageQuality,
+        })) as {
+        created: number;
+        data: Array<Record<string, unknown>>;
+      };
+      result.data = await persistImageResponseItems(result.data, {
+        route,
+        operation,
+        model,
+        prompt,
+        accountEmail: "图像 API 服务",
+        accountType: "api_service",
+      }, { keepBase64: true });
+      if (created === null) {
+        created = Number(result.created || Math.floor(Date.now() / 1000));
+      }
+      if (Array.isArray(result.data)) {
+        data.push(...result.data);
+      }
+      lastAccountEmail = "图像 API 服务";
+      lastAccountType = "api_service";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      lastErrors.push(message);
+      logger.error("account-service", "图像 API 服务补齐失败", {
+        model,
+        needed,
+        error: message.slice(0, 200),
+      });
+    }
+  }
+
   const finishedAt = new Date().toISOString();
   const durationMs = Date.now() - startTime;
 
@@ -529,7 +631,22 @@ export async function generateWithPool(
     throw new ImageGenerationError(errMsg);
   }
 
-  logger.info("account-service", "图片生成完成", { model, count, got: data.length, elapsedMs: durationMs });
+  const completedCount = Math.min(data.length, count);
+  const isComplete = completedCount === count;
+  const partialError = isComplete ? undefined : `请求 ${count} 张，实际返回 ${completedCount} 张`;
+
+  if (!isComplete) {
+    logger.warn("account-service", "图片生成部分完成", {
+      model,
+      count,
+      got: completedCount,
+      elapsedMs: durationMs,
+      lastError: lastErrors[lastErrors.length - 1] ?? null,
+    });
+  } else {
+    logger.info("account-service", "图片生成完成", { model, count, got: completedCount, elapsedMs: durationMs });
+  }
+
   addRequestLog({
     startedAt,
     finishedAt,
@@ -538,15 +655,93 @@ export async function generateWithPool(
     route,
     model,
     count,
-    success: true,
+    success: isComplete,
+    error: partialError,
     durationMs,
     accountEmail: lastAccountEmail,
     accountType: lastAccountType,
   });
   return {
     created: created ?? Math.floor(Date.now() / 1000),
-    data,
+    data: data.slice(0, count),
   };
+}
+
+export async function editWithPool(
+  prompt: string,
+  model: string,
+  images: File[],
+  mask?: File | null,
+  options: {
+    imageSize?: ImageGenerationSize;
+    imageQuality?: ImageGenerationQuality;
+  } = {},
+) {
+  const startedAt = new Date().toISOString();
+  const startTime = Date.now();
+  const route = "edits";
+  const operation = "edit";
+  let lastAccountEmail: string | undefined;
+  let lastAccountType: string | undefined;
+
+  const requestToken = await getAvailableAccessToken();
+  const account = await getAccount(requestToken);
+  if (account) {
+    lastAccountEmail = account.email ?? undefined;
+    lastAccountType = account.type ?? undefined;
+  }
+
+  try {
+    const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, {
+      images,
+      mask,
+      size: options.imageSize,
+      quality: options.imageQuality,
+    }) as { created: number; data: Array<Record<string, unknown>> };
+
+    result.data = await persistImageResponseItems(result.data, {
+      route,
+      operation,
+      model,
+      prompt,
+      accountEmail: account?.email ?? null,
+      accountType: account?.type ?? null,
+    }, { keepBase64: true });
+
+    await markImageResult(requestToken, true);
+    addRequestLog({
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      endpoint: "POST /v1/images/edits",
+      operation,
+      route,
+      model,
+      count: 1,
+      success: true,
+      durationMs: Date.now() - startTime,
+      accountEmail: lastAccountEmail,
+      accountType: lastAccountType,
+    });
+    return result;
+  } catch (error) {
+    await markImageResult(requestToken, false);
+    const message = error instanceof Error ? error.message : String(error);
+    addRequestLog({
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      endpoint: "POST /v1/images/edits",
+      operation,
+      route,
+      model,
+      count: 1,
+      success: false,
+      error: message.slice(0, 300),
+      durationMs: Date.now() - startTime,
+      accountEmail: lastAccountEmail,
+      accountType: lastAccountType,
+    });
+    throw error;
+  }
 }
 
 export async function ensureAccountWatcherStarted() {

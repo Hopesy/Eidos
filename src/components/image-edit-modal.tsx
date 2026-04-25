@@ -100,8 +100,12 @@ export function ImageEditModal({
     const [redoStrokes, setRedoStrokes] = useState<Stroke[]>([]);
     const [currentStroke, setCurrentStroke] = useState<StrokePoint[]>([]);
     const [brushCursor, setBrushCursor] = useState<BrushCursor | null>(null);
-    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectionMode, setSelectionMode] = useState(true);
     const [isDrawing, setIsDrawing] = useState(false);
+    const [scale, setScale] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [isPanning, setIsPanning] = useState(false);
+    const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
     const imgRef = useRef<HTMLImageElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -125,12 +129,14 @@ export function ImageEditModal({
     useEffect(() => {
         if (!open) return;
         setPrompt("");
-        setSelectionMode(false);
+        setSelectionMode(true);
         setBrushSize(32);
         setStrokes([]);
         setRedoStrokes([]);
         setCurrentStroke([]);
         setBrushCursor(null);
+        setScale(1);
+        setOffset({ x: 0, y: 0 });
     }, [open, imageSrc]);
 
     // ── Measure image display size ──────────────────────────────────────────────
@@ -200,6 +206,14 @@ export function ImageEditModal({
     };
 
     const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+        // Middle mouse button for panning
+        if (e.button === 1) {
+            e.preventDefault();
+            setIsPanning(true);
+            setPanStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+            return;
+        }
+
         if (!selectionMode) return;
         e.currentTarget.setPointerCapture(e.pointerId);
         const pt = getRelativePoint(e);
@@ -209,6 +223,15 @@ export function ImageEditModal({
     };
 
     const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+        // Handle panning
+        if (isPanning) {
+            setOffset({
+                x: e.clientX - panStart.x,
+                y: e.clientY - panStart.y,
+            });
+            return;
+        }
+
         const canvas = overlayCanvasRef.current;
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
@@ -222,6 +245,12 @@ export function ImageEditModal({
     };
 
     const handlePointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+        // End panning
+        if (isPanning) {
+            setIsPanning(false);
+            return;
+        }
+
         if (!selectionMode || !isDrawing) return;
         const pt = getRelativePoint(e);
         const finalPoints = currentStroke.length > 0 ? [...currentStroke, pt] : [pt];
@@ -236,6 +265,10 @@ export function ImageEditModal({
 
     const handlePointerLeave = () => {
         setBrushCursor(null);
+        if (isPanning) {
+            setIsPanning(false);
+            return;
+        }
         if (!isDrawing) return;
         // commit partial stroke on leave
         if (currentStroke.length > 0) {
@@ -253,7 +286,23 @@ export function ImageEditModal({
         setBrushCursor(null);
         setCurrentStroke([]);
         setIsDrawing(false);
+        setIsPanning(false);
     };
+
+    // ── Mouse wheel zoom ────────────────────────────────────────────────────────
+    const handleWheel = (e: WheelEvent) => {
+        e.preventDefault();
+        const delta = e.deltaY;
+        const zoomFactor = delta > 0 ? 0.9 : 1.1;
+        setScale((prev) => Math.max(0.1, Math.min(5, prev * zoomFactor)));
+    };
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container || !open) return;
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        return () => container.removeEventListener('wheel', handleWheel);
+    }, [open]);
 
     // ── Undo / Redo / Clear ─────────────────────────────────────────────────────
     const handleUndo = () => {
@@ -471,80 +520,76 @@ export function ImageEditModal({
                     ref={containerRef}
                     className="relative mx-auto flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-2 sm:px-6"
                 >
-                    {/* Image */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        ref={imgRef}
-                        src={imageSrc}
-                        alt={imageName}
-                        draggable={false}
-                        onLoad={() => {
-                            const el = imgRef.current;
-                            if (!el) return;
-                            setImgDisplaySize({ w: el.clientWidth, h: el.clientHeight });
-                            setImgNaturalSize({ w: el.naturalWidth, h: el.naturalHeight });
-                        }}
-                        className="max-h-full max-w-full select-none rounded-[20px] object-contain shadow-lg"
-                    />
-
-                    {/* Overlay canvas */}
-                    <canvas
-                        ref={overlayCanvasRef}
-                        className={cn(
-                            "pointer-events-none absolute rounded-[20px]",
-                        )}
-                        style={{
-                            width: imgDisplaySize.w,
-                            height: imgDisplaySize.h,
-                        }}
-                    />
-
-                    {/* Touch / pointer interaction layer */}
                     <div
-                        className={cn(
-                            "absolute rounded-[20px]",
-                            selectionMode ? "cursor-none" : "cursor-default",
-                        )}
                         style={{
-                            width: imgDisplaySize.w,
-                            height: imgDisplaySize.h,
-                            touchAction: "none",
+                            transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                            transformOrigin: 'center',
+                            transition: isPanning ? 'none' : 'transform 0.1s ease-out',
                         }}
-                        onPointerDown={handlePointerDown}
-                        onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerLeave={handlePointerLeave}
-                        onPointerCancel={handlePointerCancel}
-                    />
+                    >
+                        {/* Image */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            ref={imgRef}
+                            src={imageSrc}
+                            alt={imageName}
+                            draggable={false}
+                            onLoad={() => {
+                                const el = imgRef.current;
+                                if (!el) return;
+                                setImgDisplaySize({ w: el.clientWidth, h: el.clientHeight });
+                                setImgNaturalSize({ w: el.naturalWidth, h: el.naturalHeight });
+                            }}
+                            className="max-h-full max-w-full select-none rounded-[20px] object-contain shadow-lg"
+                        />
 
-                    {/* Brush cursor indicator */}
-                    {selectionMode && brushCursorPx && (
-                        <div
-                            className="pointer-events-none absolute rounded-full border-2 border-blue-500 bg-blue-300/30"
+                        {/* Overlay canvas */}
+                        <canvas
+                            ref={overlayCanvasRef}
+                            className={cn(
+                                "pointer-events-none absolute rounded-[20px]",
+                            )}
                             style={{
-                                width: brushSize,
-                                height: brushSize,
-                                left:
-                                    // position relative to container, accounting for image offset
-                                    (() => {
-                                        const el = containerRef.current;
-                                        const img = imgRef.current;
-                                        if (!el || !img) return brushCursorPx.x;
-                                        const containerRect = el.getBoundingClientRect();
-                                        const imgRect = img.getBoundingClientRect();
-                                        return imgRect.left - containerRect.left + brushCursorPx.x - brushSize / 2;
-                                    })(),
-                                top: (() => {
-                                    const el = containerRef.current;
-                                    const img = imgRef.current;
-                                    if (!el || !img) return brushCursorPx.y;
-                                    const containerRect = el.getBoundingClientRect();
-                                    const imgRect = img.getBoundingClientRect();
-                                    return imgRect.top - containerRect.top + brushCursorPx.y - brushSize / 2;
-                                })(),
+                                width: imgDisplaySize.w,
+                                height: imgDisplaySize.h,
+                                top: 0,
+                                left: 0,
                             }}
                         />
-                    )}
+
+                        {/* Touch / pointer interaction layer */}
+                        <div
+                            className={cn(
+                                "absolute rounded-[20px]",
+                                selectionMode && !isPanning ? "cursor-none" : isPanning ? "cursor-grabbing" : "cursor-default",
+                            )}
+                            style={{
+                                width: imgDisplaySize.w,
+                                height: imgDisplaySize.h,
+                                touchAction: "none",
+                                top: 0,
+                                left: 0,
+                            }}
+                            onPointerDown={handlePointerDown}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={handlePointerUp}
+                            onPointerLeave={handlePointerLeave}
+                            onPointerCancel={handlePointerCancel}
+                        />
+
+                        {/* Brush cursor indicator */}
+                        {selectionMode && brushCursorPx && !isPanning && (
+                            <div
+                                className="pointer-events-none absolute rounded-full border-2 border-blue-500 bg-blue-300/30"
+                                style={{
+                                    width: brushSize,
+                                    height: brushSize,
+                                    left: brushCursorPx.x - brushSize / 2,
+                                    top: brushCursorPx.y - brushSize / 2,
+                                }}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
 

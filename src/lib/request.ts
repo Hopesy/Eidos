@@ -1,7 +1,7 @@
-import axios, {AxiosError, type AxiosRequestConfig} from "axios";
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 import webConfig from "@/constants/common-env";
-import {clearStoredAuthKey, getStoredAuthKey} from "@/store/auth";
+import { clearStoredAuthKey, getStoredAuthKey } from "@/store/auth";
 
 type RequestConfig = AxiosRequestConfig & {
     redirectOnUnauthorized?: boolean;
@@ -12,9 +12,9 @@ const request = axios.create({
 });
 
 request.interceptors.request.use(async (config) => {
-    const nextConfig = {...config};
+    const nextConfig = { ...config };
     const authKey = await getStoredAuthKey();
-    const headers = {...(nextConfig.headers || {})} as Record<string, string>;
+    const headers = { ...(nextConfig.headers || {}) } as Record<string, string>;
     if (authKey && !headers.Authorization) {
         headers.Authorization = `Bearer ${authKey}`;
     }
@@ -50,16 +50,18 @@ type RequestOptions = {
     body?: unknown;
     headers?: Record<string, string>;
     redirectOnUnauthorized?: boolean;
+    signal?: AbortSignal;
 };
 
 export async function httpRequest<T>(path: string, options: RequestOptions = {}) {
-    const {method = "GET", body, headers, redirectOnUnauthorized = true} = options;
+    const { method = "GET", body, headers, redirectOnUnauthorized = true, signal } = options;
     const config: RequestConfig = {
         url: path,
         method,
         data: body,
         headers,
         redirectOnUnauthorized,
+        signal,
     };
     const response = await request.request<T>(config);
     return response.data;

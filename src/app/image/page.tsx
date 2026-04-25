@@ -4,11 +4,18 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent as ReactClipb
 import { toast } from "sonner";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
-import { ComposerPanel, type ImageModelOption, type ModeOption } from "./_components/composer-panel";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ImagePreviewModal } from "@/components/image-preview-modal";
+import {
+  ComposerPanel,
+  type GenerationOption,
+  type ImageModelOption,
+  type ModeOption,
+} from "./_components/composer-panel";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { ConversationTurn } from "./_components/conversation-turn";
 import { EmptyState, type InspirationExample } from "./_components/empty-state";
 import { HistorySidebar } from "./_components/history-sidebar";
+import { FilesSidebar } from "./_components/files-sidebar";
 import {
   editImage,
   fetchAccounts,
@@ -16,6 +23,8 @@ import {
   upscaleImage,
   type InpaintSourceReference,
   type Account,
+  type ImageGenerationQuality,
+  type ImageGenerationSize,
   type ImageModel,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -52,6 +61,19 @@ const modeOptions: Array<{ label: string; value: ImageMode; description: string 
 ];
 
 const upscaleOptions = ["2x", "4x"];
+
+const imageSizeOptions: GenerationOption<ImageGenerationSize>[] = [
+  { label: "Auto", value: "auto" },
+  { label: "1:1 方图", value: "1024x1024" },
+  { label: "3:2 横图", value: "1536x1024" },
+  { label: "2:3 竖图", value: "1024x1536" },
+];
+
+const imageQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
+  { label: "Auto", value: "auto" },
+  { label: "2K(中)", value: "medium" },
+  { label: "4K(高)", value: "high" },
+];
 
 const inspirationExamples: InspirationExample[] = [
   {
@@ -201,6 +223,8 @@ function createConversationTurn(payload: {
   mode: ImageMode;
   prompt: string;
   model: ImageModel;
+  imageSize?: ImageGenerationSize;
+  imageQuality?: ImageGenerationQuality;
   count: number;
   scale?: string;
   sourceImages?: StoredSourceImage[];
@@ -215,6 +239,8 @@ function createConversationTurn(payload: {
     mode: payload.mode,
     prompt: payload.prompt,
     model: payload.model,
+    imageSize: payload.imageSize,
+    imageQuality: payload.imageQuality,
     count: payload.count,
     scale: payload.scale,
     sourceImages: payload.sourceImages ?? [],
@@ -284,6 +310,16 @@ function mergeResultImages(
           error: "接口没有返回图片数据",
         },
   );
+
+  if (expected > results.length) {
+    for (let index = results.length; index < expected; index += 1) {
+      results.push({
+        id: `${conversationId}-${index}`,
+        status: "error",
+        error: "未返回足够数量的图片",
+      });
+    }
+  }
 
   return results;
 }
@@ -472,11 +508,14 @@ export default function ImagePage() {
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageCount, setImageCount] = useState("1");
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
+  const [imageSize, setImageSize] = useState<ImageGenerationSize>("auto");
+  const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("auto");
   const [upscaleScale, setUpscaleScale] = useState("2x");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
   const [conversations, setConversations] = useState<ImageConversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [filesCollapsed, setFilesCollapsed] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableQuota, setAvailableQuota] = useState("加载中");
@@ -491,6 +530,7 @@ export default function ImagePage() {
     imageName: string;
     sourceDataUrl: string;
   } | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === selectedConversationId) ?? null,
@@ -719,6 +759,8 @@ export default function ImagePage() {
     setMode(nextMode);
     setImagePrompt("");
     setImageCount("1");
+    setImageSize("auto");
+    setImageQuality("auto");
     setUpscaleScale("2x");
     setSourceImages([]);
   };
@@ -735,6 +777,8 @@ export default function ImagePage() {
     setMode("generate");
     setImageModel(example.model);
     setImageCount(String(example.count));
+    setImageSize("auto");
+    setImageQuality("high");
     setImagePrompt(example.prompt);
     openDraftConversation();
     setSourceImages([]);
@@ -900,6 +944,8 @@ export default function ImagePage() {
       mode: "edit",
       prompt,
       model: imageModel,
+      imageSize: "auto",
+      imageQuality: "auto",
       count: 1,
       sourceImages: [
         {
@@ -950,14 +996,15 @@ export default function ImagePage() {
         turns: [...(current.turns ?? []), draftTurn],
       }));
 
-      let fallbackImageFile = sourceReference
-        ? null
-        : await dataUrlToFile(editorTarget.sourceDataUrl, editorTarget.imageName || "source.png");
+      let fallbackImageFile = await dataUrlToFile(
+        editorTarget.sourceDataUrl,
+        editorTarget.imageName || "source.png",
+      );
       let data;
       try {
         data = await editImage({
           prompt,
-          images: fallbackImageFile ? [fallbackImageFile] : [],
+          images: [fallbackImageFile],
           mask: mask.file,
           sourceReference,
           model: imageModel,
@@ -966,9 +1013,6 @@ export default function ImagePage() {
         if (!sourceReference || !shouldFallbackSelectionEdit(error)) {
           throw error;
         }
-        fallbackImageFile =
-          fallbackImageFile ??
-          (await dataUrlToFile(editorTarget.sourceDataUrl, editorTarget.imageName || "source.png"));
         data = await editImage({
           prompt,
           images: [fallbackImageFile],
@@ -978,6 +1022,7 @@ export default function ImagePage() {
       }
       const resultItems = mergeResultImages(turnId, data.data || [], 1);
       const failedCount = countFailures(resultItems);
+      const durationMs = Date.now() - startedAt;
 
       await updateConversation(conversationId, (current) => ({
         ...current,
@@ -988,6 +1033,7 @@ export default function ImagePage() {
               images: resultItems,
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
+              durationMs,
             }
             : turn,
         ),
@@ -1038,6 +1084,8 @@ export default function ImagePage() {
     const turnImageSources = turnSourceImages.filter((item) => item.role === "image");
     const turnMaskSource = turnSourceImages.find((item) => item.role === "mask") ?? null;
     const turnScale = turnMode === "upscale" ? turn.scale || "2x" : undefined;
+    const turnImageSize = turn.imageSize || "auto";
+    const turnImageQuality = turn.imageQuality || "auto";
     const expectedCount = Math.max(1, turn.count || 1);
 
     if (turnMode === "generate" && !prompt) {
@@ -1096,10 +1144,19 @@ export default function ImagePage() {
           const files = await Promise.all(
             turnImageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`)),
           );
-          const data = await editImage({ prompt, images: files, model: turn.model });
+          const data = await editImage({
+            prompt,
+            images: files,
+            model: turn.model,
+            size: turnImageSize,
+            quality: turnImageQuality,
+          });
           resultItems = mergeResultImages(turnId, data.data || [], 1);
         } else {
-          const data = await generateImage(prompt, turn.model, expectedCount);
+          const data = await generateImage(prompt, turn.model, expectedCount, {
+            size: turnImageSize,
+            quality: turnImageQuality,
+          });
           resultItems = mergeResultImages(turnId, data.data || [], expectedCount);
         }
       }
@@ -1120,6 +1177,7 @@ export default function ImagePage() {
       }
 
       const failedCount = countFailures(resultItems);
+      const durationMs = Date.now() - startedAt;
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((item) =>
@@ -1129,6 +1187,7 @@ export default function ImagePage() {
               images: resultItems,
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
+              durationMs,
             }
             : item,
         ),
@@ -1190,44 +1249,18 @@ export default function ImagePage() {
     const turnId = makeId();
     const now = new Date().toISOString();
 
-    // 如果是同一会话内的连续生成（无用户手动上传图）、自动继承上一轮成功图作为参考图
-    const prevSuccessImage: StoredSourceImage | null = (() => {
-      if (mode !== "generate" || imageSources.length > 0 || !selectedConversationId) {
-        return null;
-      }
-      const conv = conversations.find((item) => item.id === selectedConversationId) ?? null;
-      if (!conv) return null;
-      const turns = conv.turns ?? [];
-      for (let i = turns.length - 1; i >= 0; i--) {
-        const successImg = (turns[i].images ?? []).find(
-          (img) => img.status === "success" && (img.url || img.b64_json),
-        );
-        const inheritedSrc = successImg ? buildImageDataUrl(successImg) : "";
-        if (inheritedSrc) {
-          return {
-            id: makeId(),
-            role: "image" as const,
-            name: `context-${successImg?.id ?? makeId()}.png`,
-            dataUrl: inheritedSrc,
-            hiddenInConversation: true,
-          };
-        }
-      }
-      return null;
-    })();
-
-    // 携带上下文参考图时走参考图生成，否则走纯文字生成
-    const effectiveImageSources = prevSuccessImage ? [...imageSources, prevSuccessImage] : imageSources;
-    const expectedCount = mode === "generate" && effectiveImageSources.length === 0 ? parsedCount : 1;
+    const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
     const draftTurn = createConversationTurn({
       turnId,
       title: buildConversationTitle(mode, prompt, upscaleScale),
       mode,
       prompt,
       model: imageModel,
+      imageSize: mode === "generate" ? imageSize : "auto",
+      imageQuality: mode === "generate" ? imageQuality : "auto",
       count: expectedCount,
       scale: mode === "upscale" ? upscaleScale : undefined,
-      sourceImages: effectiveImageSources,
+      sourceImages: imageSources,
       images: createLoadingImages(expectedCount, turnId),
       createdAt: now,
       status: "generating",
@@ -1272,6 +1305,8 @@ export default function ImagePage() {
                 mode: draftTurn.mode,
                 prompt: draftTurn.prompt,
                 model: draftTurn.model,
+                imageSize: draftTurn.imageSize,
+                imageQuality: draftTurn.imageQuality,
                 count: draftTurn.count,
                 scale: draftTurn.scale,
                 sourceImages: draftTurn.sourceImages,
@@ -1287,6 +1322,8 @@ export default function ImagePage() {
                 mode: draftTurn.mode,
                 prompt: draftTurn.prompt,
                 model: draftTurn.model,
+                imageSize: draftTurn.imageSize,
+                imageQuality: draftTurn.imageQuality,
                 count: draftTurn.count,
                 scale: draftTurn.scale,
                 sourceImages: draftTurn.sourceImages,
@@ -1309,6 +1346,8 @@ export default function ImagePage() {
           mode: draftTurn.mode,
           prompt: draftTurn.prompt,
           model: draftTurn.model,
+          imageSize: draftTurn.imageSize,
+          imageQuality: draftTurn.imageQuality,
           count: draftTurn.count,
           scale: draftTurn.scale,
           sourceImages: draftTurn.sourceImages,
@@ -1325,6 +1364,8 @@ export default function ImagePage() {
           mode: draftTurn.mode,
           prompt: draftTurn.prompt,
           model: draftTurn.model,
+          imageSize: draftTurn.imageSize,
+          imageQuality: draftTurn.imageQuality,
           count: draftTurn.count,
           scale: draftTurn.scale,
           sourceImages: draftTurn.sourceImages,
@@ -1338,16 +1379,27 @@ export default function ImagePage() {
 
       let resultItems: StoredImage[] = [];
       if (mode === "generate") {
-        if (effectiveImageSources.length > 0) {
+        if (imageSources.length > 0) {
           const files = await Promise.all(
-            effectiveImageSources.map((item, index) =>
+            imageSources.map((item, index) =>
               dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`),
             ),
           );
-          const data = await editImage({ prompt, images: files, model: imageModel, signal });
+          const data = await editImage({
+            prompt,
+            images: files,
+            model: imageModel,
+            size: imageSize,
+            quality: imageQuality,
+            signal,
+          });
           resultItems = mergeResultImages(turnId, data.data || [], 1);
         } else {
-          const data = await generateImage(prompt, imageModel, parsedCount, signal);
+          const data = await generateImage(prompt, imageModel, parsedCount, {
+            size: imageSize,
+            quality: imageQuality,
+            signal,
+          });
           resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
         }
       }
@@ -1368,6 +1420,7 @@ export default function ImagePage() {
       }
 
       const failedCount = countFailures(resultItems);
+      const durationMs = Date.now() - startedAt;
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -1377,6 +1430,7 @@ export default function ImagePage() {
               images: resultItems,
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
+              durationMs,
             }
             : turn,
         ),
@@ -1388,10 +1442,8 @@ export default function ImagePage() {
       } else {
         toast.success(
           mode === "generate"
-            ? effectiveImageSources.length > 0
-              ? prevSuccessImage
-                ? "已基于上一轮结果续写生成"
-                : "参考图生成已完成"
+            ? imageSources.length > 0
+              ? "参考图生成已完成"
               : "图片已生成"
             : mode === "edit"
               ? "图片已编辑"
@@ -1455,10 +1507,14 @@ export default function ImagePage() {
   return (
     <section
       className={cn(
-        "grid grid-cols-1 gap-1.5",
-        historyCollapsed
+        "grid grid-cols-1 gap-1",
+        historyCollapsed && filesCollapsed
           ? "lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)]"
-          : "lg:h-full lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)]",
+          : historyCollapsed && !filesCollapsed
+          ? "lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_240px]"
+          : !historyCollapsed && filesCollapsed
+          ? "lg:h-full lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)]"
+          : "lg:h-full lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)_240px]",
       )}
     >
       {!historyCollapsed ? (
@@ -1481,6 +1537,14 @@ export default function ImagePage() {
         <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setHistoryCollapsed((current) => !current)}
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
+                title={historyCollapsed ? "展开历史" : "收起历史"}
+              >
+                {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              </button>
               <h1 className="shrink-0 text-sm font-medium text-stone-900">图片工作台</h1>
               <span className="text-stone-300">/</span>
               {selectedConversation?.title ? (
@@ -1492,11 +1556,11 @@ export default function ImagePage() {
 
             <button
               type="button"
-              onClick={() => setHistoryCollapsed((current) => !current)}
-              className="inline-flex size-8 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
-              title={historyCollapsed ? "展开历史" : "收起历史"}
+              onClick={() => setFilesCollapsed((current) => !current)}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
+              title={filesCollapsed ? "展开文件" : "收起文件"}
             >
-              {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              {filesCollapsed ? <PanelRightOpen className="size-4" /> : <PanelRightClose className="size-4" />}
             </button>
           </div>
         </div>
@@ -1530,6 +1594,7 @@ export default function ImagePage() {
                   onRetryTurn={(conversationId, currentTurn) => {
                     void handleRetryTurn(conversationId, currentTurn);
                   }}
+                  onPreviewImage={(dataUrl) => setPreviewImage(dataUrl)}
                 />
               ))}
             </div>
@@ -1547,6 +1612,12 @@ export default function ImagePage() {
             hasGenerateReferences={hasGenerateReferences}
             imageCount={imageCount}
             onImageCountChange={setImageCount}
+            imageSize={imageSize}
+            imageSizeOptions={imageSizeOptions}
+            onImageSizeChange={setImageSize}
+            imageQuality={imageQuality}
+            imageQualityOptions={imageQualityOptions}
+            onImageQualityChange={setImageQuality}
             upscaleScale={upscaleScale}
             upscaleOptions={upscaleOptions}
             onUpscaleScaleChange={setUpscaleScale}
@@ -1572,6 +1643,20 @@ export default function ImagePage() {
         </div>
       </div>
 
+      {!filesCollapsed ? (
+        <FilesSidebar
+          onOpenImage={(publicPath) => {
+            setPreviewImage(publicPath);
+          }}
+        />
+      ) : null}
+
+      <ImagePreviewModal
+        open={previewImage !== null}
+        imageSrc={previewImage || ""}
+        onClose={() => setPreviewImage(null)}
+      />
+
       <ImageEditModal
         key={editorTarget?.turnId || "image-edit-modal"}
         open={Boolean(editorTarget)}
@@ -1588,6 +1673,3 @@ export default function ImagePage() {
     </section>
   );
 }
-
-
-

@@ -1,0 +1,1165 @@
+[2026-04-24T09:45:29.622Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:45:45.575Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:45:45.578Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":114,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:45:45.579Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，"}
+[2026-04-24T09:45:56.972Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:45:56.973Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T09:45:56.974Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":11395}
+[2026-04-24T09:45:56.975Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T09:46:23.466Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:46:23.467Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T09:46:34.150Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:46:34.151Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":10684}
+[2026-04-24T09:46:34.151Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T09:46:34.152Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T09:56:07.926Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:56:15.095Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据青花瓷自动生成一张博物馆图鉴式中文拆解信息图。要求整张图兼具真实写实主视觉、结构拆解、中文标注、材质说明、纹样寓意、色彩含义和核心特征总结。整体风格应为国"}
+[2026-04-24T09:56:15.092Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:56:15.094Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":149,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:56:15.486Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:56:15.487Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T09:56:15.487Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":392}
+[2026-04-24T09:56:15.488Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T09:56:23.490Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:56:27.981Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:56:27.985Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:33.344Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:34.608Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:37.393Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:41.574Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:42.927Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:56:43.792Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:57:29.354Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:57:39.001Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:57:45.942Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:57:49.144Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:58:04.298Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:58:07.132Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:58:08.187Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:58:09.092Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:58:10.058Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"4fade1f847d1c628..."}
+[2026-04-24T09:58:28.066Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:58:35.987Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:58:35.985Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T09:58:35.988Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T09:58:40.334Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-24T09:58:40.334Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T09:58:40.337Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","hasSessionId":false}
+[2026-04-24T09:58:40.337Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"1872638172@qq.com"}
+[2026-04-24T09:58:41.327Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","status":200}
+[2026-04-24T09:58:41.341Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:58:42.137Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T09:58:42.139Z] [INFO ] [openai-client] conversation:start  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T09:58:43.462Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T09:58:46.907Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb3ed2-79ac-8320-a166-6e3cbe148d02","deviceId":"47b6d885-3c87-4cf4-8b06-1202c2e42773","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:58:46.906Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb3ed2-79ac-8320-a166-6e3cbe148d02","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T09:58:49.701Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":149,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:58:49.702Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据青花瓷自动生成一张博物馆图鉴式中文拆解信息图。要求整张图兼具真实写实主视觉、结构拆解、中文标注、材质说明、纹样寓意、色彩含义和核心特征总结。整体风格应为国"}
+[2026-04-24T09:58:49.851Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:58:49.852Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T09:58:49.853Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":151}
+[2026-04-24T09:58:49.853Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T09:58:53.837Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T09:58:53.837Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:58:54.637Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T09:58:54.638Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T09:58:54.675Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":4,"status":"正常"}
+[2026-04-24T09:58:54.676Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T09:58:54.678Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"1872638172@qq.com"}
+[2026-04-24T09:58:54.678Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","hasSessionId":false}
+[2026-04-24T09:58:55.378Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","status":200}
+[2026-04-24T09:58:55.379Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:58:56.133Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T09:58:56.134Z] [INFO ] [openai-client] conversation:start  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T09:58:57.378Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T09:58:58.891Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb3ee0-6a34-83a9-a3a3-dfe1dd9b1d07","deviceId":"fa579574-f3ec-4581-8379-21c081c73c86","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:58:58.890Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb3ee0-6a34-83a9-a3a3-dfe1dd9b1d07","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T09:59:10.422Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T09:59:10.423Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T09:59:14.893Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:19.343Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:20.040Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:20.250Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:20.496Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:20.717Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:21.142Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:21.415Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:21.578Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:21.735Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:21.963Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:22.139Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:22.331Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:22.535Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T09:59:26.622Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T09:59:26.621Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T09:59:31.377Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":3,"status":"正常"}
+[2026-04-24T09:59:31.378Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T09:59:31.380Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"1872638172@qq.com"}
+[2026-04-24T09:59:31.380Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","hasSessionId":false}
+[2026-04-24T09:59:32.130Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","status":200}
+[2026-04-24T09:59:32.131Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T09:59:32.818Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T09:59:32.821Z] [INFO ] [openai-client] conversation:start  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T09:59:34.077Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T09:59:38.413Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb3f05-0ae4-83ea-8d2d-07e371019fe9","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T09:59:38.413Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb3f05-0ae4-83ea-8d2d-07e371019fe9","deviceId":"add78283-7fdf-46df-be2b-93c34431e5d1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:00:00.746Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb3f05-0ae4-83ea-8d2d-07e371019fe9","fileCount":1,"elapsedMs":22333}
+[2026-04-24T10:00:01.690Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb3f05-0ae4-83ea-8d2d-07e371019fe9","fileId":"sed:file_000000006ef472099eb57683aa9dde40","hasUrl":true}
+[2026-04-24T10:00:06.178Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000006ef472099eb57683aa9dde40&ts=493618&p=fs&cid=1&sig=e0eb936e1c70ad2a031e9759911cb91f449f3ce697c870d193cb092953748f8f&v=0","bytes":2112391}
+[2026-04-24T10:00:06.179Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb3f05-0ae4-83ea-8d2d-07e371019fe9","fileId":"sed:file_000000006ef472099eb57683aa9dde40","base64Length":2816524,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:00:06.184Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":39562}
+[2026-04-24T10:00:06.185Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":39563}
+[2026-04-24T10:00:06.185Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:04:27.989Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":5,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:04:27.990Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建风景画"}
+[2026-04-24T10:04:28.159Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:04:28.160Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T10:04:28.160Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":170}
+[2026-04-24T10:04:28.161Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T10:04:37.398Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":5,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:04:37.398Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建风景画"}
+[2026-04-24T10:04:38.831Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":2,"status":"正常"}
+[2026-04-24T10:04:38.831Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:04:38.834Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":5,"accountType":"Free","accountEmail":"1872638172@qq.com"}
+[2026-04-24T10:04:38.834Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","hasSessionId":false}
+[2026-04-24T10:04:39.435Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","status":200}
+[2026-04-24T10:04:39.437Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:04:40.401Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:04:40.403Z] [INFO ] [openai-client] conversation:start  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":5,"hasProofToken":true}
+[2026-04-24T10:04:42.607Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:04:44.732Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4038-c578-83ea-a408-c2c1b783e20d","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:04:44.732Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4038-c578-83ea-a408-c2c1b783e20d","deviceId":"f0329bbe-e91a-4921-98f3-a8df848e51e0","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:05:06.944Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb4038-c578-83ea-a408-c2c1b783e20d","fileCount":1,"elapsedMs":22212}
+[2026-04-24T10:05:07.719Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb4038-c578-83ea-a408-c2c1b783e20d","fileId":"sed:file_00000000afec72098eaf0b6a034a6535","hasUrl":true}
+[2026-04-24T10:05:08.871Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000afec72098eaf0b6a034a6535&ts=493618&p=fs&cid=1&sig=8760ceaa768de12d2911003067e6c6e0590fe2d81e92307dc4b2de8800b91248&v=0","bytes":2964933}
+[2026-04-24T10:05:08.873Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb4038-c578-83ea-a408-c2c1b783e20d","fileId":"sed:file_00000000afec72098eaf0b6a034a6535","base64Length":3953244,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:05:08.877Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":31479}
+[2026-04-24T10:05:08.878Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":31480}
+[2026-04-24T10:05:08.878Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:14:06.370Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建小狗"}
+[2026-04-24T10:14:06.365Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:14:06.369Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:14:07.788Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":1,"status":"正常"}
+[2026-04-24T10:14:07.788Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:14:07.791Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"1872638172@qq.com"}
+[2026-04-24T10:14:07.791Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","hasSessionId":false}
+[2026-04-24T10:14:08.458Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","status":200}
+[2026-04-24T10:14:08.460Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:14:11.359Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:14:11.360Z] [INFO ] [openai-client] conversation:start  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T10:14:13.589Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:14:15.571Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4273-a460-83ea-a4e2-02947d2e3e06","deviceId":"6c1960d0-0214-4a19-8ca6-cfb3b4e704d6","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:14:15.571Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4273-a460-83ea-a4e2-02947d2e3e06","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:14:15.733Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:14:15.733Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:14:27.529Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:14:27.529Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建小狗"}
+[2026-04-24T10:14:29.497Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":0,"status":"限流"}
+[2026-04-24T10:14:29.498Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":1969}
+[2026-04-24T10:14:29.498Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T10:14:29.499Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T10:15:04.711Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建小狗"}
+[2026-04-24T10:15:04.710Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:15:04.862Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:15:05.009Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:15:05.010Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T10:15:05.010Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":299}
+[2026-04-24T10:15:05.011Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T10:15:13.664Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:15:13.665Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创建小狗"}
+[2026-04-24T10:15:15.510Z] [INFO ] [account-service] 账号刷新成功  {"email":"1872638172@qq.com","type":"Free","quota":0,"status":"限流"}
+[2026-04-24T10:15:17.321Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":25,"status":"正常"}
+[2026-04-24T10:15:17.322Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:15:17.324Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T10:15:17.325Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","hasSessionId":false}
+[2026-04-24T10:15:17.834Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","status":200}
+[2026-04-24T10:15:17.835Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:15:18.626Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:15:18.627Z] [INFO ] [openai-client] conversation:start  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T10:15:22.776Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:15:28.414Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb42b9-6f44-8323-9699-9fa8524a582b","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:15:28.414Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb42b9-6f44-8323-9699-9fa8524a582b","deviceId":"6b0fe5e8-4ae1-4d99-a71e-37aa594a2821","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:15:29.668Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:15:40.918Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:15:40.919Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:15:45.628Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:16:07.956Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:16:15.123Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:16:23.524Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:16:28.011Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:16:35.292Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:17:13.447Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:17:29.403Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:18:17.051Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:18:17.049Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:18:17.052Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"青花瓷"}
+[2026-04-24T10:18:19.216Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":24,"status":"正常"}
+[2026-04-24T10:18:19.216Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:18:19.219Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","hasSessionId":false}
+[2026-04-24T10:18:19.218Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":3,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T10:18:19.658Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","status":200}
+[2026-04-24T10:18:19.659Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:18:20.180Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:18:20.182Z] [INFO ] [openai-client] conversation:start  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":3,"hasProofToken":true}
+[2026-04-24T10:18:22.289Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:18:26.787Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb436c-df5c-8320-9e2c-0a1fcb11898c","fileCount":0,"textPreview":"青花瓷{\"{\"size\":\"1024x{\"size\":\"1024x1024\",\"n\":1}正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:18:26.788Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb436c-df5c-8320-9e2c-0a1fcb11898c","deviceId":"f05c188e-33e4-4d1c-9e4d-a1fe3fba7bba","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:18:28.373Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:18:31.411Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:18:31.410Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:18:31.412Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"青花瓷"}
+[2026-04-24T10:18:34.508Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":23,"status":"正常"}
+[2026-04-24T10:18:34.508Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:18:34.511Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":3,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T10:18:34.511Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","hasSessionId":false}
+[2026-04-24T10:18:35.380Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","status":200}
+[2026-04-24T10:18:35.381Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:18:36.021Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:18:36.129Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:18:36.131Z] [INFO ] [openai-client] conversation:start  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":3,"hasProofToken":true}
+[2026-04-24T10:18:37.407Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:18:41.681Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb437c-78bc-8322-972c-144dc1b41538","fileCount":0,"textPreview":"青花瓷正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:18:41.682Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb437c-78bc-8322-972c-144dc1b41538","deviceId":"5bc5b96b-0eb7-49c0-9d18-e2a1c95a0d8a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:18:50.030Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb436c-df5c-8320-9e2c-0a1fcb11898c","fileCount":1,"elapsedMs":23242}
+[2026-04-24T10:18:51.040Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb436c-df5c-8320-9e2c-0a1fcb11898c","fileId":"sed:file_00000000930072068b39bf5915eab6b9","hasUrl":true}
+[2026-04-24T10:18:51.839Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000930072068b39bf5915eab6b9&ts=493618&p=fs&cid=1&sig=0570272132254e4caefe4645ece5ca374127472b0ffbc91bf256386c52423ea3&v=0","bytes":2207075}
+[2026-04-24T10:18:51.840Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb436c-df5c-8320-9e2c-0a1fcb11898c","fileId":"sed:file_00000000930072068b39bf5915eab6b9","base64Length":2942768,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:18:51.846Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":34794}
+[2026-04-24T10:18:51.846Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":34794}
+[2026-04-24T10:18:51.847Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:19:04.844Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb437c-78bc-8322-972c-144dc1b41538","fileCount":1,"elapsedMs":23162}
+[2026-04-24T10:19:05.666Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb437c-78bc-8322-972c-144dc1b41538","fileId":"sed:file_0000000044e072098ffb8b48c3754ee0","hasUrl":true}
+[2026-04-24T10:19:06.319Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000044e072098ffb8b48c3754ee0&ts=493618&p=fs&cid=1&sig=05cd3c31e78bca57b0ba9100cedd40b0303e7d6d6720c8df285329f43b6c65a2&v=0","bytes":1979266}
+[2026-04-24T10:19:06.321Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb437c-78bc-8322-972c-144dc1b41538","fileId":"sed:file_0000000044e072098ffb8b48c3754ee0","base64Length":2639024,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:19:06.327Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":34915}
+[2026-04-24T10:19:06.327Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":34915}
+[2026-04-24T10:19:06.327Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:19:06.378Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:19:36.862Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:19:36.863Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"风景画"}
+[2026-04-24T10:19:37.133Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:19:37.341Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:19:37.692Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:19:37.693Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T10:19:37.693Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":830}
+[2026-04-24T10:19:37.693Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T10:20:04.985Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:20:04.986Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"风景画"}
+[2026-04-24T10:20:05.302Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:20:07.030Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":8,"status":"正常"}
+[2026-04-24T10:20:07.030Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:20:07.032Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":3,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T10:20:07.033Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","hasSessionId":false}
+[2026-04-24T10:20:08.017Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","status":200}
+[2026-04-24T10:20:08.018Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:20:08.637Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:20:08.639Z] [INFO ] [openai-client] conversation:start  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":3,"hasProofToken":true}
+[2026-04-24T10:20:10.514Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:20:13.976Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb43d9-0b0c-8321-8d54-449394629724","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:20:13.977Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb43d9-0b0c-8321-8d54-449394629724","deviceId":"f3fa9c6f-d7f8-4715-b208-c7e5c13b450b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:20:29.088Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:20:29.089Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:20:29.670Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:20:45.632Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:21:07.965Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:21:15.124Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:21:23.525Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:21:28.025Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:21:35.310Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:22:13.454Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:22:29.407Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:22:49.129Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:22:49.130Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"风景画"}
+[2026-04-24T10:22:49.345Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:22:58.273Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":7,"status":"正常"}
+[2026-04-24T10:22:58.273Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:22:58.275Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":3,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T10:22:58.276Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","hasSessionId":false}
+[2026-04-24T10:22:58.695Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","status":200}
+[2026-04-24T10:22:58.696Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:22:59.304Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:22:59.305Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":3,"hasProofToken":true}
+[2026-04-24T10:23:00.708Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:23:05.486Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4483-a6b0-8323-9582-a20794b1e88a","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:23:05.487Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4483-a6b0-8323-9582-a20794b1e88a","deviceId":"a4da6ddb-0577-47e3-9f4d-3c99a19709a5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:23:05.730Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:23:05.731Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:23:12.086Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":3,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:23:12.087Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"风景画"}
+[2026-04-24T10:23:14.092Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":6,"status":"正常"}
+[2026-04-24T10:23:14.092Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:23:14.095Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","hasSessionId":false}
+[2026-04-24T10:23:14.094Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":3,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T10:23:14.532Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","status":200}
+[2026-04-24T10:23:14.533Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:23:15.174Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:23:15.175Z] [INFO ] [openai-client] conversation:start  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":3,"hasProofToken":true}
+[2026-04-24T10:23:17.054Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:23:17.642Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:23:22.037Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4493-f14c-8320-bcd8-5cc24508ebfd","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:23:22.038Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4493-f14c-8320-bcd8-5cc24508ebfd","deviceId":"b074f399-1831-4e43-b939-75ce1a43fca5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:23:28.365Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:23:31.426Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:23:36.031Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:23:42.482Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb4493-f14c-8320-bcd8-5cc24508ebfd","fileCount":1,"elapsedMs":20444}
+[2026-04-24T10:23:43.312Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb4493-f14c-8320-bcd8-5cc24508ebfd","fileId":"sed:file_000000003d047206ba17c4cb09e016a4","hasUrl":true}
+[2026-04-24T10:23:48.234Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000003d047206ba17c4cb09e016a4&ts=493618&p=fs&cid=1&sig=269ea141193dc2f74a34cecd3b9421e9efa0fd7f492502dd8b412e5afc284248&v=0","bytes":3133829}
+[2026-04-24T10:23:48.236Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb4493-f14c-8320-bcd8-5cc24508ebfd","fileId":"sed:file_000000003d047206ba17c4cb09e016a4","base64Length":4178440,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:23:48.242Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":36155}
+[2026-04-24T10:23:48.242Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":36155}
+[2026-04-24T10:23:48.243Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:24:06.393Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:24:13.016Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"高阶函数"}
+[2026-04-24T10:24:13.016Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:24:13.422Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:24:13.821Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:24:14.129Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:24:14.130Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":1114}
+[2026-04-24T10:24:14.130Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T10:24:14.131Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T10:25:29.677Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:25:45.646Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:26:07.979Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:26:15.133Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:26:23.541Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:26:28.034Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:26:35.320Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:27:13.455Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:27:29.407Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:28:17.068Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:28:28.370Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:28:31.428Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:28:36.036Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:29:06.396Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:30:29.680Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:30:45.660Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:31:07.987Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:31:15.136Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:31:23.553Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:31:28.034Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:31:35.332Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:32:13.472Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:32:29.422Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:33:17.080Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:33:20.628Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:33:20.629Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T10:33:20.627Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:33:22.696Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":22,"status":"正常"}
+[2026-04-24T10:33:22.697Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:33:22.699Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T10:33:22.700Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","hasSessionId":false}
+[2026-04-24T10:33:23.569Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","status":200}
+[2026-04-24T10:33:23.571Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:33:24.594Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:33:24.596Z] [INFO ] [openai-client] conversation:start  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T10:33:26.346Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:33:28.376Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:33:31.441Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:33:32.111Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb46f5-294c-8323-b392-80a40d2fe51c","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:33:32.112Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb46f5-294c-8323-b392-80a40d2fe51c","deviceId":"ff965403-f180-4f27-9676-aa1e3a3269e5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:33:36.048Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:34:06.395Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:34:20.139Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb46f5-294c-8323-b392-80a40d2fe51c","fileCount":1,"elapsedMs":48027}
+[2026-04-24T10:34:20.938Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb46f5-294c-8323-b392-80a40d2fe51c","fileId":"sed:file_00000000131c7207bddad440293e4a93","hasUrl":true}
+[2026-04-24T10:34:30.142Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000131c7207bddad440293e4a93&ts=493618&p=fs&cid=1&sig=f04604861557ccef87b7623547ff9182f951097b42e8580d3f605988293c183a&v=0","bytes":3023402}
+[2026-04-24T10:34:30.144Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb46f5-294c-8323-b392-80a40d2fe51c","fileId":"sed:file_00000000131c7207bddad440293e4a93","base64Length":4031204,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:34:30.149Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":69520}
+[2026-04-24T10:34:30.149Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":69520}
+[2026-04-24T10:34:30.150Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:35:29.679Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:35:45.661Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:36:07.992Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:36:15.141Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:36:23.555Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:36:28.048Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:36:35.348Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:37:13.482Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:37:29.437Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:38:17.087Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:38:20.638Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:38:28.389Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:38:31.446Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:38:36.058Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:39:06.398Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:48:11.554Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:48:25.328Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，"}
+[2026-04-24T10:48:25.327Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":114,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:48:25.322Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T10:48:26.721Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":21,"status":"正常"}
+[2026-04-24T10:48:26.721Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:48:26.726Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","hasSessionId":false}
+[2026-04-24T10:48:26.725Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":114,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T10:48:27.208Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","status":200}
+[2026-04-24T10:48:27.209Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:48:27.775Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:48:27.776Z] [INFO ] [openai-client] conversation:start  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":114,"hasProofToken":true}
+[2026-04-24T10:48:29.732Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:48:30.769Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4a7c-012c-83a4-8142-b7349c3e84a0","deviceId":"e237ddbd-882d-4927-b5bb-6f6977c27f06","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:48:30.768Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4a7c-012c-83a4-8142-b7349c3e84a0","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:49:06.409Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb4a7c-012c-83a4-8142-b7349c3e84a0","fileCount":1,"elapsedMs":35640}
+[2026-04-24T10:49:06.927Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:49:06.927Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:49:14.303Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":114,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:49:14.304Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，"}
+[2026-04-24T10:49:16.153Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":8,"status":"正常"}
+[2026-04-24T10:49:16.153Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:49:16.157Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","hasSessionId":false}
+[2026-04-24T10:49:16.157Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":114,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T10:49:16.580Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","status":200}
+[2026-04-24T10:49:16.581Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:49:17.226Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:49:17.228Z] [INFO ] [openai-client] conversation:start  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":114,"hasProofToken":true}
+[2026-04-24T10:49:18.628Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:49:22.275Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4aad-a114-83e8-8045-06a5c3b8987b","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:49:22.276Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4aad-a114-83e8-8045-06a5c3b8987b","deviceId":"07612703-e08e-47de-a317-5d8a6a5043f5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:49:26.995Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:49:26.995Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:49:41.048Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，"}
+[2026-04-24T10:49:41.047Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":114,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:49:52.752Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-24T10:49:52.753Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:49:52.756Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":114,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T10:49:52.756Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","hasSessionId":false}
+[2026-04-24T10:49:53.676Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","status":200}
+[2026-04-24T10:49:53.677Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:49:56.190Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:49:56.191Z] [INFO ] [openai-client] conversation:start  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":114,"hasProofToken":true}
+[2026-04-24T10:49:57.714Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:49:59.482Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4ad4-9330-83ea-b6d8-74a38d2849ad","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:49:59.483Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4ad4-9330-83ea-b6d8-74a38d2849ad","deviceId":"44a6712c-6c03-4344-80b8-ab6112457460","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:50:21.675Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb4ad4-9330-83ea-b6d8-74a38d2849ad","fileCount":1,"elapsedMs":22192}
+[2026-04-24T10:50:23.361Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb4ad4-9330-83ea-b6d8-74a38d2849ad","fileId":"sed:file_00000000e1dc720697268c2e79be91ae","hasUrl":true}
+[2026-04-24T10:50:24.874Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000e1dc720697268c2e79be91ae&ts=493618&p=fs&cid=1&sig=d52da09d526650bde9fcdbc9ac3b65369c62f3766ac593dae7021b68d0116758&v=0","bytes":2232151}
+[2026-04-24T10:50:24.875Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb4ad4-9330-83ea-b6d8-74a38d2849ad","fileId":"sed:file_00000000e1dc720697268c2e79be91ae","base64Length":2976204,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:50:24.880Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":43832}
+[2026-04-24T10:50:24.881Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T10:50:24.881Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":43833}
+[2026-04-24T10:50:55.848Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T10:50:55.848Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T10:50:56.129Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:50:58.274Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":7,"status":"正常"}
+[2026-04-24T10:50:58.275Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T10:50:58.278Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T10:50:58.278Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","hasSessionId":false}
+[2026-04-24T10:50:58.953Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","status":200}
+[2026-04-24T10:50:58.955Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:51:00.448Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T10:51:00.450Z] [INFO ] [openai-client] conversation:start  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T10:51:02.051Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T10:51:07.515Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb4b15-1148-83e8-8f57-8a2bba6d6bf1","deviceId":"99611865-7618-4a6e-8505-41c4b4b01ee7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T10:51:07.514Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb4b15-1148-83e8-8f57-8a2bba6d6bf1","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T10:51:08.164Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T10:51:08.165Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T10:53:11.562Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:53:25.337Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:58:11.572Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T10:58:25.338Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:03:11.581Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:03:25.350Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:08:11.584Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:08:25.357Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:13:11.595Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:13:25.360Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:18:11.600Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:18:25.365Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:23:11.609Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:23:25.368Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:28:11.612Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:28:25.375Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:33:11.618Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:33:25.387Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:38:11.623Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:38:25.401Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:43:11.627Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:43:25.409Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:48:11.648Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:48:25.429Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:53:11.678Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:53:25.451Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:58:11.704Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T11:58:25.484Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:03:11.727Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:03:25.507Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:08:11.752Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:08:25.535Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:13:11.779Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:13:25.554Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:14:24.320Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:14:27.096Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T12:14:27.095Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:14:27.092Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:14:27.443Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:14:33.015Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":4,"status":"正常"}
+[2026-04-24T12:14:33.016Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:14:33.020Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T12:14:33.020Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","hasSessionId":false}
+[2026-04-24T12:14:33.589Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","status":200}
+[2026-04-24T12:14:33.590Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:14:34.200Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:14:34.201Z] [INFO ] [openai-client] conversation:start  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T12:14:36.137Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:14:38.273Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb5eaa-d9e4-83ea-85f6-12dd2c4c0920","deviceId":"037482dc-55ed-4ea6-8540-1dcd3e7a7475","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:14:38.272Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb5eaa-d9e4-83ea-85f6-12dd2c4c0920","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:14:42.899Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:14:42.900Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:14:53.705Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:14:53.705Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T12:14:55.305Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":3,"status":"正常"}
+[2026-04-24T12:14:55.305Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:14:55.308Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T12:14:55.309Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","hasSessionId":false}
+[2026-04-24T12:14:55.765Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","status":200}
+[2026-04-24T12:14:55.766Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:14:56.194Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:14:56.195Z] [INFO ] [openai-client] conversation:start  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T12:14:57.446Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:14:59.098Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb5ec0-4844-83ea-8391-a5102978111c","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:14:59.099Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb5ec0-4844-83ea-8391-a5102978111c","deviceId":"2054a281-9bf3-49c4-8a15-10459b2eac79","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:15:06.981Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:15:06.982Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:15:22.389Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:15:22.390Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T12:15:24.118Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":21,"status":"正常"}
+[2026-04-24T12:15:24.119Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:15:24.122Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:15:24.123Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","hasSessionId":false}
+[2026-04-24T12:15:24.777Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","status":200}
+[2026-04-24T12:15:24.777Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:15:25.336Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:15:25.337Z] [INFO ] [openai-client] conversation:start  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T12:15:30.230Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:15:34.106Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb5ede-0b94-8322-b22e-7b51cc0194ff","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:15:34.107Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb5ede-0b94-8322-b22e-7b51cc0194ff","deviceId":"8e77bc3b-31c7-4569-8c4a-79258f1a5103","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:16:05.827Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb5ede-0b94-8322-b22e-7b51cc0194ff","fileCount":1,"elapsedMs":31720}
+[2026-04-24T12:16:06.436Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb5ede-0b94-8322-b22e-7b51cc0194ff","fileId":"sed:file_000000007aac7206b065b062ee0dbce5","hasUrl":true}
+[2026-04-24T12:16:07.460Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000007aac7206b065b062ee0dbce5&ts=493620&p=fs&cid=1&sig=6d065765f9c783f6a062eee00fdc88b3b4334fd3999615622a26ebec35a4946d&v=0","bytes":2199701}
+[2026-04-24T12:16:07.463Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb5ede-0b94-8322-b22e-7b51cc0194ff","fileId":"sed:file_000000007aac7206b065b062ee0dbce5","base64Length":2932936,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:16:07.474Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":45084}
+[2026-04-24T12:16:07.473Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":45083}
+[2026-04-24T12:16:07.474Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T12:18:11.803Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:18:25.583Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:19:24.339Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:19:27.121Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:22:45.761Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:22:56.095Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:22:56.095Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:22:56.093Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:22:56.466Z] [ERROR] [account-service] 账号刷新失败  {"message":"/backend-api/me failed: HTTP 403","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:22:56.595Z] [ERROR] [account-service] 账号刷新失败  {"message":"/backend-api/me failed: HTTP 403","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:22:56.766Z] [ERROR] [account-service] 账号刷新失败  {"message":"/backend-api/me failed: HTTP 403","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:22:56.767Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T12:22:56.767Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":672}
+[2026-04-24T12:22:56.768Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T12:23:11.822Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:23:13.854Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:23:13.855Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:23:15.814Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":20,"status":"正常"}
+[2026-04-24T12:23:15.815Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:23:15.819Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","hasSessionId":false}
+[2026-04-24T12:23:15.818Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:23:16.313Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","status":200}
+[2026-04-24T12:23:16.314Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:17.011Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:23:17.012Z] [INFO ] [openai-client] conversation:start  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:23:18.274Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:23:21.783Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb60b5-3bb8-8321-ae9b-3635690dd6d3","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:23:21.783Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb60b5-3bb8-8321-ae9b-3635690dd6d3","deviceId":"aa222592-4dd8-454c-813c-485be6512ed2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:25.594Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:23:26.263Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:23:26.264Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:23:29.654Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:23:29.655Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:23:31.513Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":6,"status":"正常"}
+[2026-04-24T12:23:31.514Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:23:31.517Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:23:31.517Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","hasSessionId":false}
+[2026-04-24T12:23:32.034Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","status":200}
+[2026-04-24T12:23:32.035Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:32.593Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:23:32.594Z] [INFO ] [openai-client] conversation:start  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:23:33.974Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:23:37.435Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb60c4-eef8-83e8-9f76-9931d849ac1d","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:23:37.436Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb60c4-eef8-83e8-9f76-9931d849ac1d","deviceId":"656a6b3a-12da-46f9-b8d0-7e97410f5519","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:41.975Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:23:41.976Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:23:44.817Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:23:44.818Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:23:45.037Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:45.322Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:45.498Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:45.499Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"No available tokens found in data/accounts.json"}
+[2026-04-24T12:23:45.500Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"No available tokens found in data/accounts.json","elapsedMs":682}
+[2026-04-24T12:23:45.500Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: No available tokens found in data/accounts.json","name":"Error"}
+[2026-04-24T12:23:47.304Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:23:47.305Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:23:48.458Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":2,"status":"正常"}
+[2026-04-24T12:23:48.460Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:23:48.469Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","hasSessionId":false}
+[2026-04-24T12:23:48.467Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T12:23:48.889Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","status":200}
+[2026-04-24T12:23:48.890Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:49.492Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:23:49.493Z] [INFO ] [openai-client] conversation:start  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:23:50.803Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:23:52.548Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb60d5-9670-83ea-8a92-c31e45a4c376","deviceId":"60b56ee7-4c51-49ec-9200-ab01248d2cf3","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:23:52.547Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb60d5-9670-83ea-8a92-c31e45a4c376","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:23:52.772Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:23:52.773Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:23:58.112Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:23:58.112Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:23:58.346Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:24:00.147Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-24T12:24:00.148Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:24:00.152Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:24:00.152Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","hasSessionId":false}
+[2026-04-24T12:24:00.624Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","status":200}
+[2026-04-24T12:24:00.625Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:24:01.089Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:24:01.091Z] [INFO ] [openai-client] conversation:start  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:24:02.285Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:24:06.404Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb60e1-53e8-83e8-af55-54f38efaac36","deviceId":"8a107c38-dc88-4cff-8c1d-f364e9a5cef2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:24:06.403Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb60e1-53e8-83e8-af55-54f38efaac36","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:24:06.605Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:24:06.605Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:24:24.356Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:24:27.132Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:25:06.042Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:25:07.810Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:25:07.812Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:25:07.814Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:25:08.027Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:09.621Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":1,"status":"正常"}
+[2026-04-24T12:25:09.622Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:25:09.627Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","hasSessionId":false}
+[2026-04-24T12:25:09.626Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil@gmail.com"}
+[2026-04-24T12:25:10.440Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","status":200}
+[2026-04-24T12:25:10.442Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:10.967Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:25:10.972Z] [INFO ] [openai-client] conversation:start  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:25:16.269Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:25:20.593Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb6128-2c38-83e8-a2a2-473746fb63bd","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:25:20.594Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb6128-2c38-83e8-a2a2-473746fb63bd","deviceId":"4e638507-aa73-45f4-9d87-07ee66cecc64","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:25.272Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:25:25.273Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:25:27.581Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:25:27.582Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:25:27.784Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:29.037Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":4,"status":"正常"}
+[2026-04-24T12:25:29.038Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:25:29.042Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:25:29.042Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","hasSessionId":false}
+[2026-04-24T12:25:29.696Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","status":200}
+[2026-04-24T12:25:29.697Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:30.163Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:25:30.165Z] [INFO ] [openai-client] conversation:start  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:25:31.210Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:25:33.077Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb613a-3994-83e8-a2e2-c08d5f2c925f","deviceId":"3fea06b6-edbd-49c2-a8aa-d1cab6bdb23f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:25:33.076Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb613a-3994-83e8-a2e2-c08d5f2c925f","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:26:04.346Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb613a-3994-83e8-a2e2-c08d5f2c925f","fileCount":1,"elapsedMs":31269}
+[2026-04-24T12:26:04.978Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb613a-3994-83e8-a2e2-c08d5f2c925f","fileId":"sed:file_000000002df47206983ec4ea4d5d5ba3","hasUrl":true}
+[2026-04-24T12:26:06.160Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000002df47206983ec4ea4d5d5ba3&ts=493620&p=fs&cid=1&sig=b54b96cea43a81de86bd1302429162cea2fd29616866fd96bade71ccb8caea2c&v=0","bytes":2637693}
+[2026-04-24T12:26:06.162Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb613a-3994-83e8-a2e2-c08d5f2c925f","fileId":"sed:file_000000002df47206983ec4ea4d5d5ba3","base64Length":3516924,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:26:06.171Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":38589}
+[2026-04-24T12:26:06.172Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":38590}
+[2026-04-24T12:26:06.172Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T12:26:15.510Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:26:15.511Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:26:17.057Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":3,"status":"正常"}
+[2026-04-24T12:26:17.059Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:26:17.063Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","hasSessionId":false}
+[2026-04-24T12:26:17.062Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:26:17.630Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","status":200}
+[2026-04-24T12:26:17.631Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:26:18.284Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:26:18.285Z] [INFO ] [openai-client] conversation:start  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:26:19.478Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:26:23.194Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb616a-6538-83e8-871a-621558277130","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:26:23.195Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb616a-6538-83e8-871a-621558277130","deviceId":"cadf5a61-f494-4e09-a94c-5b553a8ef58e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:26:27.888Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:26:27.890Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:27:45.789Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:27:56.118Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:28:11.847Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:28:25.618Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:28:57.493Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:29:17.543Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:29:17.541Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:29:17.544Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:29:18.783Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":19,"status":"正常"}
+[2026-04-24T12:29:18.783Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:29:18.788Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","hasSessionId":false}
+[2026-04-24T12:29:18.787Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:29:19.374Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","status":200}
+[2026-04-24T12:29:19.375Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:29:19.821Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:29:19.823Z] [INFO ] [openai-client] conversation:start  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:29:20.997Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"10d2122f-c303-4169-9701-329a273b7310","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:29:22.799Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb621f-e21c-8320-9596-54b4fe04ca63","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:29:22.800Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb621f-e21c-8320-9596-54b4fe04ca63","deviceId":"10d2122f-c303-4169-9701-329a273b7310","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:29:23.109Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:29:23.110Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:29:24.369Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:29:27.149Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:30:06.061Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:30:07.827Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-24T12:32:03.188Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:32:05.061Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:32:05.064Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:32:05.065Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:32:05.252Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:32:07.364Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":0,"status":"限流"}
+[2026-04-24T12:32:08.902Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":2,"status":"正常"}
+[2026-04-24T12:32:08.903Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:32:08.908Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","hasSessionId":false}
+[2026-04-24T12:32:08.908Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:32:09.618Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","status":200}
+[2026-04-24T12:32:09.619Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:32:10.388Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:32:10.391Z] [INFO ] [openai-client] conversation:start  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:32:12.735Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"2f7f625e-596a-479c-883a-926c09957e9a","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:32:13.773Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"terminated"}
+[2026-04-24T12:32:13.774Z] [ERROR] [images.generations.route] request:failed  {"message":"terminated","name":"TypeError"}
+[2026-04-24T12:32:45.804Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:32:56.139Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:33:11.870Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:33:25.634Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:33:57.513Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:34:17.554Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:34:24.390Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:34:27.171Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:35:06.078Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:35:07.840Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:37:03.206Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:37:05.084Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:37:45.823Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:37:55.188Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:37:55.184Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:37:55.187Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:37:56.160Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:37:56.442Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":18,"status":"正常"}
+[2026-04-24T12:37:56.444Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:37:56.453Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:37:56.454Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","hasSessionId":false}
+[2026-04-24T12:37:56.923Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","status":200}
+[2026-04-24T12:37:56.925Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:37:57.430Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:37:57.431Z] [INFO ] [openai-client] conversation:start  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:37:58.704Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:38:01.008Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb6425-80f0-8322-aab0-ac7fb584dbf8","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:38:01.009Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb6425-80f0-8322-aab0-ac7fb584dbf8","deviceId":"216f216e-ef0e-4c17-9662-5b78285c007d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:38:01.221Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T12:38:01.222Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T12:38:11.889Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:38:25.642Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:38:57.533Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:39:15.383Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"《倚天屠龙记》周芷若的维秘联动活动宣传图，人物占画面 80% 以上，周芷若在古风古城城墙上，优雅侧身回眸姿态，高品质真人级 3D 古风游戏截图风格，电影级光影，"}
+[2026-04-24T12:39:15.382Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":114,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:39:15.619Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:39:17.566Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:39:18.133Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":17,"status":"正常"}
+[2026-04-24T12:39:18.134Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:39:18.139Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":114,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:39:18.140Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","hasSessionId":false}
+[2026-04-24T12:39:18.849Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","status":200}
+[2026-04-24T12:39:18.850Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:39:19.777Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:39:19.779Z] [INFO ] [openai-client] conversation:start  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":114,"hasProofToken":true}
+[2026-04-24T12:39:21.353Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:39:23.769Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb6477-fb84-83a2-9b0e-d768e9b402aa","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:39:23.770Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb6477-fb84-83a2-9b0e-d768e9b402aa","deviceId":"8af30d9b-13a5-4afb-b0f4-61dd8fff9051","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:39:24.406Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:39:27.186Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:39:59.309Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb6477-fb84-83a2-9b0e-d768e9b402aa","fileCount":1,"elapsedMs":35539}
+[2026-04-24T12:39:59.954Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb6477-fb84-83a2-9b0e-d768e9b402aa","fileId":"sed:file_00000000309072079334e823bc4c832f","hasUrl":true}
+[2026-04-24T12:40:01.164Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000309072079334e823bc4c832f&ts=493620&p=fs&cid=1&sig=b45efd705ee5e216d38f5d05df8246e5857f3ca551bfd910673c8d7de9cd8c00&v=0","bytes":2125072}
+[2026-04-24T12:40:01.165Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb6477-fb84-83a2-9b0e-d768e9b402aa","fileId":"sed:file_00000000309072079334e823bc4c832f","base64Length":2833432,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:40:01.172Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":45789}
+[2026-04-24T12:40:01.172Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":45789}
+[2026-04-24T12:40:01.173Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T12:40:06.095Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:40:07.860Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-24T12:40:25.080Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-24T12:40:25.080Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:40:26.295Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":1,"status":"正常"}
+[2026-04-24T12:40:26.296Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:40:26.300Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","hasSessionId":false}
+[2026-04-24T12:40:26.299Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":414,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-24T12:40:26.784Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","status":200}
+[2026-04-24T12:40:26.785Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:40:27.240Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:40:27.241Z] [INFO ] [openai-client] conversation:start  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":414,"hasProofToken":true}
+[2026-04-24T12:40:37.500Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:40:42.676Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb64be-1a70-83e8-8369-409d7c5ff1a8","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:40:42.677Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb64be-1a70-83e8-8369-409d7c5ff1a8","deviceId":"ec654c0e-a693-4926-bcad-882c90c5f760","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:41:12.450Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb64be-1a70-83e8-8369-409d7c5ff1a8","fileCount":1,"elapsedMs":29773}
+[2026-04-24T12:41:13.402Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb64be-1a70-83e8-8369-409d7c5ff1a8","fileId":"sed:file_00000000acec7206bad03e40e2c338ae","hasUrl":true}
+[2026-04-24T12:41:14.920Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000acec7206bad03e40e2c338ae&ts=493620&p=fs&cid=1&sig=9ecb6ecaebd24bcaf6c9ee7e113f0f936f9b77ee44c4f3bad09ccec38f6d2701&v=0","bytes":2638587}
+[2026-04-24T12:41:14.921Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb64be-1a70-83e8-8369-409d7c5ff1a8","fileId":"sed:file_00000000acec7206bad03e40e2c338ae","base64Length":3518116,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:41:14.927Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":49847}
+[2026-04-24T12:41:14.927Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":49847}
+[2026-04-24T12:41:14.928Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T12:42:03.220Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:42:05.097Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:42:45.842Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:42:55.207Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:42:56.183Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:43:11.906Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:43:25.658Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:43:57.550Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:44:17.578Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:44:24.423Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:44:27.200Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:45:06.107Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:45:07.872Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:46:47.782Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个风格"}
+[2026-04-24T12:46:47.777Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:46:47.780Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":4,"hasResponseFormat":true,"size":null}
+[2026-04-24T12:46:49.317Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":16,"status":"正常"}
+[2026-04-24T12:46:49.318Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T12:46:49.322Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T12:46:49.322Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","hasSessionId":false}
+[2026-04-24T12:46:49.799Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","status":200}
+[2026-04-24T12:46:49.800Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:46:50.247Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T12:46:50.248Z] [INFO ] [openai-client] conversation:start  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T12:46:51.927Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T12:46:56.065Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb663a-715c-8322-be85-2f7c534824f4","fileCount":0,"textPreview":"换个风格正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T12:46:56.065Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb663a-715c-8322-be85-2f7c534824f4","deviceId":"d942d5cd-d2a5-47be-8811-ccc99cb95f1b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:47:03.231Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:47:05.109Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:47:45.864Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:47:55.222Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:47:56.199Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:48:11.920Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:48:25.677Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:48:32.431Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb663a-715c-8322-be85-2f7c534824f4","fileCount":1,"elapsedMs":96366}
+[2026-04-24T12:48:33.120Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb663a-715c-8322-be85-2f7c534824f4","fileId":"sed:file_0000000002147209af45dd24ecacc070","hasUrl":true}
+[2026-04-24T12:48:34.030Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000002147209af45dd24ecacc070&ts=493620&p=fs&cid=1&sig=5eb5589b312f2e4e8308dad4bed6850565862787e641213a4a11485241b324fb&v=0","bytes":2542174}
+[2026-04-24T12:48:34.033Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb663a-715c-8322-be85-2f7c534824f4","fileId":"sed:file_0000000002147209af45dd24ecacc070","base64Length":3389568,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T12:48:34.047Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":106265}
+[2026-04-24T12:48:34.047Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":106265}
+[2026-04-24T12:48:34.048Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T12:48:57.569Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:49:17.596Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:49:24.434Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:49:27.210Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:50:06.124Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:50:07.894Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:51:47.792Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:52:03.242Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:52:05.128Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:52:45.877Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:52:55.239Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:52:56.215Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:53:11.927Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:53:25.699Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:53:41.620Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T12:53:57.577Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:54:17.617Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:54:24.453Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:54:27.223Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:55:06.140Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:55:07.909Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:56:47.806Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:57:03.259Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:57:05.140Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:57:45.885Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:57:55.245Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:57:56.230Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:58:11.936Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:58:25.713Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:58:41.633Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:58:57.583Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:59:17.624Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:59:24.467Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T12:59:27.230Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:00:06.160Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:00:07.924Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:01:02.888Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:01:47.825Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:02:03.268Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:02:05.159Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:02:45.899Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:02:55.256Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:02:56.244Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:03:11.950Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:03:25.724Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:03:41.641Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:03:57.601Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:04:17.637Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:04:24.473Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:04:27.240Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:05:06.178Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:05:07.932Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:06:02.902Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:06:47.842Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:07:03.287Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:07:05.171Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:07:45.912Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:07:55.268Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:07:56.259Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:08:11.968Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:08:25.731Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:08:41.657Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:08:57.620Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:09:17.650Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:09:24.491Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:09:27.256Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:10:06.194Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:10:07.940Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:11:02.911Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:11:47.851Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:12:03.294Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:12:05.184Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:12:45.924Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:12:55.277Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:12:56.267Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:13:11.004Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:13:12.097Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:13:25.750Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:13:41.673Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:13:57.626Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:14:17.659Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:14:24.499Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:14:27.269Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:15:06.208Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:15:07.954Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:43:51.814Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:48:41.068Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:52:13.332Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:54:54.918Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T13:54:54.913Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:54:54.919Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T13:55:05.652Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T13:55:05.653Z] [WARN ] [account-service] 第 1 张：无可用 token  {"reason":"暂无可用账号，请先在账号管理页面添加并启用账号"}
+[2026-04-24T13:55:05.653Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"暂无可用账号，请先在账号管理页面添加并启用账号","elapsedMs":10734}
+[2026-04-24T13:55:05.654Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: 暂无可用账号，请先在账号管理页面添加并启用账号","name":"Error"}
+[2026-04-24T13:55:45.730Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:55:57.298Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:55:57.301Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T13:56:05.497Z] [ERROR] [account-service] 账号刷新失败  {"message":"account not found","token":"42263f7591ff61fd..."}
+[2026-04-24T13:57:13.343Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T13:57:24.046Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:57:35.012Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:57:44.403Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:57:46.935Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:57:46.937Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T13:57:46.936Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T13:57:48.383Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":15,"status":"正常"}
+[2026-04-24T13:57:48.384Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T13:57:48.394Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","hasSessionId":false}
+[2026-04-24T13:57:48.391Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T13:57:49.129Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","status":200}
+[2026-04-24T13:57:49.131Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T13:57:49.709Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T13:57:49.711Z] [INFO ] [openai-client] conversation:start  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T13:57:51.576Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"c087e40b-9753-4153-96c8-b714362df02f","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T13:57:55.261Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb76dd-f00c-8323-887b-801f826488a1","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T13:57:55.263Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb76dd-f00c-8323-887b-801f826488a1","deviceId":"c087e40b-9753-4153-96c8-b714362df02f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T13:58:26.612Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb76dd-f00c-8323-887b-801f826488a1","fileCount":1,"elapsedMs":31350}
+[2026-04-24T13:58:27.236Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb76dd-f00c-8323-887b-801f826488a1","fileId":"sed:file_000000003ef07209bbdbdc7479a3b90d","hasUrl":true}
+[2026-04-24T13:58:34.037Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"terminated"}
+[2026-04-24T13:58:34.038Z] [ERROR] [images.generations.route] request:failed  {"message":"terminated","name":"TypeError"}
+[2026-04-24T13:58:34.268Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T13:59:54.928Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:00:45.745Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:02:48.642Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:02:50.522Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T14:02:50.516Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:02:50.520Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T14:02:52.108Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":14,"status":"正常"}
+[2026-04-24T14:02:52.109Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:02:52.113Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T14:02:52.114Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","hasSessionId":false}
+[2026-04-24T14:02:52.634Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","status":200}
+[2026-04-24T14:02:52.636Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:02:53.127Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:02:53.129Z] [INFO ] [openai-client] conversation:start  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T14:02:54.511Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:02:56.605Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb780d-2694-8323-ad73-ee986ec66523","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T14:02:56.606Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb780d-2694-8323-ad73-ee986ec66523","deviceId":"e7f48b9f-cb81-4344-b4eb-05d348722a0e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:03:01.055Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T14:03:01.056Z] [ERROR] [images.generations.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T14:06:41.769Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:06:49.233Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":151,"hasResponseFormat":true,"size":null}
+[2026-04-24T14:06:49.234Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"创作一张图片为《极限竞速 地平线 8》的游戏实机截图，游戏背景设为中国，背景城市为深圳，时间设定为 2028 年。画面需要体现真实次世代开放世界赛车游戏的实机演"}
+[2026-04-24T14:06:49.229Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:06:49.696Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:06:52.365Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":8,"status":"正常"}
+[2026-04-24T14:06:52.365Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:06:52.370Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":151,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-24T14:06:52.371Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","hasSessionId":false}
+[2026-04-24T14:06:52.952Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","status":200}
+[2026-04-24T14:06:52.953Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:06:53.611Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:06:53.613Z] [INFO ] [openai-client] conversation:start  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":151,"hasProofToken":true}
+[2026-04-24T14:06:55.280Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:07:00.171Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb78fe-23ac-83e8-868b-4b540d8ba8e9","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T14:07:00.172Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb78fe-23ac-83e8-868b-4b540d8ba8e9","deviceId":"181fdd73-f15b-4c71-af79-2c31a4193aa7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:07:21.645Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eb78fe-23ac-83e8-868b-4b540d8ba8e9","fileCount":1,"elapsedMs":21473}
+[2026-04-24T14:07:22.383Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eb78fe-23ac-83e8-868b-4b540d8ba8e9","fileId":"sed:file_0000000056987209858a1d85f30dfe51","hasUrl":true}
+[2026-04-24T14:07:25.420Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000056987209858a1d85f30dfe51&ts=493622&p=fs&cid=1&sig=e3cfa5d86d3b06622a248988e449d21260f1870aa324ab6a11ebdf75c395479c&v=0","bytes":2299002}
+[2026-04-24T14:07:25.422Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eb78fe-23ac-83e8-868b-4b540d8ba8e9","fileId":"sed:file_0000000056987209858a1d85f30dfe51","base64Length":3065336,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:07:25.432Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":36198}
+[2026-04-24T14:07:25.432Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":36198}
+[2026-04-24T14:07:25.433Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-24T14:07:58.942Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:09:24.933Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:09:24.945Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundary0dNdAV8ANyPAraJw"}
+[2026-04-24T14:09:24.947Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个风格"}
+[2026-04-24T14:09:27.257Z] [INFO ] [account-service] 账号刷新成功  {"email":"meadowssteven9699+anvh7mg@hotmail.com","type":"Free","quota":13,"status":"正常"}
+[2026-04-24T14:09:27.257Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:09:27.261Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"meadowssteven9699+anvh7mg@hotmail.com"}
+[2026-04-24T14:09:27.262Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","hasSessionId":false}
+[2026-04-24T14:09:27.833Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","status":200}
+[2026-04-24T14:09:27.835Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:09:28.338Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:09:28.340Z] [INFO ] [openai-client] conversation:start  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T14:09:31.471Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:09:36.341Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb7998-a2f4-8322-ab4f-e474aa3738f0","fileCount":0,"textPreview":"换个风格正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-24T14:09:36.342Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb7998-a2f4-8322-ab4f-e474aa3738f0","deviceId":"32bce045-5f44-42b0-8766-6fce2f186910","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:09:36.716Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T14:09:36.717Z] [ERROR] [images.edits.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T14:09:39.581Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个风格"}
+[2026-04-24T14:09:39.580Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryXnu9HalhTdQx0tu4"}
+[2026-04-24T14:09:41.175Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":25,"status":"正常"}
+[2026-04-24T14:09:41.176Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:09:41.179Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-24T14:09:41.180Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","hasSessionId":false}
+[2026-04-24T14:09:41.806Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","status":200}
+[2026-04-24T14:09:41.807Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:09:42.657Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:09:42.658Z] [INFO ] [openai-client] conversation:start  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T14:09:44.049Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:09:48.290Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb79a6-ce9c-8320-9c66-89dee5db30fc","fileCount":0,"textPreview":"换个风格可以的可以的，你想换可以的，你想换成可以的，你想换成什么风格？是画风、写可以的，你想换成什么风格？是画风、写作风格还是界面主题之类的？"}
+[2026-04-24T14:09:48.290Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb79a6-ce9c-8320-9c66-89dee5db30fc","deviceId":"1d54e3ce-3501-4627-99c7-edee53d4de3b","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:11:41.786Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:11:49.244Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:12:49.243Z] [ERROR] [openai-client] generate-image:no-file-ids  {"conversationId":"69eb79a6-ce9c-8320-9c66-89dee5db30fc","textPreview":"换个风格可以的可以的，你想换可以的，你想换成可以的，你想换成什么风格？是画风、写可以的，你想换成什么风格？是画风、写作风格还是界面主题之类的？","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:12:49.240Z] [WARN ] [openai-client] poll-image-ids:timeout  {"conversationId":"69eb79a6-ce9c-8320-9c66-89dee5db30fc","elapsedMs":180950}
+[2026-04-24T14:12:49.339Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"换个风格可以的可以的，你想换可以的，你想换成可以的，你想换成什么风格？是画风、写可以的，你想换成什么风格？是画风、写作风格还是界面主题之类的？"}
+[2026-04-24T14:12:49.340Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"换个风格可以的可以的，你想换可以的，你想换成可以的，你想换成什么风格？是画风、写可以的，你想换成什么风格？是画风、写作风格还是界面主题之类的？","elapsedMs":189759}
+[2026-04-24T14:12:49.341Z] [ERROR] [images.edits.route] request:failed  {"message":"image generation failed: 换个风格可以的可以的，你想换可以的，你想换成可以的，你想换成什么风格？是画风、写可以的，你想换成什么风格？是画风、写作风格还是界面主题之类的？","name":"Error"}
+[2026-04-24T14:12:52.295Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:12:58.956Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:14:24.945Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:16:41.791Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:16:49.260Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T14:25:00.227Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:25:02.999Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个风格"}
+[2026-04-24T14:25:02.997Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundarysd8XrCI6R5LCKOlZ"}
+[2026-04-24T14:25:02.976Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:25:03.241Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:25:05.399Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":7,"status":"正常"}
+[2026-04-24T14:25:05.400Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:25:05.407Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","hasSessionId":false}
+[2026-04-24T14:25:05.406Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-24T14:25:05.944Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","status":200}
+[2026-04-24T14:25:05.947Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:25:06.511Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:25:06.513Z] [INFO ] [openai-client] conversation:start  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T14:25:08.218Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:25:12.278Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb7d42-eb88-83e8-8e68-8eb769ec4c37","deviceId":"014a46d7-e1ac-4dff-b74a-b5093ecfc369","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:25:12.277Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb7d42-eb88-83e8-8e68-8eb769ec4c37","fileCount":0,"textPreview":"换个风格可以，请具体可以，请具体说一下你可以，请具体说一下你想换可以，请具体说一下你想换成什么风格？比如动漫可以，请具体说一下你想换成什么风格？比如动漫风、油画风、赛博朋克、简约插画风等。"}
+[2026-04-24T14:28:09.839Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:28:26.626Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T14:28:26.640Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个分格"}
+[2026-04-24T14:28:26.639Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryOATvpF8Fr8okFqlB"}
+[2026-04-24T14:28:26.864Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:28:28.178Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":6,"status":"正常"}
+[2026-04-24T14:28:28.179Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:28:28.183Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-24T14:28:28.184Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","hasSessionId":false}
+[2026-04-24T14:28:28.750Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","status":200}
+[2026-04-24T14:28:28.752Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:28:29.267Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:28:29.268Z] [INFO ] [openai-client] conversation:start  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T14:28:30.460Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:28:35.738Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb7e0d-3d60-83e8-9b5c-a6bf9ce60f73","fileCount":0,"textPreview":"换个分格你能你能稍微具体一点吗？你能稍微具体一点吗？“换个你能稍微具体一点吗？“换个分格”是你能稍微具体一点吗？“换个分格”是指想换风格、换布局，还是想把图像拆分成格子呢？"}
+[2026-04-24T14:28:35.738Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb7e0d-3d60-83e8-9b5c-a6bf9ce60f73","deviceId":"5adbcc42-2abc-49b7-84c0-1ab3bf0edd9d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:28:40.357Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T14:28:40.358Z] [ERROR] [images.edits.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T14:28:52.837Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryDQqlxZooBSqI8OA2"}
+[2026-04-24T14:28:52.838Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个分格"}
+[2026-04-24T14:28:53.109Z] [ERROR] [account-service] 账号刷新失败  {"message":"fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:28:55.763Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyxf5pqh@2925.com","type":"Free","quota":10,"status":"正常"}
+[2026-04-24T14:28:55.764Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:28:55.767Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesyxf5pqh@2925.com"}
+[2026-04-24T14:28:55.767Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","hasSessionId":false}
+[2026-04-24T14:28:56.341Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","status":200}
+[2026-04-24T14:28:56.342Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:28:57.080Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-24T14:28:57.082Z] [INFO ] [openai-client] conversation:start  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-24T14:28:58.736Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-24T14:29:02.632Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eb7e29-7a74-8322-a997-17ba9cfffc56","fileCount":0,"textPreview":"换个分格{\n {\n  \"prompt\":{\n  \"prompt\": \"a modern,{\n  \"prompt\": \"a modern, sleek, minimalist design with a clean grid layout, emphasizing symmetry and simplicity. The color scheme should be neutral with sha"}
+[2026-04-24T14:29:02.632Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eb7e29-7a74-8322-a997-17ba9cfffc56","deviceId":"29a9e5d6-150d-4166-b05d-35a7a79f24ac","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-24T14:29:02.958Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"fetch failed"}
+[2026-04-24T14:29:02.958Z] [ERROR] [images.edits.route] request:failed  {"message":"fetch failed","name":"TypeError"}
+[2026-04-24T14:29:36.909Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个分格"}
+[2026-04-24T14:29:36.908Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryUnF22DwwS05SpfCS"}
+[2026-04-24T14:29:38.997Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyxf5pqh@2925.com","type":"Free","quota":9,"status":"正常"}
+[2026-04-24T14:29:38.998Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-24T14:29:39.003Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesyxf5pqh@2925.com"}
+[2026-04-24T14:29:39.004Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"5f335cba-2c47-49a8-a061-0631f4b68ed6","hasSessionId":false}
+[2026-04-24T15:39:23.943Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T15:39:51.184Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T15:39:54.448Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T15:42:43.136Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T15:43:25.285Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T15:44:23.949Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:44:51.187Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:44:54.453Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:47:43.141Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:48:25.301Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:49:23.959Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:49:51.190Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:49:54.456Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:52:43.157Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:53:25.309Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:54:23.966Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:54:51.204Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:54:54.469Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:57:43.159Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:58:25.315Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:59:23.976Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:59:51.215Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T15:59:54.472Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:02:43.169Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:03:25.317Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:04:23.987Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:04:51.223Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:04:54.477Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:07:43.181Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:08:25.323Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:09:23.998Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:09:51.237Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:09:54.486Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:12:43.188Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:13:25.335Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:14:24.008Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:14:42.758Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T16:14:51.248Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:14:54.488Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:17:43.193Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:17:54.170Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T16:18:25.344Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:19:24.020Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:19:42.777Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:19:51.261Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:19:54.496Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:20:25.047Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T16:22:43.199Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:22:54.188Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:23:19.709Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-24T16:23:25.350Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:24:24.026Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:24:42.787Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:24:51.273Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:24:54.498Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:25:25.062Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:27:43.214Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:27:54.197Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:28:19.721Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:28:25.362Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-24T16:29:24.028Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}

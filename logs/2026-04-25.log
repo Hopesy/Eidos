@@ -1,0 +1,1304 @@
+[2026-04-25T02:18:37.301Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:18:47.453Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:20:19.064Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:20:21.792Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:20:21.807Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryFOdOI8m739GZtH7K"}
+[2026-04-25T02:20:21.808Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换个分格"}
+[2026-04-25T02:20:22.923Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:20:24.288Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":4,"status":"正常"}
+[2026-04-25T02:20:24.289Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:20:24.292Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-25T02:20:24.293Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","hasSessionId":false}
+[2026-04-25T02:20:25.021Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","status":200}
+[2026-04-25T02:20:25.022Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:20:25.639Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:20:25.640Z] [INFO ] [openai-client] conversation:start  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-25T02:20:26.722Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:20:29.023Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec24ea-24c8-83e8-9dea-ef1c2e073dfd","deviceId":"1bff3cac-4b78-457f-8edb-d1033591f6b1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:20:29.022Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec24ea-24c8-83e8-9dea-ef1c2e073dfd","fileCount":0,"textPreview":"换个分格我需要确认一下，你我需要确认一下，你说的“换个分我需要确认一下，你说的“换个分格”是指我需要确认一下，你说的“换个分格”是指要生成图像的**布局分格**吗？比如漫画格、九宫格，还是别的形式的分格？"}
+[2026-04-25T02:23:32.054Z] [WARN ] [openai-client] poll-image-ids:timeout  {"conversationId":"69ec24ea-24c8-83e8-9dea-ef1c2e073dfd","elapsedMs":183031}
+[2026-04-25T02:23:32.055Z] [ERROR] [openai-client] generate-image:no-file-ids  {"conversationId":"69ec24ea-24c8-83e8-9dea-ef1c2e073dfd","textPreview":"换个分格我需要确认一下，你我需要确认一下，你说的“换个分我需要确认一下，你说的“换个分格”是指我需要确认一下，你说的“换个分格”是指要生成图像的**布局分格**吗？比如漫画格、九宫格，还是别的形式的分格？","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:23:32.064Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":190256}
+[2026-04-25T02:23:32.063Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":190255}
+[2026-04-25T02:23:32.064Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T02:23:37.311Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T02:23:47.467Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T02:25:19.079Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T02:25:21.802Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-25T02:26:09.526Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":7,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryzDHau1AN2irgSzTh"}
+[2026-04-25T02:26:09.527Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换成梵高的风格"}
+[2026-04-25T02:26:10.009Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:10.463Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:12.394Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":17,"status":"正常"}
+[2026-04-25T02:26:12.395Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:26:12.398Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":7,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-25T02:26:12.398Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","hasSessionId":false}
+[2026-04-25T02:26:13.103Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","status":200}
+[2026-04-25T02:26:13.105Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:13.762Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:26:13.766Z] [INFO ] [openai-client] conversation:start  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":7,"hasProofToken":true}
+[2026-04-25T02:26:14.817Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:26:17.292Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2646-3d5c-83e8-82c3-b155fde3729f","fileCount":0,"textPreview":"换成梵高的风格{\n  \"{\n  \"is_style_transfer\": true,\n  \"prompt\": \"Create{\n  \"is_style_transfer\": true,\n  \"prompt\": \"Create an image in the style of Vincent van Gogh. The scene should be a vibrant, swirling land"}
+[2026-04-25T02:26:17.293Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2646-3d5c-83e8-82c3-b155fde3729f","deviceId":"e1760b98-530e-4413-ac1e-43128322a65c","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:17.998Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:26:17.999Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"network error: fetch failed","elapsedMs":8472}
+[2026-04-25T02:26:18.000Z] [ERROR] [images.edits.route] request:failed  {"message":"image generation failed: network error: fetch failed","name":"Error"}
+[2026-04-25T02:26:19.760Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":7,"contentType":"multipart/form-data; boundary=----WebKitFormBoundarygKWwlGm5H9AxgAhy"}
+[2026-04-25T02:26:19.761Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"换成梵高的风格"}
+[2026-04-25T02:26:21.436Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyxf5pqh@2925.com","type":"Free","quota":24,"status":"正常"}
+[2026-04-25T02:26:21.437Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:26:21.439Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":7,"accountType":"Free","accountEmail":"zhlhopesyxf5pqh@2925.com"}
+[2026-04-25T02:26:21.439Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","hasSessionId":false}
+[2026-04-25T02:26:22.070Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","status":200}
+[2026-04-25T02:26:22.071Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:22.735Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:26:22.737Z] [INFO ] [openai-client] conversation:start  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":7,"hasProofToken":true}
+[2026-04-25T02:26:24.309Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:26:27.556Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec264f-7ba4-8323-a312-18b5058b0475","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T02:26:27.557Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec264f-7ba4-8323-a312-18b5058b0475","deviceId":"1dd0517d-e0e8-4452-99fa-f2f7f1d7f91a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:49.779Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec264f-7ba4-8323-a312-18b5058b0475","fileCount":1,"elapsedMs":22222}
+[2026-04-25T02:26:50.507Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec264f-7ba4-8323-a312-18b5058b0475","fileId":"sed:file_000000003a84722faddb3eaea14cca04","hasUrl":true}
+[2026-04-25T02:26:51.960Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000003a84722faddb3eaea14cca04&ts=493634&p=fs&cid=1&sig=7089adc397b347b2da7a834b68d1d18f270f10f66318a1f479ac64c67817c3ae&v=0","bytes":3598117}
+[2026-04-25T02:26:51.962Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec264f-7ba4-8323-a312-18b5058b0475","fileId":"sed:file_000000003a84722faddb3eaea14cca04","base64Length":4797492,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:26:51.970Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":32209}
+[2026-04-25T02:26:51.971Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":32210}
+[2026-04-25T02:26:51.972Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T02:28:37.323Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-25T02:28:47.482Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-25T02:29:26.794Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":5,"contentType":"multipart/form-data; boundary=----WebKitFormBoundary1YIwEVvkAK7ynqRi"}
+[2026-04-25T02:29:26.772Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:29:26.795Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"月亮大一点"}
+[2026-04-25T02:29:27.254Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:29:28.882Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":25,"status":"正常"}
+[2026-04-25T02:29:28.883Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:29:28.887Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":5,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-25T02:29:28.887Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","hasSessionId":false}
+[2026-04-25T02:29:29.507Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","status":200}
+[2026-04-25T02:29:29.508Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:29:30.047Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:29:30.049Z] [INFO ] [openai-client] conversation:start  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":5,"hasProofToken":true}
+[2026-04-25T02:29:30.961Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:29:33.201Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec270a-6304-8324-8c40-661662efb713","fileCount":0,"textPreview":"月亮大一点{\n  \"prompt{\n  \"prompt\": \"A{\n  \"prompt\": \"A landscape with the moon unusually{\n  \"prompt\": \"A landscape with the moon unusually large in the sky, casting a gentle glow over the scenery, with a ca"}
+[2026-04-25T02:29:33.202Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec270a-6304-8324-8c40-661662efb713","deviceId":"7ffa3cd0-1797-4ecb-8ae3-58b108a8b6ec","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:29:48.699Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec270a-6304-8324-8c40-661662efb713","fileCount":1,"elapsedMs":15497}
+[2026-04-25T02:29:49.207Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec270a-6304-8324-8c40-661662efb713","fileId":"sed:file_00000000deb871fd84c3047fc25877b6","hasUrl":true}
+[2026-04-25T02:29:50.590Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000deb871fd84c3047fc25877b6&ts=493634&p=fs&cid=1&sig=d084fd3b3a27674a3a5bcb8b9fec458f03e4a15e2b4be4f37b4ef779d570fe30&v=0","bytes":2245880}
+[2026-04-25T02:29:50.592Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec270a-6304-8324-8c40-661662efb713","fileId":"sed:file_00000000deb871fd84c3047fc25877b6","base64Length":2994508,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:29:50.598Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":23803}
+[2026-04-25T02:29:50.597Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":23802}
+[2026-04-25T02:29:50.599Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T02:30:19.089Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-25T02:30:21.810Z] [INFO ] [account-service] 定期刷新限流账号  {"count":1}
+[2026-04-25T02:32:07.997Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:32:08.000Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":352,"hasResponseFormat":true,"size":null}
+[2026-04-25T02:32:08.000Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n"}
+[2026-04-25T02:32:09.183Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":16,"status":"正常"}
+[2026-04-25T02:32:09.184Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:32:09.187Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-25T02:32:09.188Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","hasSessionId":false}
+[2026-04-25T02:32:09.932Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","status":200}
+[2026-04-25T02:32:09.933Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:32:10.606Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:32:10.608Z] [INFO ] [openai-client] conversation:start  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:32:11.923Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:32:15.776Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec27ab-2420-83e8-af77-86f95ce56ea4","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:32:15.777Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec27ab-2420-83e8-af77-86f95ce56ea4","deviceId":"d3ed719f-70a6-4380-a417-6e1e54b76890","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:32:54.008Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec27ab-2420-83e8-af77-86f95ce56ea4","fileCount":1,"elapsedMs":38231}
+[2026-04-25T02:32:54.637Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec27ab-2420-83e8-af77-86f95ce56ea4","fileId":"sed:file_00000000465471f68c89b23b53608ab1","hasUrl":true}
+[2026-04-25T02:32:56.123Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000465471f68c89b23b53608ab1&ts=493634&p=fs&cid=1&sig=a6a3bacc566699258bede0882e75d82c0497998c803a3c51daa6ffab4f071525&v=0","bytes":1925464}
+[2026-04-25T02:32:56.125Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec27ab-2420-83e8-af77-86f95ce56ea4","fileId":"sed:file_00000000465471f68c89b23b53608ab1","base64Length":2567288,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:32:56.134Z] [INFO ] [account-service] 第 1 张：生成成功  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":48134}
+[2026-04-25T02:32:57.946Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil@gmail.com","type":"Free","quota":0,"status":"限流"}
+[2026-04-25T02:32:58.647Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":23,"status":"正常"}
+[2026-04-25T02:32:58.648Z] [INFO ] [account-service] 第 2 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:32:58.652Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","hasSessionId":false}
+[2026-04-25T02:32:58.652Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-25T02:32:59.249Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","status":200}
+[2026-04-25T02:32:59.250Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:32:59.794Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:32:59.795Z] [INFO ] [openai-client] conversation:start  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:33:05.700Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:33:11.639Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec27e0-9268-83ea-af70-61166ed08c9a","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:33:11.639Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec27e0-9268-83ea-af70-61166ed08c9a","deviceId":"93c468b3-0e01-4ebd-8827-edce7834dc81","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:33:37.341Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:33:47.490Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:34:24.347Z] [ERROR] [account-service] 第 2 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:34:24.348Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":2,"got":1,"elapsedMs":136348}
+[2026-04-25T02:34:24.348Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":2,"imageCount":1}
+[2026-04-25T02:34:26.792Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:35:19.106Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:35:21.821Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:37:08.019Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:38:37.360Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:38:47.502Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:39:26.803Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:40:19.120Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:40:21.832Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:42:08.035Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:42:20.768Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:42:20.771Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":352,"hasResponseFormat":true,"size":null}
+[2026-04-25T02:42:20.772Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n"}
+[2026-04-25T02:42:21.411Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:22.473Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":23,"status":"正常"}
+[2026-04-25T02:42:22.474Z] [INFO ] [account-service] 第 1 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:42:22.478Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-25T02:42:22.478Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","hasSessionId":false}
+[2026-04-25T02:42:23.210Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","status":200}
+[2026-04-25T02:42:23.212Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:23.834Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:42:23.837Z] [INFO ] [openai-client] conversation:start  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:42:24.728Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:42:28.972Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2a10-2394-83ea-9f6c-265c09b114b5","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:42:28.973Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2a10-2394-83ea-9f6c-265c09b114b5","deviceId":"38075219-07ed-4c4b-9ce8-a1f847e4d970","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:29.468Z] [ERROR] [account-service] 第 1 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:42:29.959Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:30.443Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:32.542Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":24,"status":"正常"}
+[2026-04-25T02:42:32.542Z] [INFO ] [account-service] 第 2 张：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:42:32.546Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-25T02:42:32.546Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","hasSessionId":false}
+[2026-04-25T02:42:33.118Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","status":200}
+[2026-04-25T02:42:33.123Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:33.873Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:42:33.875Z] [INFO ] [openai-client] conversation:start  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:42:35.027Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:42:38.347Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2a1a-65c8-83ea-81a1-c91c0eb1edca","deviceId":"67145189-1518-4ee2-bed0-062bf9cba5e6","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:42:38.346Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2a1a-65c8-83ea-81a1-c91c0eb1edca","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:42:38.776Z] [ERROR] [account-service] 第 2 张：生成失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:42:38.777Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":2,"detail":"network error: fetch failed","elapsedMs":18005}
+[2026-04-25T02:42:38.777Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: network error: fetch failed","name":"Error"}
+[2026-04-25T02:43:37.376Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:43:47.514Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:44:26.822Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:45:19.139Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:45:21.852Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:54:05.816Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:54:09.866Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T02:54:09.871Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":352,"hasResponseFormat":true,"size":null}
+[2026-04-25T02:54:09.872Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n"}
+[2026-04-25T02:54:09.873Z] [INFO ] [account-service] 第 1 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T02:54:11.204Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":15,"status":"正常"}
+[2026-04-25T02:54:11.205Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:54:11.210Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopefil+mapledeltaoasis@gmail.com"}
+[2026-04-25T02:54:11.212Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","hasSessionId":false}
+[2026-04-25T02:54:11.869Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","status":200}
+[2026-04-25T02:54:11.870Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:54:12.515Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:54:12.517Z] [INFO ] [openai-client] conversation:start  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:54:13.574Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:54:15.805Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2cd4-df30-83e8-bfd1-dcfbb5b95c21","deviceId":"d2cab144-5ee0-4070-8d2f-ce10b4716822","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:54:15.804Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2cd4-df30-83e8-bfd1-dcfbb5b95c21","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:54:34.352Z] [ERROR] [account-service] 第 1 次请求：失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:54:34.353Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":2,"detail":"network error: fetch failed","elapsedMs":24481}
+[2026-04-25T02:54:34.353Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: network error: fetch failed","name":"Error"}
+[2026-04-25T02:55:51.439Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":352,"hasResponseFormat":true,"size":null}
+[2026-04-25T02:55:51.440Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n"}
+[2026-04-25T02:55:51.440Z] [INFO ] [account-service] 第 1 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T02:55:53.425Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":23,"status":"正常"}
+[2026-04-25T02:55:53.426Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:55:53.430Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","hasSessionId":false}
+[2026-04-25T02:55:53.429Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-25T02:55:54.251Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","status":200}
+[2026-04-25T02:55:54.252Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:55:54.975Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:55:54.976Z] [INFO ] [openai-client] conversation:start  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T02:55:55.945Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:55:59.541Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2d3b-4940-83ea-807e-3db1f0ad15ac","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T02:55:59.542Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2d3b-4940-83ea-807e-3db1f0ad15ac","deviceId":"493475a1-215d-4f14-bf29-26d7da9c8f9f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:56:00.031Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":2,"detail":"network error: fetch failed","elapsedMs":8591}
+[2026-04-25T02:56:00.030Z] [ERROR] [account-service] 第 1 次请求：失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T02:56:00.031Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: network error: fetch failed","name":"Error"}
+[2026-04-25T02:56:48.339Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"生成一张灵笼2里的白月魁做内衣模特联动活动宣传图，人物占80%画面，躺在水池里摆弄姿态，穿着联动款的产品，要贴合主题，诱惑风，3D质感，图中即为白月魁\ngpt没"}
+[2026-04-25T02:56:48.339Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":108,"hasResponseFormat":true,"size":null}
+[2026-04-25T02:56:48.340Z] [INFO ] [account-service] 第 1 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T02:56:48.834Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:56:50.338Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyxf5pqh@2925.com","type":"Free","quota":23,"status":"正常"}
+[2026-04-25T02:56:50.339Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:56:50.343Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","hasSessionId":false}
+[2026-04-25T02:56:50.342Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":108,"accountType":"Free","accountEmail":"zhlhopesyxf5pqh@2925.com"}
+[2026-04-25T02:56:51.072Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","status":200}
+[2026-04-25T02:56:51.073Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:56:51.707Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:56:51.708Z] [INFO ] [openai-client] conversation:start  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":108,"hasProofToken":true}
+[2026-04-25T02:56:52.740Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T02:56:54.752Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2d74-2c84-8323-b7e7-2471d64c2b14","fileCount":0,"textPreview":"生成一张灵笼2里的白月魁做内衣模特联动活动宣传图，人物占80%画面，躺在水池里摆弄姿态，穿着联动款的产品，要贴合主题，诱惑风，3D质感，图中即为白月魁\ngpt没有国漫的数据的，所以生图的时候要上传一张对应人物图片给他为了准确生成图像为了准确生成图像，我需要你上传一为了准确生成图像，我需要你上传一张白月魁为了准确生成图像，我需要你上传一张白月魁的图片，这样我才能更好地体现她的形象和风格。请提供一张相"}
+[2026-04-25T02:56:54.753Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2d74-2c84-8323-b7e7-2471d64c2b14","deviceId":"ba549203-31e6-427d-a472-081fc21d6a0e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:05.836Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:59:09.877Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T02:59:55.040Z] [WARN ] [openai-client] poll-image-ids:timeout  {"conversationId":"69ec2d74-2c84-8323-b7e7-2471d64c2b14","elapsedMs":180287}
+[2026-04-25T02:59:55.041Z] [ERROR] [openai-client] generate-image:no-file-ids  {"conversationId":"69ec2d74-2c84-8323-b7e7-2471d64c2b14","textPreview":"生成一张灵笼2里的白月魁做内衣模特联动活动宣传图，人物占80%画面，躺在水池里摆弄姿态，穿着联动款的产品，要贴合主题，诱惑风，3D质感，图中即为白月魁\ngpt没有国漫的数据的，所以生图的时候要上传一张对应人物图片给他为了准确生成图像为了准确生成图像，我需要你上传一为了准确生成图像，我需要你上传一张白月魁为了准确生成图像，我需要你上传一张白月魁的图片，这样我才能更好地体现她的形象和风格。请提供一张相关的图片吧！","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:55.046Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/2 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":186707}
+[2026-04-25T02:59:55.046Z] [INFO ] [account-service] 第 2 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T02:59:55.502Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:55.899Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:56.317Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:57.631Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyygrky7@2925.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-25T02:59:57.632Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T02:59:57.634Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":108,"accountType":"Free","accountEmail":"zhlhopesyygrky7@2925.com"}
+[2026-04-25T02:59:57.635Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","hasSessionId":false}
+[2026-04-25T02:59:58.221Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","status":200}
+[2026-04-25T02:59:58.222Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T02:59:58.839Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T02:59:58.840Z] [INFO ] [openai-client] conversation:start  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":108,"hasProofToken":true}
+[2026-04-25T03:00:00.008Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T03:00:02.266Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec2e2f-3dcc-83e8-99f5-2c6085d79a53","deviceId":"637141fa-c0ac-4d2a-b8e4-930f11b8981f","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T03:00:02.266Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec2e2f-3dcc-83e8-99f5-2c6085d79a53","fileCount":0,"textPreview":"生成一张灵笼2里的白月魁做内衣模特联动活动宣传图，人物占80%画面，躺在水池里摆弄姿态，穿着联动款的产品，要贴合主题，诱惑风，3D质感，图中即为白月魁\ngpt没有国漫的数据的，所以生图的时候要上传一张对应人物图片给他我无法生成包含我无法生成包含性暗示或成人我无法生成包含性暗示或成人内容的图片，包括诱惑我无法生成包含性暗示或成人内容的图片，包括诱惑风内衣画面。如果你希望，我可以帮你制作白月魁我无法生"}
+[2026-04-25T03:00:02.655Z] [ERROR] [account-service] 第 2 次请求：失败  {"token":"eyJhbGciOiJSUzI1...","error":"network error: fetch failed"}
+[2026-04-25T03:00:02.655Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":2,"got":1,"elapsedMs":194316}
+[2026-04-25T03:00:02.656Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":2,"imageCount":1}
+[2026-04-25T03:00:55.857Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T03:01:18.836Z] [INFO ] [account-service] 账号 watcher 已启动
+[2026-04-25T03:04:05.843Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:04:09.894Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:05:55.870Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:06:18.845Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:09:05.858Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:09:09.909Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:10:55.883Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:11:18.853Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:14:05.866Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:14:09.915Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:15:55.896Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:16:18.866Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:19:05.872Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:19:09.928Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:20:55.904Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:21:18.880Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:24:05.878Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:24:09.934Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:25:55.919Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:26:18.893Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:29:05.887Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:29:09.944Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:30:55.932Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:31:18.907Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:34:05.893Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:34:09.951Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:35:55.936Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:36:18.914Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:39:05.907Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:39:09.966Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:40:55.951Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:41:18.929Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:44:05.913Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:44:09.978Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:45:55.956Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:46:18.941Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:49:05.917Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:49:09.981Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:50:55.966Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:51:18.956Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:54:05.929Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:54:09.984Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:55:55.973Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:56:18.959Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:59:05.939Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T03:59:10.000Z] [INFO ] [account-service] 定期刷新限流账号  {"count":2}
+[2026-04-25T04:00:07.430Z] [INFO ] [account-service] 第 1 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T04:00:07.429Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n"}
+[2026-04-25T04:00:07.427Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":352,"hasResponseFormat":true,"size":null}
+[2026-04-25T04:00:09.103Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopefil+mapledeltaoasis@gmail.com","type":"Free","quota":0,"status":"限流"}
+[2026-04-25T04:00:10.444Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyt33jz3@2925.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-25T04:00:10.445Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T04:00:10.450Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","hasSessionId":false}
+[2026-04-25T04:00:10.450Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesyt33jz3@2925.com"}
+[2026-04-25T04:00:10.722Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","status":200}
+[2026-04-25T04:00:10.725Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:00:11.122Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T04:00:11.123Z] [INFO ] [openai-client] conversation:start  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T04:00:12.119Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T04:00:17.525Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T04:00:17.526Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","deviceId":"7e97d798-0973-4da0-8260-034c83a841f9","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:00:49.836Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","fileCount":1,"elapsedMs":32310}
+[2026-04-25T04:00:50.856Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","fileId":"sed:file_0000000025187209b97c940f050c014e","hasUrl":true}
+[2026-04-25T04:00:51.763Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000025187209b97c940f050c014e&ts=493636&p=fs&cid=1&sig=3c5a9ab6cd3adf1606294b290937f6af5816888852a54feecdf728152dd2bf86&v=0","bytes":2085219}
+[2026-04-25T04:00:51.764Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","fileId":"sed:file_0000000025187209b97c940f050c014e","base64Length":2780292,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:00:51.765Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec3c4b-7758-83e8-9ed4-b1876531b486","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:00:51.770Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/2 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":44341}
+[2026-04-25T04:00:51.770Z] [INFO ] [account-service] 第 2 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T04:00:53.356Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesytz9kqv@2925.com","type":"Free","quota":5,"status":"正常"}
+[2026-04-25T04:00:53.356Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T04:00:53.358Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":352,"accountType":"Free","accountEmail":"zhlhopesytz9kqv@2925.com"}
+[2026-04-25T04:00:53.359Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","hasSessionId":false}
+[2026-04-25T04:00:53.556Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","status":200}
+[2026-04-25T04:00:53.557Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:00:54.005Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T04:00:54.006Z] [INFO ] [openai-client] conversation:start  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":352,"hasProofToken":true}
+[2026-04-25T04:00:55.336Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T04:00:55.985Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:01:01.798Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","deviceId":"edcd87b3-8806-4d47-8aba-6c391f0a28b7","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:01:01.797Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","fileCount":0,"textPreview":"横图，创作如图人物英雄联盟索拉卡性感泳衣的A-pose设计图（不要照搬图中的动作），米白色底。\n有种初期设计的感觉。\n有各个部位拆分。\n要表情差分，多角度表情\n物品拆分，细节特写。\n并且使用手写体文字进行标注说明，最好使用中文。\n角色：保持好角色本体的现有特征，例如脸型、发色、身材等归属于人体特征的内容\n着装、图片的构成务必按照以下要求：\n以下是对人物着装细节的提取以及图片各部分\n二、 图片各部分"}
+[2026-04-25T04:01:18.971Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:01:47.309Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","fileCount":1,"elapsedMs":45511}
+[2026-04-25T04:01:48.061Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","fileId":"sed:file_00000000295c7209896ba441a1449608","hasUrl":true}
+[2026-04-25T04:01:48.772Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000295c7209896ba441a1449608&ts=493636&p=fs&cid=1&sig=109befbe87e2cb3f0fa6ee6c878ad3b545bbb6b6141c2f7fe403862f7760f275&v=0","bytes":2378834}
+[2026-04-25T04:01:48.774Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","fileId":"sed:file_00000000295c7209896ba441a1449608","base64Length":3171780,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:01:48.774Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec3c76-6d34-83ea-ad3a-c55fae33aa2f","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T04:01:48.783Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/2 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":101354}
+[2026-04-25T04:01:48.783Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":2,"got":2,"elapsedMs":101354}
+[2026-04-25T04:01:48.784Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":2,"imageCount":2}
+[2026-04-25T04:04:05.945Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:04:10.002Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:05:55.999Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:06:18.979Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:09:05.955Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:09:10.005Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:10:56.003Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:11:18.990Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:14:05.969Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:14:10.019Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:15:56.017Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:16:19.004Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:19:05.970Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:19:10.028Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:20:56.023Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:21:19.017Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:24:05.985Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:24:10.034Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:25:56.025Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:26:19.030Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:29:05.999Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:29:10.041Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:30:56.041Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T04:31:19.041Z] [INFO ] [account-service] 定期刷新限流账号  {"count":3}
+[2026-04-25T08:49:17.261Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-25T08:49:17.264Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T08:49:17.263Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-25T08:49:27.952Z] [ERROR] [account-service] 账号刷新失败  {"message":"network error: fetch failed","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T08:49:27.953Z] [WARN ] [account-service] 第 1 次请求：无可用 token  {"reason":"暂无可用账号，请先在账号管理页面添加并启用账号"}
+[2026-04-25T08:49:27.954Z] [ERROR] [account-service] 图片生成全部失败  {"model":"gpt-image-2","count":1,"detail":"暂无可用账号，请先在账号管理页面添加并启用账号","elapsedMs":10691}
+[2026-04-25T08:49:27.955Z] [ERROR] [images.generations.route] request:failed  {"message":"image generation failed: 暂无可用账号，请先在账号管理页面添加并启用账号","name":"Error"}
+[2026-04-25T09:47:52.124Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":414,"hasResponseFormat":true,"size":null}
+[2026-04-25T09:47:52.126Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据【主题：崩坏星穹铁道，角色卡芙卡】自动生成一张高审美的轮廓宇宙收藏版叙事海报风格作品。不要将画面局限于固定器物或常见容器，不要优先默认瓶子、沙漏、玻璃罩、"}
+[2026-04-25T09:47:52.127Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T09:47:54.568Z] [INFO ] [account-service] 账号刷新成功  {"email":"shanna6c5c48@7a.26ai.org","type":"Plus","quota":13,"status":"正常"}
+[2026-04-25T09:47:54.569Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T09:47:54.626Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":414,"accountType":"Plus","accountEmail":"shanna6c5c48@7a.26ai.org"}
+[2026-04-25T09:47:54.627Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","hasSessionId":false}
+[2026-04-25T09:47:55.646Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","status":200}
+[2026-04-25T09:47:55.648Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:47:56.528Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T09:47:56.531Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":414,"hasProofToken":true}
+[2026-04-25T09:47:57.748Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T09:48:01.920Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T09:48:01.921Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","deviceId":"a9ebac4a-e09a-4bd6-beeb-5ab031a33e4e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:48:38.724Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","fileCount":1,"elapsedMs":36803}
+[2026-04-25T09:48:40.083Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","fileId":"sed:file_000000009cd8720b892166ed4125242e","hasUrl":true}
+[2026-04-25T09:48:41.145Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000009cd8720b892166ed4125242e&ts=493641&p=fs&cid=1&sig=69cbe95c5f0495022f80e2fa8f856ad0839d2c059ec10ae680dead34c8bc0f3e&v=0","bytes":2522487}
+[2026-04-25T09:48:41.146Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","fileId":"sed:file_000000009cd8720b892166ed4125242e","base64Length":3363316,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:48:41.146Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ec8dcd-0800-83ea-ac23-b61269447416","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:48:41.328Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":49202}
+[2026-04-25T09:48:41.328Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":49202}
+[2026-04-25T09:48:41.330Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-25T09:50:05.449Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":209,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryfuCI5kvW8RiYAbHC"}
+[2026-04-25T09:50:05.450Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"生成一张日本 MV 钢琴演奏场景的影视前期设定板，横版 16:9，黑色标题栏日文标题，左侧为少女偶像的服装设定六视图，右侧为复古欧式钢琴沙龙的场景美术设定与俯视"}
+[2026-04-25T09:50:05.451Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T09:50:07.258Z] [INFO ] [account-service] 账号刷新成功  {"email":"shanna6c5c48@7a.26ai.org","type":"Plus","quota":12,"status":"正常"}
+[2026-04-25T09:50:07.259Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T09:50:07.296Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":209,"accountType":"Plus","accountEmail":"shanna6c5c48@7a.26ai.org"}
+[2026-04-25T09:50:07.297Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","hasSessionId":false}
+[2026-04-25T09:50:07.656Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","status":200}
+[2026-04-25T09:50:07.657Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:50:08.168Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T09:50:08.169Z] [INFO ] [openai-client] conversation:start  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":209,"hasProofToken":true}
+[2026-04-25T09:50:10.688Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T09:50:14.470Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ec8e51-1bf8-83ea-8671-b3151005e497","deviceId":"6128f363-0b42-4589-b7c9-e4666edbc84a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:50:14.470Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ec8e51-1bf8-83ea-8671-b3151005e497","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T09:53:16.260Z] [WARN ] [openai-client] poll-image-ids:timeout  {"conversationId":"69ec8e51-1bf8-83ea-8671-b3151005e497","elapsedMs":181790}
+[2026-04-25T09:53:16.261Z] [ERROR] [openai-client] generate-image:no-file-ids  {"conversationId":"69ec8e51-1bf8-83ea-8671-b3151005e497","textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T09:53:16.403Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":190953}
+[2026-04-25T09:53:16.403Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":190953}
+[2026-04-25T09:53:16.405Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T11:14:17.185Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","promptLength":5,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryj16wOAiDWtuB5u8n"}
+[2026-04-25T11:14:17.188Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T11:14:17.187Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"多张风景图"}
+[2026-04-25T11:14:17.896Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:14:19.776Z] [INFO ] [account-service] 账号刷新成功  {"email":"pirali6c5c45@su.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T11:14:20.618Z] [INFO ] [account-service] 账号刷新成功  {"email":"engeddi6c5c45@ww.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T11:14:21.615Z] [INFO ] [account-service] 账号刷新成功  {"email":"emlyn6c5c45@im.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T11:14:23.021Z] [INFO ] [account-service] 账号刷新成功  {"email":"chanda6c5c45@i4.26ai.org","type":"Plus","quota":2,"status":"正常"}
+[2026-04-25T11:14:23.022Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T11:14:23.100Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","hasSessionId":false}
+[2026-04-25T11:14:23.099Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"chanda6c5c45@i4.26ai.org"}
+[2026-04-25T11:14:23.412Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","status":200}
+[2026-04-25T11:14:23.416Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:14:23.949Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T11:14:23.951Z] [INFO ] [openai-client] conversation:start  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T11:14:24.806Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T11:14:27.314Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","deviceId":"4e338925-16f9-4eb1-a8a0-e6dea80daf71","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:14:27.314Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","fileCount":0,"textPreview":"多张风景图{\n {\n  \"prompt\":{\n  \"prompt\": \"multiple beautiful landscape views, including mountains, forests, and rivers under a bright blue sky\",\n  \"size\": \"large\",\n  \"n\": 3\n}正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图"}
+[2026-04-25T11:14:56.489Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","fileCount":1,"elapsedMs":29175}
+[2026-04-25T11:14:57.209Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","fileId":"sed:file_0000000065f872099fe79ce602849274","hasUrl":true}
+[2026-04-25T11:14:57.876Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000065f872099fe79ce602849274&ts=493643&p=fs&cid=1&sig=e53600cf8945d4c95576b6071d30575ddbe6414ff3bdf4ee80508547d022b2fb&v=0","bytes":2762813}
+[2026-04-25T11:14:57.877Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","fileId":"sed:file_0000000065f872099fe79ce602849274","base64Length":3683752,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:14:57.878Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69eca210-3b90-83e8-9a3e-0786f76bad2f","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:14:58.049Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":40862}
+[2026-04-25T11:14:58.050Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":40863}
+[2026-04-25T11:14:58.052Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T11:53:28.384Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":3,"prompt":"李白健身图"}
+[2026-04-25T11:53:28.383Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":3,"promptLength":5,"hasResponseFormat":true,"size":null}
+[2026-04-25T11:53:28.385Z] [INFO ] [account-service] 第 1 次请求，还需 3 张  {"model":"gpt-image-2"}
+[2026-04-25T11:53:30.467Z] [INFO ] [account-service] 账号刷新成功  {"email":"rexana6c5c48@odk.26ai.org","type":"Plus","quota":1,"status":"正常"}
+[2026-04-25T11:53:30.468Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T11:53:30.501Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","hasSessionId":false}
+[2026-04-25T11:53:30.500Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"rexana6c5c48@odk.26ai.org"}
+[2026-04-25T11:53:30.779Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","status":200}
+[2026-04-25T11:53:30.780Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:53:31.565Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T11:53:31.566Z] [INFO ] [openai-client] conversation:start  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T11:53:32.634Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T11:53:36.719Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","deviceId":"d7a012a1-1600-460a-b12d-fa4d140e424a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:53:36.718Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","fileCount":0,"textPreview":"李白健身图{\n  \"prompt{\n  \"prompt\": \"李白正在{\n  \"prompt\": \"李白正在健身的{\n  \"prompt\": \"李白正在健身的场景，穿着现代运动服，做举重动作，背景是现代健身房，风格写实且有些幽默感\",\n  \"size{\n  \"prompt\": \"李白正在健身的场景，穿着现代运动服，做举重动作，背景是现代健身房，风格写实且有些幽默感\",\n  \"size\": \"102"}
+[2026-04-25T11:54:12.619Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","fileCount":1,"elapsedMs":35900}
+[2026-04-25T11:54:13.110Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","fileId":"sed:file_00000000fa347209b1d6f2a0ee07e425","hasUrl":true}
+[2026-04-25T11:54:13.774Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000fa347209b1d6f2a0ee07e425&ts=493643&p=fs&cid=1&sig=b3e87de4771832565725ff128729afb5e766e66b7d57684b41b8c335f23f399b&v=0","bytes":1964062}
+[2026-04-25T11:54:13.775Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","fileId":"sed:file_00000000fa347209b1d6f2a0ee07e425","base64Length":2618752,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:13.776Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecab3c-00c4-83ea-93b8-7b432d919100","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:13.911Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":45527}
+[2026-04-25T11:54:13.912Z] [INFO ] [account-service] 第 2 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T11:54:14.207Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:15.313Z] [INFO ] [account-service] 账号刷新成功  {"email":"chanda6c5c45@i4.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T11:54:15.653Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:16.269Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:17.721Z] [INFO ] [account-service] 账号刷新成功  {"email":"jay6c5c4e@ifi.26ai.org","type":"Plus","quota":5,"status":"正常"}
+[2026-04-25T11:54:17.721Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T11:54:17.755Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"jay6c5c4e@ifi.26ai.org"}
+[2026-04-25T11:54:17.756Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","hasSessionId":false}
+[2026-04-25T11:54:18.091Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","status":200}
+[2026-04-25T11:54:18.092Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:18.776Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T11:54:18.778Z] [INFO ] [openai-client] conversation:start  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T11:54:19.971Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T11:54:23.594Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","deviceId":"dd6fcd3e-b3e4-4ebf-9c29-f8f52cf7da21","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:23.593Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","fileCount":0,"textPreview":"李白健身图{\n {\n  \"prompt{\n  \"prompt\":{\n  \"prompt\": \"A humorous and imaginative illustration of{\n  \"prompt\": \"A humorous and imaginative illustration of Li Bai, the famous Chinese poet, working out in a mod"}
+[2026-04-25T11:54:46.303Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","fileCount":1,"elapsedMs":22709}
+[2026-04-25T11:54:46.993Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","fileId":"sed:file_000000008444720997ece11306fcd644","hasUrl":true}
+[2026-04-25T11:54:47.639Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000008444720997ece11306fcd644&ts=493643&p=fs&cid=1&sig=e495a815c1b4cabd867b37e62183d7c7014b2dca438dba09a34503c7dddebb5c&v=0","bytes":1848823}
+[2026-04-25T11:54:47.640Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","fileId":"sed:file_000000008444720997ece11306fcd644","base64Length":2465100,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:47.641Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecab6b-1d18-83ea-a949-eeb4374cda2c","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:47.890Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":79506}
+[2026-04-25T11:54:47.890Z] [INFO ] [account-service] 第 3 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T11:54:48.238Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:48.717Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:49.288Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:49.902Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:50.563Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:51.189Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:51.664Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:53.063Z] [INFO ] [account-service] 账号刷新成功  {"email":"susana6c5c5e@ri.26ai.org","type":"Plus","quota":10,"status":"正常"}
+[2026-04-25T11:54:53.063Z] [INFO ] [account-service] 第 3 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T11:54:53.094Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"susana6c5c5e@ri.26ai.org"}
+[2026-04-25T11:54:53.095Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","hasSessionId":false}
+[2026-04-25T11:54:53.401Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","status":200}
+[2026-04-25T11:54:53.402Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:54:54.195Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T11:54:54.196Z] [INFO ] [openai-client] conversation:start  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T11:54:55.589Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T11:55:00.544Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","fileCount":0,"textPreview":"李白健身图{\n  \"prompt{\n  \"prompt\":{\n  \"prompt\": \"A dynamic illustration{\n  \"prompt\": \"A dynamic illustration of the famous poet Li Bai engaging in fitness exercises. He is wearing traditional Chinese attir"}
+[2026-04-25T11:55:00.545Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","deviceId":"eaa2e624-0577-4d9d-b066-5d5b300d6eb1","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:55:23.814Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","fileCount":1,"elapsedMs":23269}
+[2026-04-25T11:55:24.466Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","fileId":"sed:file_0000000074207209a14b900874094dc1","hasUrl":true}
+[2026-04-25T11:55:25.483Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000074207209a14b900874094dc1&ts=493643&p=fs&cid=1&sig=7cb594aa1900c9f268d829bf3f2a857e361ba9c6965cd18839da83e0b97ef23b&v=0","bytes":2012760}
+[2026-04-25T11:55:25.485Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","fileId":"sed:file_0000000074207209a14b900874094dc1","base64Length":2683680,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:55:25.486Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecab8e-e940-83ea-96f2-708ee011d5e3","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T11:55:25.745Z] [INFO ] [account-service] 第 3 次请求：成功，累计 3/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":117361}
+[2026-04-25T11:55:25.745Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":3,"got":3,"elapsedMs":117361}
+[2026-04-25T11:55:25.748Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":3,"imageCount":3}
+[2026-04-25T12:18:25.273Z] [INFO ] [account-service] 第 1 次请求，还需 3 张  {"model":"gpt-image-2"}
+[2026-04-25T12:18:25.273Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":3,"prompt":"李白健身图"}
+[2026-04-25T12:18:25.271Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":3,"promptLength":5,"hasResponseFormat":true,"size":null}
+[2026-04-25T12:18:26.014Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:26.468Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:27.088Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:27.671Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:28.137Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:29.701Z] [INFO ] [account-service] 账号刷新成功  {"email":"ania6c5c56@uc.26ai.org","type":"Plus","quota":12,"status":"正常"}
+[2026-04-25T12:18:29.701Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T12:18:29.730Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"ania6c5c56@uc.26ai.org"}
+[2026-04-25T12:18:29.731Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","hasSessionId":false}
+[2026-04-25T12:18:29.975Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","status":200}
+[2026-04-25T12:18:29.976Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:18:30.501Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T12:18:30.503Z] [INFO ] [openai-client] conversation:start  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T12:18:31.743Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T12:18:35.218Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","fileCount":0,"textPreview":"李白健身图{\n  \"{\n  \"prompt\": \"{\n  \"prompt\": \"A humorous and imaginative illustration of{\n  \"prompt\": \"A humorous and imaginative illustration of the ancient Chinese poet Li Bai working out in a modern gym,"}
+[2026-04-25T12:18:35.218Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","deviceId":"31ca04ba-ee21-42a7-b057-645d91a2540d","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:01.635Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","fileCount":1,"elapsedMs":26417}
+[2026-04-25T12:19:03.023Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","fileId":"sed:file_000000002b447209908019eed8cbe62e","hasUrl":true}
+[2026-04-25T12:19:03.483Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000002b447209908019eed8cbe62e&ts=493644&p=fs&cid=1&sig=187878b4be95468fe0bbbfd863383797f866a03093d1b5b77fae29564d447ad4&v=0","bytes":2098454}
+[2026-04-25T12:19:03.484Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","fileId":"sed:file_000000002b447209908019eed8cbe62e","base64Length":2797940,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:03.484Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecb116-dfd0-83e8-9752-93a42e08040f","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:03.611Z] [INFO ] [account-service] 第 2 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T12:19:03.610Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":38337}
+[2026-04-25T12:19:03.964Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:04.350Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:05.146Z] [INFO ] [account-service] 账号刷新成功  {"email":"sarene6c5c5e@ndg.26ai.org","type":"Plus","quota":12,"status":"正常"}
+[2026-04-25T12:19:05.168Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"sarene6c5c5e@ndg.26ai.org"}
+[2026-04-25T12:19:05.168Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","hasSessionId":false}
+[2026-04-25T12:19:05.147Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T12:19:05.389Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","status":200}
+[2026-04-25T12:19:05.390Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:05.736Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T12:19:05.736Z] [INFO ] [openai-client] conversation:start  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T12:19:06.912Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T12:19:10.108Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","deviceId":"85e71df7-20de-489b-a6a9-63e3874bf6fc","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:10.108Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","fileCount":0,"textPreview":"李白健身图{\n  \"prompt\": \"A{\n  \"prompt\": \"A playful,{\n  \"prompt\": \"A playful, artistic rendition of Li Bai, the famous Chinese poet, in a modern gym setting. He is wearing a{\n  \"prompt\": \"A playful, artisti"}
+[2026-04-25T12:19:34.457Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","fileCount":1,"elapsedMs":24349}
+[2026-04-25T12:19:35.141Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","fileId":"sed:file_00000000ae8872099ea77c60589e6685","hasUrl":true}
+[2026-04-25T12:19:37.657Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000ae8872099ea77c60589e6685&ts=493644&p=fs&cid=1&sig=5642575ce9f2d2a0cf2fe93754143f9fd42fb79b1f49526bb6dbe45ad227c2f2&v=0","bytes":1942388}
+[2026-04-25T12:19:37.658Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","fileId":"sed:file_00000000ae8872099ea77c60589e6685","base64Length":2589852,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:37.659Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecb13a-064c-83ea-8355-05fce651465c","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:37.852Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":72579}
+[2026-04-25T12:19:37.853Z] [INFO ] [account-service] 第 3 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T12:19:38.230Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:38.664Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:39.205Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:39.698Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:39.938Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:40.428Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:41.060Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:41.760Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:42.400Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:42.900Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:43.494Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:45.504Z] [INFO ] [account-service] 第 3 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T12:19:45.493Z] [INFO ] [account-service] 账号刷新成功  {"email":"ofelia6c5c73@38g.26ai.org","type":"Plus","quota":22,"status":"正常"}
+[2026-04-25T12:19:45.595Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"ofelia6c5c73@38g.26ai.org"}
+[2026-04-25T12:19:45.595Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","hasSessionId":false}
+[2026-04-25T12:19:45.793Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","status":200}
+[2026-04-25T12:19:45.794Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:46.599Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T12:19:46.600Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T12:19:49.373Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T12:19:52.709Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","deviceId":"a3c4fc30-e4cd-4ac9-bdaf-9afda07135fa","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:19:52.708Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","fileCount":0,"textPreview":"李白健身图{\n  \"prompt\": \"A{\n  \"prompt\": \"A dynamic and{\n  \"prompt\": \"A dynamic and humorous illustration of Li Bai, the famous Tang Dynasty poet, engaging in a modern workout routine, perhaps lifting{\n  \"p"}
+[2026-04-25T12:20:12.445Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","fileCount":1,"elapsedMs":19736}
+[2026-04-25T12:20:12.984Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","fileId":"sed:file_00000000b3847209a1bf102ca2b61087","hasUrl":true}
+[2026-04-25T12:20:13.661Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000b3847209a1bf102ca2b61087&ts=493644&p=fs&cid=1&sig=87ea46fa6789320eeae51c6f0bbd644797fcb15356fe207129cfae8798a4d0c8&v=0","bytes":2047483}
+[2026-04-25T12:20:13.662Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","fileId":"sed:file_00000000b3847209a1bf102ca2b61087","base64Length":2729980,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:20:13.663Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecb164-a3b0-83ea-8fc4-2be876acfb33","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T12:20:13.870Z] [INFO ] [account-service] 第 3 次请求：成功，累计 3/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":108597}
+[2026-04-25T12:20:13.871Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":3,"got":3,"elapsedMs":108598}
+[2026-04-25T12:20:13.872Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":3,"imageCount":3}
+[2026-04-25T13:00:16.496Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":2,"prompt":"杜甫打虎图"}
+[2026-04-25T13:00:16.495Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":2,"promptLength":5,"hasResponseFormat":true,"size":null}
+[2026-04-25T13:00:16.497Z] [INFO ] [account-service] 第 1 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T13:00:18.077Z] [INFO ] [account-service] 账号刷新成功  {"email":"kristal6c5c45@ld.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:00:18.596Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:19.673Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:20.442Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:21.101Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:21.872Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:22.528Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:23.340Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:24.070Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:24.781Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:25.427Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:27.234Z] [INFO ] [account-service] 账号刷新成功  {"email":"derinna6c5c75@8k.26ai.org","type":"Plus","quota":13,"status":"正常"}
+[2026-04-25T13:00:27.235Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:00:27.285Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"derinna6c5c75@8k.26ai.org"}
+[2026-04-25T13:00:27.286Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","hasSessionId":false}
+[2026-04-25T13:00:27.673Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","status":200}
+[2026-04-25T13:00:27.675Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:28.884Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:00:28.885Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T13:00:30.885Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:00:35.669Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","deviceId":"a8cd1fdb-14c1-438d-9e5a-2e5cea4cee41","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:00:35.669Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","fileCount":0,"textPreview":"杜甫打虎图{\n  \"prompt\":{\n  \"prompt\": \"A traditional Chinese painting{\n  \"prompt\": \"A traditional Chinese painting inspired by the theme 'Du{\n  \"prompt\": \"A traditional Chinese painting inspired by the them"}
+[2026-04-25T13:01:06.939Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","fileCount":1,"elapsedMs":31270}
+[2026-04-25T13:01:07.725Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","fileId":"sed:file_00000000bf30720b8c9807f4cc7a1df2","hasUrl":true}
+[2026-04-25T13:01:09.245Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000bf30720b8c9807f4cc7a1df2&ts=493645&p=fs&cid=1&sig=4e2ac8d63c48d5fde7a8e0f55aacdae28777f33fc263f7ba2bb026c10b0af4cf&v=0","bytes":3068065}
+[2026-04-25T13:01:09.247Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","fileId":"sed:file_00000000bf30720b8c9807f4cc7a1df2","base64Length":4090756,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:09.247Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecbaed-6cd0-83e8-8152-de66f1562060","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:09.522Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/2 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":53026}
+[2026-04-25T13:01:09.523Z] [INFO ] [account-service] 第 2 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T13:01:10.320Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:10.924Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:11.500Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:12.044Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:13.961Z] [INFO ] [account-service] 账号刷新成功  {"email":"leticia6c5c6c@7h.26ai.org","type":"Plus","quota":9,"status":"正常"}
+[2026-04-25T13:01:13.962Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:01:14.007Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":5,"accountType":"Plus","accountEmail":"leticia6c5c6c@7h.26ai.org"}
+[2026-04-25T13:01:14.007Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","hasSessionId":false}
+[2026-04-25T13:01:14.815Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","status":200}
+[2026-04-25T13:01:14.817Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:15.744Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:01:15.746Z] [INFO ] [openai-client] conversation:start  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":5,"hasProofToken":true}
+[2026-04-25T13:01:17.061Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:01:19.917Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","fileCount":0,"textPreview":"杜甫打虎图"}
+[2026-04-25T13:01:19.918Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","deviceId":"43091e85-704a-455c-bb18-fd6024eaf8e3","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:56.125Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","fileCount":1,"elapsedMs":36208}
+[2026-04-25T13:01:56.753Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","fileId":"sed:file_000000006288720ba34c4e4e01b0d40b","hasUrl":true}
+[2026-04-25T13:01:57.569Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000006288720ba34c4e4e01b0d40b&ts=493645&p=fs&cid=1&sig=f4ac6997de4c4fe50300f7715eeffaeaafd65ea4eb728101f40662abd312d185&v=0","bytes":2893630}
+[2026-04-25T13:01:57.571Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","fileId":"sed:file_000000006288720ba34c4e4e01b0d40b","base64Length":3858176,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:57.572Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecbb1c-1fa8-8320-a217-717cef69db77","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:01:57.830Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/2 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":101334}
+[2026-04-25T13:01:57.830Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":2,"got":2,"elapsedMs":101334}
+[2026-04-25T13:01:57.833Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":2,"imageCount":2}
+[2026-04-25T13:47:17.864Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":3,"promptLength":7,"hasResponseFormat":true,"size":null}
+[2026-04-25T13:47:17.869Z] [INFO ] [account-service] 第 1 次请求，还需 3 张  {"model":"gpt-image-2"}
+[2026-04-25T13:47:17.868Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":3,"prompt":"武松偶遇潘金莲"}
+[2026-04-25T13:47:18.519Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:20.109Z] [INFO ] [account-service] 账号刷新成功  {"email":"ania6c5c56@uc.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:47:20.555Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:21.158Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:21.710Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:22.353Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:22.948Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:23.478Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:24.077Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:24.628Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:25.163Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:25.710Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:26.254Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:26.800Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:27.351Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:27.939Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:28.413Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:28.968Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:29.524Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:30.080Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:30.657Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:31.236Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:31.813Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:32.382Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:32.928Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:33.859Z] [INFO ] [account-service] 账号刷新成功  {"email":"clarette6c5c91@v8k.26ai.org","type":"Plus","quota":2,"status":"正常"}
+[2026-04-25T13:47:33.860Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:47:33.882Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":7,"accountType":"Plus","accountEmail":"clarette6c5c91@v8k.26ai.org"}
+[2026-04-25T13:47:33.883Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","hasSessionId":false}
+[2026-04-25T13:47:34.155Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","status":200}
+[2026-04-25T13:47:34.157Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:34.400Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:47:34.402Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:47:36.406Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:47:40.131Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","fileCount":0,"textPreview":"武松偶遇潘金莲{\n {\n  \"prompt\": \"A scene from the Chinese classic 'Water Margin' (水浒{\n  \"prompt\": \"A scene from the Chinese classic 'Water Margin' (水浒传), where Wu Song (武松) unexpectedly encounters Pan Jinlian"}
+[2026-04-25T13:47:40.132Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","deviceId":"a653461a-7115-41a7-bd62-2ef0cc9af453","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:47:40.538Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:47:44.383Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:47:47.668Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:47:54.406Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:47:59.012Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:02.493Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:05.802Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:09.351Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:12.669Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:15.929Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:19.218Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:22.572Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:26.681Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:30.585Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:33.957Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:37.217Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:40.565Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:43.831Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:47.089Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","status":429}
+[2026-04-25T13:48:50.783Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","fileCount":1,"elapsedMs":70651}
+[2026-04-25T13:48:51.534Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","fileId":"sed:file_00000000f95472099212c2d8ecbef0b6","hasUrl":true}
+[2026-04-25T13:48:52.158Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000f95472099212c2d8ecbef0b6&ts=493645&p=fs&cid=1&sig=2c5ad58d5835ff7e5f9591ecb1e97e99859b34e3e7ac169a42bfc7b593a5058c&v=0","bytes":1919292}
+[2026-04-25T13:48:52.160Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","fileId":"sed:file_00000000f95472099212c2d8ecbef0b6","base64Length":2559056,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:52.161Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc5f6-aef8-83ea-b823-619f19fe86ec","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:52.462Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":94596}
+[2026-04-25T13:48:52.462Z] [INFO ] [account-service] 第 2 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T13:48:52.798Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:53.436Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:53.984Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:54.533Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:55.059Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:55.631Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:56.195Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:56.750Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:57.408Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:57.989Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:58.516Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:59.044Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:48:59.448Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:00.071Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:00.373Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:00.922Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:01.233Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:02.191Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:02.752Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:03.631Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:04.103Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:04.862Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:05.392Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:05.915Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:06.442Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:06.984Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:07.518Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:08.045Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:08.562Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:09.084Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:09.668Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:10.241Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:10.780Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:11.326Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:11.872Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:12.210Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:12.789Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:13.318Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:13.870Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:14.199Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:14.736Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:15.809Z] [INFO ] [account-service] 账号刷新成功  {"email":"vial6c5d38@0m.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:49:16.934Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:17.333Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:17.893Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:18.451Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:19.144Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:19.959Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:20.576Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:21.110Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:21.679Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:22.239Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:22.794Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:23.456Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:24.677Z] [INFO ] [account-service] 账号刷新成功  {"email":"hilten6c5d3e@txh.26ai.org","type":"Plus","quota":7,"status":"正常"}
+[2026-04-25T13:49:24.678Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:49:24.720Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":7,"accountType":"Plus","accountEmail":"hilten6c5d3e@txh.26ai.org"}
+[2026-04-25T13:49:24.721Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","hasSessionId":false}
+[2026-04-25T13:49:25.036Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","status":200}
+[2026-04-25T13:49:25.038Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:25.353Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:49:25.354Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:49:26.172Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:49:28.966Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","fileCount":0,"textPreview":"武松偶遇潘金莲{\n  \"{\n  \"prompt\": \"A dramatic scene{\n  \"prompt\": \"A dramatic scene where Wu Song{\n  \"prompt\": \"A dramatic scene where Wu Song unexpectedly encounters Pan Jinlian in a traditional Chinese setti"}
+[2026-04-25T13:49:28.967Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","deviceId":"a843f95a-d5cf-4e58-af54-23598539d139","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:55.630Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","fileCount":1,"elapsedMs":26663}
+[2026-04-25T13:49:56.318Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","fileId":"sed:file_00000000f8007209ab89122dc320f5e4","hasUrl":true}
+[2026-04-25T13:49:56.907Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000f8007209ab89122dc320f5e4&ts=493645&p=fs&cid=1&sig=1feb8befa3d7fc6621b51d399f1a21b40689d90f69039b7435373c2247da170a&v=0","bytes":2195523}
+[2026-04-25T13:49:56.910Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","fileId":"sed:file_00000000f8007209ab89122dc320f5e4","base64Length":2927364,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:56.910Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc665-9a50-83ea-9908-75e2b9bacfe1","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:57.199Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":159333}
+[2026-04-25T13:49:57.200Z] [INFO ] [account-service] 第 3 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T13:49:57.572Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:58.104Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:58.650Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:59.225Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:49:59.820Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:00.875Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:01.609Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:02.182Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:03.024Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:03.468Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:04.013Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:04.576Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:05.375Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:05.977Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:06.537Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:07.273Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:07.971Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:08.548Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:09.078Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:09.733Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:10.284Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:12.880Z] [INFO ] [account-service] 账号刷新成功  {"email":"god6c5d5f@ooi.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:50:13.273Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:14.199Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:15.410Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:15.980Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:16.496Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:17.060Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:17.495Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:18.069Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:19.219Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:19.765Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:20.887Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:21.838Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:22.651Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:23.199Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:23.724Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:24.276Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:24.894Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:25.527Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:26.098Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:27.227Z] [INFO ] [account-service] 账号刷新成功  {"email":"bullis6c5d97@ax.26ai.org","type":"Plus","quota":12,"status":"正常"}
+[2026-04-25T13:50:27.228Z] [INFO ] [account-service] 第 3 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:50:27.274Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":7,"accountType":"Plus","accountEmail":"bullis6c5d97@ax.26ai.org"}
+[2026-04-25T13:50:27.275Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","hasSessionId":false}
+[2026-04-25T13:50:27.575Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","status":200}
+[2026-04-25T13:50:27.576Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:28.383Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:50:28.385Z] [INFO ] [openai-client] conversation:start  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:50:29.093Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:50:32.476Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","fileCount":0,"textPreview":"武松偶遇潘金莲{\n  \"{\n  \"prompt\": \"A scene from{\n  \"prompt\": \"A scene from the classic Chinese novel 'Water Margin' (水浒{\n  \"prompt\": \"A scene from the classic Chinese novel 'Water Margin' (水浒传), where the her"}
+[2026-04-25T13:50:32.476Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","deviceId":"694fa7ec-a3fd-4445-ae79-39df96f2f5b5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:48.376Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","fileCount":1,"elapsedMs":15900}
+[2026-04-25T13:50:49.008Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","fileId":"sed:file_00000000cbe07209bcff79b952c875ce","hasUrl":true}
+[2026-04-25T13:50:49.767Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000cbe07209bcff79b952c875ce&ts=493645&p=fs&cid=1&sig=79fe2d752dca8d1fc780d76a3430690c226c473c00c1c9adc16337237ddabdfc&v=0","bytes":2871505}
+[2026-04-25T13:50:49.769Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","fileId":"sed:file_00000000cbe07209bcff79b952c875ce","base64Length":3828676,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:49.770Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc6a4-a48c-83ea-bd3a-e00bbdf6833c","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:50:50.248Z] [INFO ] [account-service] 第 3 次请求：成功，累计 3/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":212382}
+[2026-04-25T13:50:50.249Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":3,"got":3,"elapsedMs":212383}
+[2026-04-25T13:50:50.252Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":3,"imageCount":3}
+[2026-04-25T13:53:39.295Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":3,"promptLength":7,"hasResponseFormat":true,"size":null}
+[2026-04-25T13:53:39.300Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":3,"prompt":"武松偶遇潘金莲"}
+[2026-04-25T13:53:39.301Z] [INFO ] [account-service] 第 1 次请求，还需 3 张  {"model":"gpt-image-2"}
+[2026-04-25T13:53:39.968Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:40.506Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:41.015Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:41.583Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:42.139Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:43.815Z] [INFO ] [account-service] 账号刷新成功  {"email":"artamas6c5c77@cf.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:53:44.174Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:44.718Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:45.316Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:45.870Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:46.397Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:46.926Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:47.494Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:47.808Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:48.359Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:48.807Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:49.356Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:49.891Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:50.428Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:50.968Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:51.515Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:52.051Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:52.599Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:53.149Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:53.702Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:54.257Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:54.797Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:55.345Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:55.915Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:56.941Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:57.501Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:58.037Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:58.581Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:58.914Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:59.250Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:53:59.819Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:00.383Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:00.931Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:01.536Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:02.058Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:02.758Z] [INFO ] [account-service] 账号刷新成功  {"email":"hilten6c5d3e@txh.26ai.org","type":"Plus","quota":3,"status":"正常"}
+[2026-04-25T13:54:02.759Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:54:02.783Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":7,"accountType":"Plus","accountEmail":"hilten6c5d3e@txh.26ai.org"}
+[2026-04-25T13:54:02.783Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","hasSessionId":false}
+[2026-04-25T13:54:03.023Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","status":200}
+[2026-04-25T13:54:03.024Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:03.318Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:54:03.319Z] [INFO ] [openai-client] conversation:start  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:54:04.148Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:54:07.206Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","fileCount":0,"textPreview":"武松偶遇潘金莲{\n  \"{\n  \"prompt\": \"{\n  \"prompt\": \"A scene depicting{\n  \"prompt\": \"A scene depicting the encounter between Wu Song (武松) and Pan Jinlian (潘金莲) from the classic Chinese novel 'Water Margin'. Wu S"}
+[2026-04-25T13:54:07.207Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","deviceId":"1d5933cd-7dba-44d1-9177-c2d4f42e5874","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:30.248Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","fileCount":1,"elapsedMs":23041}
+[2026-04-25T13:54:30.928Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","fileId":"sed:file_0000000081a87209835edb9dbac6e775","hasUrl":true}
+[2026-04-25T13:54:31.810Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_0000000081a87209835edb9dbac6e775&ts=493645&p=fs&cid=1&sig=9eacdf5130734fe0cd3a18430c50b3f5516728478749f800796a22d4796a0c7b&v=0","bytes":2029114}
+[2026-04-25T13:54:31.812Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","fileId":"sed:file_0000000081a87209835edb9dbac6e775","base64Length":2705488,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:31.813Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc77b-9520-83ea-8b11-5a8a117154ef","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:32.088Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":52791}
+[2026-04-25T13:54:32.088Z] [INFO ] [account-service] 第 2 次请求，还需 2 张  {"model":"gpt-image-2"}
+[2026-04-25T13:54:32.718Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:33.291Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:33.826Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:34.365Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:34.940Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:36.166Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:36.748Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:37.295Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:37.844Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:38.416Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:38.988Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:40.122Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:41.853Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:42.461Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:43.816Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:44.777Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:45.533Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:46.245Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:47.289Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:47.859Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:48.472Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:49.091Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:49.784Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:50.331Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:50.887Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:51.486Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:52.086Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:52.801Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:53.342Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:54.473Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:55.081Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:55.655Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:56.160Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:57.011Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:57.598Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:58.135Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:58.683Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:59.224Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:54:59.755Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:00.297Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:00.878Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:01.433Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:02.818Z] [INFO ] [account-service] 账号刷新成功  {"email":"allix6c5dbf@pj.26ai.org","type":"Plus","quota":6,"status":"正常"}
+[2026-04-25T13:55:02.819Z] [INFO ] [account-service] 第 2 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:55:02.868Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":7,"accountType":"Plus","accountEmail":"allix6c5dbf@pj.26ai.org"}
+[2026-04-25T13:55:02.869Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","hasSessionId":false}
+[2026-04-25T13:55:03.242Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","status":200}
+[2026-04-25T13:55:03.244Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:03.649Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:55:03.651Z] [INFO ] [openai-client] conversation:start  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:55:07.741Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T13:55:20.479Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","fileCount":0,"textPreview":"武松偶遇潘金莲{\n  \"{\n  \"prompt\": \"A{\n  \"prompt\": \"A traditional Chinese painting style scene{\n  \"prompt\": \"A traditional Chinese painting style scene depicting Wu Song (武松) meeting Pan Jinlian (潘金莲) for the "}
+[2026-04-25T13:55:20.480Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","deviceId":"16a2a7ab-0871-4d14-99a3-e59ebd5eb02a","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:55:20.991Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:24.251Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:27.546Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:34.819Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:38.228Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:41.518Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:44.787Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:48.127Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:51.422Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:55.306Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:55:58.573Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:02.674Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:07.254Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:10.555Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:13.819Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:17.095Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:20.426Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:24.406Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:27.711Z] [WARN ] [openai-client] poll-image-ids:non-ok  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","status":429}
+[2026-04-25T13:56:31.323Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","fileCount":1,"elapsedMs":70843}
+[2026-04-25T13:56:31.866Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","fileId":"sed:file_00000000c3fc7209bc4c630f81fa4e41","hasUrl":true}
+[2026-04-25T13:56:32.826Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000c3fc7209bc4c630f81fa4e41&ts=493645&p=fs&cid=1&sig=7b2c3dfba2c96ce35cb3f81bd4c50b7edd5703b96d046cde0bf39d824e7b0b86&v=0","bytes":2165746}
+[2026-04-25T13:56:32.827Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","fileId":"sed:file_00000000c3fc7209bc4c630f81fa4e41","base64Length":2887664,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:32.828Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc7b8-8094-83ea-bbb5-6603e5d179f9","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:33.089Z] [INFO ] [account-service] 第 2 次请求：成功，累计 2/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":173793}
+[2026-04-25T13:56:33.090Z] [INFO ] [account-service] 第 3 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T13:56:33.549Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:34.236Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:34.888Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:35.291Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:35.883Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:36.875Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:37.622Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:38.786Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:39.424Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:40.057Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:40.721Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:41.334Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:41.986Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:42.586Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:43.173Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:43.762Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:44.385Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:44.884Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:45.433Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:45.957Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:46.510Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:47.065Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:47.641Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:48.224Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:48.776Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:49.346Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:49.909Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:50.474Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:51.051Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:51.605Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:52.158Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:52.739Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:53.320Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:53.883Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:54.751Z] [INFO ] [account-service] 账号刷新成功  {"email":"glavin6c5def@67.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:56:55.756Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:56.444Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:57.588Z] [INFO ] [account-service] 账号刷新成功  {"email":"collen6c5de9@88k.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T13:56:58.043Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:58.622Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:56:59.334Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:00.111Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:00.782Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:01.291Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:02.012Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:02.653Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:03.276Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:03.914Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:04.573Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:05.279Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:05.940Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:06.608Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:07.285Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:07.857Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:08.361Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:09.575Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:11.238Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:11.731Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:12.523Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:13.007Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:13.435Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:13.856Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:14.327Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:14.790Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:15.228Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:15.677Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:16.162Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:16.655Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:18.975Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":22,"status":"正常"}
+[2026-04-25T13:57:18.976Z] [INFO ] [account-service] 第 3 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T13:57:19.007Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","promptLength":7,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-25T13:57:19.008Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","hasSessionId":false}
+[2026-04-25T13:57:19.303Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","status":200}
+[2026-04-25T13:57:19.304Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:19.829Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T13:57:19.830Z] [INFO ] [openai-client] conversation:start  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":7,"hasProofToken":true}
+[2026-04-25T13:57:22.275Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T13:57:27.242Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","fileCount":0,"textPreview":"武松偶遇潘金莲{\n  \"prompt{\n  \"prompt\": \"{\n  \"prompt\": \"A historical Chinese scene inspired{\n  \"prompt\": \"A historical Chinese scene inspired by classical literature: Wu Song, a strong and brave man{\n  \"promp"}
+[2026-04-25T13:57:27.243Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","deviceId":"a58690e5-203c-401a-b75c-78929f6d6aec","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:52.011Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","fileCount":1,"elapsedMs":24768}
+[2026-04-25T13:57:53.245Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","fileId":"sed:file_000000008a7c720991c5f89d5688ff57","hasUrl":true}
+[2026-04-25T13:57:53.991Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000008a7c720991c5f89d5688ff57&ts=493645&p=fs&cid=1&sig=a0b99110d99382db011f768be1b6239c1a3b20e5931348749cc00307c499e56d&v=0","bytes":1933002}
+[2026-04-25T13:57:53.992Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","fileId":"sed:file_000000008a7c720991c5f89d5688ff57","base64Length":2577336,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:53.993Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc840-55d8-83ea-b64b-7823d1745e0f","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T13:57:54.134Z] [INFO ] [account-service] 第 3 次请求：成功，累计 3/3 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":254838}
+[2026-04-25T13:57:54.137Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":3,"imageCount":3}
+[2026-04-25T13:57:54.135Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":3,"got":3,"elapsedMs":254839}
+[2026-04-25T14:01:13.616Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"prompt":"请根据青花瓷自动生成一张博物馆图鉴式中文拆解信息图。要求整张图兼具真实写实主视觉、结构拆解、中文标注、材质说明、纹样寓意、色彩含义和核心特征总结。整体风格应为国"}
+[2026-04-25T14:01:13.611Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-2","count":1,"promptLength":149,"hasResponseFormat":true,"size":null}
+[2026-04-25T14:01:13.617Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T14:01:14.412Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:15.048Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:15.713Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:16.352Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:17.878Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:18.566Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:19.779Z] [INFO ] [account-service] 账号刷新成功  {"email":"clarette6c5c91@v8k.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:01:20.275Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:20.978Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:21.717Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:22.420Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:23.082Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:23.753Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:24.420Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:25.110Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:25.809Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:26.470Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:27.232Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:27.928Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:28.732Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:29.792Z] [INFO ] [account-service] 账号刷新成功  {"email":"hilten6c5d3e@txh.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:01:30.288Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:30.917Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:31.601Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:32.268Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:32.922Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:33.663Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:34.390Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:35.098Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:35.913Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:36.649Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:37.355Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:38.559Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:39.319Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:40.091Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:40.838Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:41.539Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:42.206Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:42.864Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:43.519Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:44.198Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:44.856Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:45.516Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:46.150Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:46.764Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:47.443Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:48.848Z] [INFO ] [account-service] 账号刷新成功  {"email":"carmelle6c5dc1@s2.26ai.org","type":"Plus","quota":6,"status":"正常"}
+[2026-04-25T14:01:48.849Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T14:01:48.901Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"gpt-5-3","promptLength":149,"accountType":"Plus","accountEmail":"carmelle6c5dc1@s2.26ai.org"}
+[2026-04-25T14:01:48.902Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","hasSessionId":false}
+[2026-04-25T14:01:49.988Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","status":200}
+[2026-04-25T14:01:49.989Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:01:53.979Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T14:01:53.981Z] [INFO ] [openai-client] conversation:start  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","promptLength":149,"hasProofToken":true}
+[2026-04-25T14:01:55.177Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","token":"eyJhbGciOiJSUzI1...","model":"gpt-5-3","status":200}
+[2026-04-25T14:01:57.522Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T14:01:57.523Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","deviceId":"ae00e07a-5c26-4c26-ae6f-12580b2413da","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:02:41.216Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","fileCount":1,"elapsedMs":43693}
+[2026-04-25T14:02:42.201Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","fileId":"sed:file_00000000f2a8720ba73d8642f2da07f0","hasUrl":true}
+[2026-04-25T14:02:43.361Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000f2a8720ba73d8642f2da07f0&ts=493646&p=fs&cid=1&sig=e8be188942c2eac008eca6230c1fa3e816511083d98faf06bc9ec39a7248fd07&v=0","bytes":2369196}
+[2026-04-25T14:02:43.364Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","fileId":"sed:file_00000000f2a8720ba73d8642f2da07f0","base64Length":3158928,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:02:43.364Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecc952-532c-83ea-aec5-cc5bc5f68991","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:02:43.627Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":90015}
+[2026-04-25T14:02:43.627Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":90015}
+[2026-04-25T14:02:43.630Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-2","count":1,"imageCount":1}
+[2026-04-25T14:39:59.460Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-2","size":"auto","quality":"auto","promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryCeM0z8ZBYZfATMKT"}
+[2026-04-25T14:39:59.462Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-2"}
+[2026-04-25T14:39:59.462Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-2","count":1,"size":"auto","quality":"auto","prompt":"换成瓶子"}
+[2026-04-25T14:40:00.989Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:02.229Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:02.790Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:03.342Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:03.932Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:04.521Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:05.082Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:05.726Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:06.328Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:06.991Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:07.653Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:08.301Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:08.922Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:09.644Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:10.275Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:11.516Z] [INFO ] [account-service] 账号刷新成功  {"email":"bullis6c5d97@ax.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:40:11.990Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:12.590Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:13.201Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:13.917Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:14.996Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:15.619Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:16.300Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:17.275Z] [INFO ] [account-service] 账号刷新成功  {"email":"carmelle6c5dc1@s2.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:40:17.823Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:18.500Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:19.162Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:19.897Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:20.600Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:21.974Z] [INFO ] [account-service] 账号刷新成功  {"email":"klara6c5dde@h1.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:40:22.444Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:23.887Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:24.619Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:25.364Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:26.147Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:26.845Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:27.652Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:28.387Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:28.960Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:29.692Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:30.909Z] [INFO ] [account-service] 账号刷新成功  {"email":"ozzie6c5e03@ljf.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T14:40:31.367Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:32.069Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:32.784Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:33.500Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:34.102Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:34.739Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:35.345Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:35.948Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:36.531Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:37.073Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:37.612Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:38.298Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:39.774Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":21,"status":"正常"}
+[2026-04-25T14:40:39.775Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-2"}
+[2026-04-25T14:40:39.811Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-2","upstreamModel":"auto","size":"auto","quality":"auto","promptLength":4,"accountType":"Free","accountEmail":"zhlhopesywnw4p5@2925.com"}
+[2026-04-25T14:40:39.812Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","hasSessionId":false}
+[2026-04-25T14:40:40.795Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","status":200}
+[2026-04-25T14:40:40.796Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:40:42.391Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T14:40:42.392Z] [INFO ] [openai-client] conversation:start  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":4,"hasProofToken":true}
+[2026-04-25T14:40:44.501Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T14:40:49.107Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","fileCount":0,"textPreview":"换成瓶子{\n  \"{\n  \"prompt\": \"{\n  \"prompt\": \"将某个物体换{\n  \"prompt\": \"将某个物体换成瓶子的创意图像\",\n  \"size\": \"1024x1024\",\n  \"n{\n  \"prompt\": \"将某个物体换成瓶子的创意图像\",\n  \"size\": \"1024x1024\",\n  \"n\": 1\n}正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。"}
+[2026-04-25T14:40:49.108Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","deviceId":"01ec9cc9-17ea-418b-863e-a437097ee5f2","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:41:12.923Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","fileCount":1,"elapsedMs":23816}
+[2026-04-25T14:41:14.244Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","fileId":"sed:file_00000000b9d071f98cf878b5775aeada","hasUrl":true}
+[2026-04-25T14:41:17.366Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000b9d071f98cf878b5775aeada&ts=493646&p=fs&cid=1&sig=d6dbb96c8304d584a74dc64dc3397f1bb29698ccd7ea9350da511c89e862ca24&v=0","bytes":1484648}
+[2026-04-25T14:41:17.367Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","fileId":"sed:file_00000000b9d071f98cf878b5775aeada","base64Length":1979532,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:41:17.368Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ecd26b-6860-83ea-b917-ee00fecb463b","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T14:41:17.572Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":78111}
+[2026-04-25T14:41:17.572Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-2","count":1,"got":1,"elapsedMs":78111}
+[2026-04-25T14:41:17.575Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-2","imageCount":1}
+[2026-04-25T15:37:12.566Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-1","size":"auto","quality":"auto","imageCount":1,"hasMask":true,"promptLength":4,"contentType":"multipart/form-data; boundary=----WebKitFormBoundarykJ0iE0FOhOU4XvTk"}
+[2026-04-25T15:37:17.385Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:22.158Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:26.240Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:28.821Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:30.062Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:33.719Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:35.342Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:38.626Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:41.918Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:43.352Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:45.339Z] [INFO ] [account-service] 账号刷新成功  {"email":"allix6c5dbf@pj.26ai.org","type":"Plus","quota":0,"status":"限流"}
+[2026-04-25T15:37:46.497Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:48.052Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:49.361Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:50.564Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:52.149Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:53.649Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:55.179Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:56.666Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:37:59.985Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:01.829Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:03.597Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:05.213Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:08.010Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:09.613Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:12.375Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:14.113Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:18.242Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyt33jz3@2925.com","type":"Free","quota":4,"status":"正常"}
+[2026-04-25T15:38:18.289Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","hasSessionId":false}
+[2026-04-25T15:38:20.384Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","status":200}
+[2026-04-25T15:38:20.385Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:38:22.620Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T15:39:18.847Z] [INFO ] [openai-client] generate-image:attachments:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-1","upstreamModel":"auto","imageCount":1,"hasMask":true,"promptLength":4}
+[2026-04-25T15:39:18.848Z] [INFO ] [openai-client] conversation:start  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":59,"attachmentCount":2,"hasProofToken":true}
+[2026-04-25T15:39:22.546Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T15:39:28.016Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T15:39:28.017Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","deviceId":"bdbee897-98a0-44a1-9e39-bdb41b51a84e","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:40:05.559Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","fileCount":1,"elapsedMs":37542}
+[2026-04-25T15:40:06.464Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","fileId":"sed:file_00000000f12c720b9b025683391dbdb0","hasUrl":true}
+[2026-04-25T15:40:08.771Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_00000000f12c720b9b025683391dbdb0&ts=493647&p=fs&cid=1&sig=003d910f9fae72ce4213f593b9988561d922822a4ec63c904b2fa647e5528383&v=0","bytes":1542171}
+[2026-04-25T15:40:08.773Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","fileId":"sed:file_00000000f12c720b9b025683391dbdb0","base64Length":2056228,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:40:08.774Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ece029-6a64-83e8-b471-db40f205162e","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:40:08.948Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-1","imageCount":1}
+[2026-04-25T15:59:35.652Z] [INFO ] [images.edits.route] request:start  {"model":"gpt-image-1","size":"1024x1024","quality":"auto","imageCount":1,"hasMask":false,"promptLength":6,"contentType":"multipart/form-data; boundary=----WebKitFormBoundaryI0n9tfThPXZjjz9P"}
+[2026-04-25T15:59:39.100Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:40.324Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:40.938Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:41.477Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:42.278Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:44.145Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:45.290Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:46.259Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:47.205Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:49.131Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:49.602Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:50.278Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:51.341Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T15:59:53.718Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesywnw4p5@2925.com","type":"Free","quota":20,"status":"正常"}
+[2026-04-25T15:59:53.742Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","hasSessionId":false}
+[2026-04-25T15:59:59.888Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","status":200}
+[2026-04-25T15:59:59.889Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:00:09.304Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T16:00:22.598Z] [INFO ] [openai-client] generate-image:attachments:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-1","upstreamModel":"auto","imageCount":1,"hasMask":false,"promptLength":6}
+[2026-04-25T16:00:22.598Z] [INFO ] [openai-client] conversation:start  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":63,"attachmentCount":1,"hasProofToken":true}
+[2026-04-25T16:00:24.551Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T16:00:28.194Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","fileCount":0,"textPreview":"正在处理图片\n\n目前有很多人在创建图片，因此可能需要一点时间。图片准备好后我们会通知你。"}
+[2026-04-25T16:00:28.195Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","deviceId":"b7b29d87-ca71-46e0-8c5b-71f97a482ef5","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:00:55.904Z] [INFO ] [openai-client] poll-image-ids:done  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","fileCount":1,"elapsedMs":27709}
+[2026-04-25T16:00:56.496Z] [INFO ] [openai-client] download-url:done  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","fileId":"sed:file_000000007b2c7206a416332cf46b6731","hasUrl":true}
+[2026-04-25T16:00:58.038Z] [INFO ] [openai-client] download-image:done  {"downloadUrl":"https://chatgpt.com/backend-api/estuary/content?id=file_000000007b2c7206a416332cf46b6731&ts=493648&p=fs&cid=1&sig=1687bf7d6009e30dad893ae2aaa3edb0be25f665e75b3698086febd37f3e50a0&v=0","bytes":3522218}
+[2026-04-25T16:00:58.040Z] [INFO ] [openai-client] generate-image:file-downloaded  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","fileId":"sed:file_000000007b2c7206a416332cf46b6731","base64Length":4696292,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:00:58.041Z] [INFO ] [openai-client] generate-image:done  {"conversationId":"69ece517-31b4-83ea-ba13-a0b77219d046","fileCount":1,"successCount":1,"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:00:58.200Z] [INFO ] [images.edits.route] request:success  {"model":"gpt-image-1","imageCount":1}
+[2026-04-25T16:01:26.104Z] [INFO ] [account-service] 开始图片生成  {"model":"gpt-image-1","count":1,"size":"auto","quality":"auto","prompt":"换成素描风格"}
+[2026-04-25T16:01:26.100Z] [INFO ] [images.generations.route] request:start  {"model":"gpt-image-1","count":1,"promptLength":6,"hasResponseFormat":true,"size":"auto","quality":"auto"}
+[2026-04-25T16:01:26.105Z] [INFO ] [account-service] 第 1 次请求，还需 1 张  {"model":"gpt-image-1"}
+[2026-04-25T16:01:27.859Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:29.140Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:29.824Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:30.544Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:31.154Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:32.449Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:33.019Z] [WARN ] [account-service] 账号 401 异常，标记禁用  {"token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:35.914Z] [INFO ] [account-service] 账号刷新成功  {"email":"zhlhopesyt33jz3@2925.com","type":"Free","quota":3,"status":"正常"}
+[2026-04-25T16:01:35.915Z] [INFO ] [account-service] 第 1 次请求：使用 token  {"token":"eyJhbGciOiJSUzI1...","model":"gpt-image-1"}
+[2026-04-25T16:01:35.963Z] [INFO ] [openai-client] bootstrap:start  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","hasSessionId":false}
+[2026-04-25T16:01:35.962Z] [INFO ] [openai-client] generate-image:start  {"token":"eyJhbGciOiJSUzI1...","requestedModel":"gpt-image-1","upstreamModel":"auto","size":"auto","quality":"auto","promptLength":6,"accountType":"Free","accountEmail":"zhlhopesyt33jz3@2925.com"}
+[2026-04-25T16:01:36.514Z] [INFO ] [openai-client] bootstrap:done  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","status":200}
+[2026-04-25T16:01:36.516Z] [INFO ] [openai-client] chat-requirements:start  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:01:37.491Z] [INFO ] [openai-client] chat-requirements:done  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","token":"eyJhbGciOiJSUzI1...","proofRequired":true}
+[2026-04-25T16:01:37.492Z] [INFO ] [openai-client] conversation:start  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","token":"eyJhbGciOiJSUzI1...","model":"auto","promptLength":6,"attachmentCount":0,"hasProofToken":true}
+[2026-04-25T16:01:39.680Z] [INFO ] [openai-client] conversation:accepted  {"deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","token":"eyJhbGciOiJSUzI1...","model":"auto","status":200}
+[2026-04-25T16:01:45.337Z] [INFO ] [openai-client] generate-image:sse-parsed  {"conversationId":"69ece562-7384-83e8-9dd0-c897b25d80f8","fileCount":0,"textPreview":"换成素描风格请上传您希望转换请上传您希望转换成素描风请上传您希望转换成素描风格的图片，我会请上传您希望转换成素描风格的图片，我会帮您处理。"}
+[2026-04-25T16:01:45.338Z] [INFO ] [openai-client] poll-image-ids:start  {"conversationId":"69ece562-7384-83e8-9dd0-c897b25d80f8","deviceId":"fa17dba0-e535-4604-9c17-2c81ecc74146","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:04:48.985Z] [WARN ] [openai-client] poll-image-ids:timeout  {"conversationId":"69ece562-7384-83e8-9dd0-c897b25d80f8","elapsedMs":183647}
+[2026-04-25T16:04:48.987Z] [ERROR] [openai-client] generate-image:no-file-ids  {"conversationId":"69ece562-7384-83e8-9dd0-c897b25d80f8","textPreview":"换成素描风格请上传您希望转换请上传您希望转换成素描风请上传您希望转换成素描风格的图片，我会请上传您希望转换成素描风格的图片，我会帮您处理。","token":"eyJhbGciOiJSUzI1..."}
+[2026-04-25T16:04:49.143Z] [INFO ] [account-service] 第 1 次请求：成功，累计 1/1 张  {"token":"eyJhbGciOiJSUzI1...","elapsedMs":203041}
+[2026-04-25T16:04:49.143Z] [INFO ] [account-service] 图片生成完成  {"model":"gpt-image-1","count":1,"got":1,"elapsedMs":203042}
+[2026-04-25T16:04:49.145Z] [INFO ] [images.generations.route] request:success  {"model":"gpt-image-1","count":1,"imageCount":1}

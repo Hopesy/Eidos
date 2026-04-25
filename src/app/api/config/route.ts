@@ -1,11 +1,26 @@
 import { NextRequest } from "next/server";
 
 import { requireAuthKey } from "@/server/auth";
-import { getRuntimeConfig } from "@/server/config";
 import { getSavedConfig, setSavedConfig } from "@/server/config-store";
 import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
+
+function sanitizeConfig(value: Record<string, unknown>) {
+  const next = { ...value };
+  delete next.image;
+  delete next.app;
+  delete next.server;
+  delete next.log;
+
+  if (next.chatgpt && typeof next.chatgpt === "object") {
+    const nextChatgpt = { ...(next.chatgpt as Record<string, unknown>) };
+    delete nextChatgpt.timeout;
+    next.chatgpt = nextChatgpt;
+  }
+
+  return next;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,26 +28,25 @@ export async function GET(request: NextRequest) {
 
     const saved = getSavedConfig();
     if (saved) {
-      return jsonOk(saved);
+      return jsonOk(sanitizeConfig(saved as Record<string, unknown>));
     }
 
-    // Build a default config from runtime values
-    const runtime = await getRuntimeConfig();
     return jsonOk({
-      app: { authKey: runtime.authKey ? "***" : "" },
-      server: { host: runtime.host, port: runtime.port },
-      chatgpt: { baseUrl: "https://chatgpt.com", timeout: 60000 },
+      chatgpt: {
+        enabled: false,
+        baseUrl: "https://api.openai.com/v1",
+        apiKey: "",
+        apiStyle: "v1",
+        responsesModel: "gpt-5.5",
+      },
       accounts: {
         defaultQuota: 50,
         autoRefresh: true,
-        refreshInterval: runtime.refreshAccountIntervalMinute,
+        refreshInterval: 5,
       },
-      storage: { type: "sqlite", path: "data/eidos.db" },
       sync: { enabled: false, provider: "codex", direction: "both", interval: 300 },
       proxy: { enabled: false, url: "" },
       cpa: { enabled: false, baseUrl: "", managementKey: "", providerType: "codex" },
-      log: { level: "info", maxItems: 500 },
-      paths: { data: "data/eidos.db", logs: "logs", images: "data/images", uploads: "data/uploads" },
     });
   } catch (error) {
     return jsonError(error);
@@ -43,8 +57,9 @@ export async function PUT(request: NextRequest) {
   try {
     await requireAuthKey(request);
     const body = (await request.json()) as Record<string, unknown>;
-    setSavedConfig(body);
-    return jsonOk(body);
+    const sanitized = sanitizeConfig(body);
+    setSavedConfig(sanitized);
+    return jsonOk(sanitized);
   } catch (error) {
     return jsonError(error);
   }

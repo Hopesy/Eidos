@@ -1,19 +1,9 @@
-import { ApiError } from "@/server/response";
 import { generateWithPool } from "@/server/account-service";
+import { parseImageCount } from "@/server/image-request";
 import { ImageGenerationError } from "@/server/providers/openai-client";
+import { ApiError } from "@/server/response";
 
 const IMAGE_MODELS = new Set(["gpt-image-1", "gpt-image-2"]);
-
-export function parseImageCount(rawValue: unknown) {
-  const count = Number(rawValue ?? 1);
-  if (!Number.isInteger(count)) {
-    throw new ApiError(400, "n must be an integer");
-  }
-  if (count < 1 || count > 4) {
-    throw new ApiError(400, "n must be between 1 and 4");
-  }
-  return count;
-}
 
 function extractPromptFromMessageContent(content: unknown): string {
   if (typeof content === "string") {

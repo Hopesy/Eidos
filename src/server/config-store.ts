@@ -6,6 +6,14 @@ import { getDb } from "@/server/db";
  */
 
 type ConfigStore = {
+    chatgpt?: {
+        enabled?: boolean;
+        baseUrl?: string;
+        apiKey?: string;
+        apiStyle?: "v1" | "responses";
+        responsesModel?: string;
+        [key: string]: unknown;
+    };
     sync?: {
         enabled?: boolean;
         provider?: string;

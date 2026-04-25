@@ -17,6 +17,8 @@ import {
 import { fetchVersionInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { clearStoredAuthKey } from "@/store/auth";
+import { clearCachedAccountsView } from "@/store/accounts-view-cache";
+import { clearCachedSyncStatus } from "@/store/sync-status-cache";
 
 const repositoryUrl = "https://github.com/peiyizhi0724/Eidos";
 
@@ -53,7 +55,7 @@ function DesktopTopNav({
     <aside
       className={cn(
         "hidden shrink-0 transition-[width] duration-200 lg:flex",
-        collapsed ? "w-[72px]" : "w-[196px]",
+        collapsed ? "w-[60px]" : "w-[176px]",
       )}
     >
       <div className="flex h-full w-full flex-col rounded-[18px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
@@ -135,7 +137,7 @@ function DesktopTopNav({
                 ) : null}
                 <span
                   className={cn(
-                    "flex items-center justify-center rounded-2xl transition-all duration-200",
+                    "flex shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
                     collapsed ? "size-10" : "size-9",
                     active
                       ? "bg-stone-950 text-white shadow-[0_8px_20px_rgba(15,23,42,0.20)]"
@@ -222,6 +224,8 @@ export function TopNav() {
   }, []);
 
   const handleLogout = async () => {
+    clearCachedAccountsView();
+    clearCachedSyncStatus();
     await clearStoredAuthKey();
     router.replace("/login");
   };
@@ -278,7 +282,7 @@ export function TopNav() {
                   {active ? <span className="absolute inset-x-3 bottom-0 h-px bg-stone-950/10" /> : null}
                   <span
                     className={cn(
-                      "flex size-9 items-center justify-center rounded-xl transition-all duration-200",
+                      "flex shrink-0 size-9 items-center justify-center rounded-xl transition-all duration-200",
                       active
                         ? "bg-stone-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)]"
                         : "bg-white text-stone-600 group-hover:bg-white group-hover:text-stone-900",

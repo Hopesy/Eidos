@@ -1,6 +1,6 @@
 "use client";
 
-import { History, LoaderCircle, MessageSquarePlus, Trash2 } from "lucide-react";
+import { History, LoaderCircle, MessageSquarePlus, Sparkles, Trash2 } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,11 @@ function formatConversationTime(value: string) {
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return "刚刚";
-  if (diffMins < 60) return `${diffMins}m前`;
+  if (diffMins < 60) return `${diffMins}分钟前`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h前`;
+  if (diffHours < 24) return `${diffHours}小时前`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}天前`;
   return new Intl.DateTimeFormat("zh-CN", {
     month: "2-digit",
     day: "2-digit",
@@ -53,9 +55,9 @@ const modeLabelMap: Record<ImageMode, string> = {
 };
 
 const modeColorMap: Record<ImageMode, string> = {
-  generate: "bg-violet-50 text-violet-600",
-  edit: "bg-sky-50 text-sky-600",
-  upscale: "bg-amber-50 text-amber-600",
+  generate: "bg-gradient-to-br from-violet-500 to-purple-600 text-white",
+  edit: "bg-gradient-to-br from-sky-500 to-blue-600 text-white",
+  upscale: "bg-gradient-to-br from-amber-500 to-orange-600 text-white",
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -82,51 +84,57 @@ export function HistorySidebar({
   onClearHistory,
 }: HistorySidebarProps) {
   return (
-    <aside className="order-2 w-full overflow-hidden rounded-[18px] border border-stone-200 bg-[#f8f8f7] shadow-[0_8px_30px_rgba(15,23,42,0.04)] lg:order-none lg:min-h-0">
+    <aside className="order-2 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:min-h-0">
       <div className="flex h-full min-h-0 flex-col">
         {/* 头部 */}
-        <div className="border-b border-stone-200/80 px-3 py-3">
+        <div className="border-b border-stone-200/60 bg-white/80 px-4 py-3 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-stone-900">历史</span>
-              <span className="min-w-[20px] rounded-full bg-stone-200/80 px-1.5 py-0.5 text-center text-[11px] font-medium text-stone-500">
-                {conversations.length}
-              </span>
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-stone-900 to-stone-700 shadow-sm">
+                <History className="size-4 text-white" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold text-stone-900">历史记录</span>
+                <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {conversations.length}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={onClearHistory}
-                disabled={conversations.length === 0}
-                className="inline-flex size-7 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-200/70 hover:text-stone-700 disabled:pointer-events-none disabled:opacity-40"
-                title="清空历史"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onClearHistory}
+              disabled={conversations.length === 0}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-rose-50 hover:text-rose-600 hover:shadow-sm disabled:pointer-events-none disabled:opacity-40"
+              title="清空历史"
+            >
+              <Trash2 className="size-4" />
+            </button>
           </div>
           <Button
-            className="mt-2.5 h-9 w-full rounded-xl bg-stone-950 text-xs text-white hover:bg-stone-800"
+            className="mt-3 h-10 w-full rounded-xl bg-gradient-to-br from-stone-900 to-stone-800 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg"
             onClick={onCreateDraft}
           >
-            <MessageSquarePlus className="size-3.5" />
+            <MessageSquarePlus className="size-4" />
             新建对话
           </Button>
         </div>
 
         {/* 列表 */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-2">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {isLoadingHistory ? (
             <div className="flex items-center gap-2 rounded-xl px-3 py-3 text-xs text-stone-400">
-              <LoaderCircle className="size-3.5 animate-spin" />
+              <LoaderCircle className="size-4 animate-spin" />
               读取中…
             </div>
           ) : conversations.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs leading-6 text-stone-400">
-              还没有历史记录
+            <div className="flex flex-col items-center justify-center gap-2 px-3 py-12 text-center">
+              <div className="rounded-xl bg-stone-100 p-3">
+                <History className="size-5 text-stone-400" />
+              </div>
+              <p className="text-xs text-stone-400">还没有历史记录</p>
             </div>
           ) : (
-            <div className="space-y-0.5">
+            <div className="space-y-1.5">
               {conversations.map((conversation) => {
                 const active = conversation.id === selectedConversationId;
                 const previewSrc = buildConversationPreviewSource(conversation);
@@ -136,19 +144,19 @@ export function HistorySidebar({
                   <div
                     key={conversation.id}
                     className={cn(
-                      "group relative rounded-[14px] transition-all",
+                      "group relative overflow-hidden rounded-xl transition-all duration-200",
                       active
-                        ? "bg-white shadow-sm ring-1 ring-stone-200/80"
-                        : "hover:bg-white/60",
+                        ? "bg-white shadow-lg ring-2 ring-stone-900/10"
+                        : "bg-white/60 hover:bg-white hover:shadow-md",
                     )}
                   >
                     <button
                       type="button"
                       onClick={() => onSelect(conversation.id)}
-                      className="flex w-full items-center gap-2.5 p-2 pr-8 text-left"
+                      className="flex w-full gap-3 p-2.5 pr-9 text-left"
                     >
                       {/* 缩略图 */}
-                      <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-stone-100">
+                      <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200/50 shadow-sm ring-1 ring-stone-900/5">
                         {previewSrc ? (
                           <Image
                             src={previewSrc}
@@ -156,27 +164,26 @@ export function HistorySidebar({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <History className="size-3.5 text-stone-400" />
+                          <History className="size-5 text-stone-400" />
                         )}
                         {isGenerating && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-                            <LoaderCircle className="size-3.5 animate-spin text-stone-600" />
+                          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/80 backdrop-blur-sm">
+                            <div className="relative flex items-center justify-center">
+                              <div className="absolute size-8 animate-ping rounded-full bg-stone-300 opacity-15" />
+                              <div className="absolute size-6 animate-pulse rounded-full bg-stone-400 opacity-20" />
+                              <Sparkles className="relative size-4 animate-pulse text-stone-500" />
+                            </div>
                           </div>
                         )}
                       </div>
 
                       {/* 文字区 */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={cn("rounded-md px-1.5 py-0.5 text-[10px] font-semibold", modeColorMap[conversation.mode])}>
-                            {modeLabelMap[conversation.mode]}
-                          </span>
-                          <span className="ml-auto shrink-0 text-[11px] text-stone-400">
-                            {formatConversationTime(conversation.createdAt)}
-                          </span>
-                        </div>
-                        <div className="mt-1 truncate text-[13px] font-medium leading-snug text-stone-800">
+                      <div className="min-w-0 flex-1 py-0.5">
+                        <div className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900">
                           {conversation.title}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-500">
+                          <span>{formatConversationTime(conversation.createdAt)}</span>
                         </div>
                       </div>
                     </button>
@@ -185,7 +192,7 @@ export function HistorySidebar({
                     <button
                       type="button"
                       onClick={() => onDelete(conversation.id)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex size-6 items-center justify-center rounded-lg text-stone-400 opacity-0 transition hover:bg-rose-50 hover:text-rose-500 group-hover:opacity-100"
+                      className="absolute right-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-lg bg-white/90 text-stone-400 opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-rose-500 hover:text-white hover:shadow-md group-hover:opacity-100"
                       aria-label="删除会话"
                     >
                       <Trash2 className="size-3.5" />

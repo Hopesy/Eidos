@@ -22,6 +22,92 @@
 - 轮询可用账号进行图片生成
 - 失效 Token 自动剔除
 
+### 接口暴露层 vs 上游实际链路
+
+本项目**对下游统一暴露 OpenAI 风格 `/v1/*` 接口**，但**向上游实际调用的链路并不只有一种**。
+
+#### 对下游统一暴露的接口
+
+- `POST /v1/images/generations`
+- `POST /v1/images/edits`
+- `POST /v1/images/upscale`
+- `POST /v1/chat/completions`
+- `POST /v1/responses`
+
+#### 向上游实际调用的两条主链
+
+1. **账号池模式**
+
+   向上游走的是 **ChatGPT 会话链**，也就是项目内部维护的 `chatgpt.com/backend-api/*` 路径，例如：
+
+   - `backend-api/conversation`
+   - `backend-api/conversation/init`
+   - 文件下载相关 `backend-api/files/*` / `backend-api/conversation/*/attachment/*/download`
+
+   这条链**不是官方公开 `/v1` API**，而是账号池模式下的会话式上游实现。
+
+2. **图像 API 服务模式**
+
+   向上游走的是**官方公开 Images API**，例如：
+
+   - `POST /v1/images/generations`
+   - `POST /v1/images/edits`
+
+   这条链是当前项目里最接近“标准官方图像 API”的实现路径。
+
+#### `/v1/responses` 当前状态
+
+- 项目**已经对下实现了** `POST /v1/responses`
+- 但**图片工作台当前主入口并不是走 `/v1/responses`**
+- 图片工作台当前主要调用的是：
+  - `POST /v1/images/generations`
+  - `POST /v1/images/edits`
+  - `POST /v1/images/upscale`
+
+因此，可以把当前项目理解为：
+
+- **对下**：统一暴露 OpenAI 风格 `/v1/*`
+- **对上**：
+  - 账号池模式 -> ChatGPT 会话链
+  - API 服务模式 -> 官方 `/v1/images/*`
+- **`/v1/responses` 已实现，但不是图片工作台当前主链路**
+
+### 图片工作台比例 / 画质说明
+
+图片工作台在“生成”模式下支持比例与画质选择，当前 UI 与 OpenAI Images API 参数的对应关系如下：
+
+- 比例实际对应官方支持的图片尺寸：
+  - `1024x1024`
+  - `1536x1024`
+  - `1024x1536`
+  - `auto`
+- 画质实际对应：
+  - `auto`
+  - `low`
+  - `medium`
+  - `high`
+
+因此当前界面的文案映射为：
+
+- `自动比例` -> `auto`
+- `1:1 方图` -> `1024x1024`
+- `3:2 横图` -> `1536x1024`
+- `2:3 竖图` -> `1024x1536`
+- `自动画质` -> `auto`
+- `2K(中)` -> `medium`
+- `4K(高)` -> `high`
+
+说明：
+
+- `2K(中)` / `4K(高)` 是当前前端给用户的易懂文案，底层并不是直接把 `2k` / `4k` 发给 OpenAI，而是映射到官方支持的 `medium` / `high`
+- 如果当前请求走标准 Images API 服务路径，会直接传 `size` / `quality`
+- 如果当前请求走本地 ChatGPT 会话链路，则会把比例 / 画质要求补进 prompt，保证两条链路都能吃到这个设置
+
+官方文档：
+
+- Image generation guide: https://platform.openai.com/docs/guides/image-generation
+- Images API reference: https://platform.openai.com/docs/api-reference/images/generate
+
 ---
 
 ## 目录

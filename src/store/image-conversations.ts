@@ -2,7 +2,7 @@
 
 import localforage from "localforage";
 
-import type { ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
 import { httpRequest } from "@/lib/request";
 
 // ─────────────────────────────────────────────
@@ -48,6 +48,8 @@ export type ImageConversationTurn = {
   mode: ImageMode;
   prompt: string;
   model: ImageModel;
+  imageSize?: ImageGenerationSize;
+  imageQuality?: ImageGenerationQuality;
   count: number;
   scale?: string;
   sourceImages?: StoredSourceImage[];
@@ -55,6 +57,7 @@ export type ImageConversationTurn = {
   createdAt: string;
   status: ImageConversationStatus;
   error?: string;
+  durationMs?: number;
 };
 
 export type ImageConversation = {
@@ -62,6 +65,8 @@ export type ImageConversation = {
   title: string;
   prompt: string;
   model: ImageModel;
+  imageSize?: ImageGenerationSize;
+  imageQuality?: ImageGenerationQuality;
   count: number;
   images: StoredImage[];
   createdAt: string;
@@ -143,6 +148,8 @@ export function normalizeTurn(turn: ImageConversationTurn): ImageConversationTur
   return {
     ...turn,
     mode: turn.mode ?? "generate",
+    imageSize: turn.imageSize ?? "auto",
+    imageQuality: turn.imageQuality ?? "auto",
     sourceImages: turn.sourceImages ?? [],
     images: (turn.images || []).map(normalizeStoredImage),
   };
@@ -161,6 +168,8 @@ export function normalizeConversation(
       mode: conversation.mode ?? "generate",
       prompt: conversation.prompt,
       model: conversation.model,
+      imageSize: conversation.imageSize,
+      imageQuality: conversation.imageQuality,
       count: conversation.count,
       scale: conversation.scale,
       sourceImages: conversation.sourceImages ?? [],
@@ -174,6 +183,8 @@ export function normalizeConversation(
   return {
     ...conversation,
     mode: conversation.mode ?? "generate",
+    imageSize: conversation.imageSize ?? "auto",
+    imageQuality: conversation.imageQuality ?? "auto",
     sourceImages: conversation.sourceImages ?? [],
     images: (conversation.images || []).map(normalizeStoredImage),
     turns: hasTurns
@@ -229,6 +240,8 @@ export async function updateImageConversation(
     mode: "generate",
     prompt: "",
     model: "gpt-image-1",
+    imageSize: "auto",
+    imageQuality: "auto",
     count: 1,
     scale: undefined,
     sourceImages: [],
