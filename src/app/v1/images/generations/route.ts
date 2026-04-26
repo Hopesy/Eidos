@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { ensureAccountWatcherStarted, generateWithPool } from "@/server/account-service";
 import { parseImageCount } from "@/server/image-request";
 import { logger } from "@/server/logger";
@@ -12,7 +11,6 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAuthKey(request);
     await ensureAccountWatcherStarted();
     const body = (await request.json()) as {
       prompt?: string;

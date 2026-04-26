@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { listAccounts, updateAccount } from "@/server/account-service";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import type { AccountStatus, AccountType } from "@/server/types";
@@ -9,7 +8,6 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAuthKey(request);
     const body = (await request.json()) as {
       access_token?: string;
       type?: AccountType;

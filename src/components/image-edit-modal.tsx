@@ -7,7 +7,7 @@ import {
     useState,
     type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Brush, Redo2, Trash2, Undo2, X } from "lucide-react";
+import { Brush, Minus, Plus, Redo2, Trash2, Undo2, X, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -124,6 +124,41 @@ export function ImageEditModal({
             document.body.style.overflow = prev;
         };
     }, [open]);
+
+    // ── Keyboard shortcuts ──────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!open) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Undo: Ctrl/Cmd + Z
+            if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+                e.preventDefault();
+                handleUndo();
+            }
+            // Redo: Ctrl/Cmd + Shift + Z
+            if ((e.ctrlKey || e.metaKey) && e.key === "z" && e.shiftKey) {
+                e.preventDefault();
+                handleRedo();
+            }
+            // Brush size: [ and ]
+            if (e.key === "[") {
+                e.preventDefault();
+                setBrushSize((prev) => Math.max(4, prev - 4));
+            }
+            if (e.key === "]") {
+                e.preventDefault();
+                setBrushSize((prev) => Math.min(120, prev + 4));
+            }
+            // Toggle selection mode: B
+            if (e.key === "b" || e.key === "B") {
+                e.preventDefault();
+                setSelectionMode((v) => !v);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [open, strokes.length, redoStrokes.length]);
 
     // ── Reset state on open / imageSrc change ───────────────────────────────────
     useEffect(() => {
@@ -409,116 +444,46 @@ export function ImageEditModal({
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white/90 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex flex-col bg-stone-50 dark:bg-stone-950">
             {/* ── Header ─────────────────────────────────────────────────────────── */}
-            <header className="flex shrink-0 items-center gap-3 border-b border-stone-200 px-4 py-3 sm:px-6">
-                {/* Close */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full text-stone-500 hover:text-stone-800"
-                    onClick={onClose}
-                    disabled={isSubmitting}
-                    aria-label="关闭"
-                >
-                    <X className="size-5" />
-                </Button>
+            <header className="flex shrink-0 items-center justify-between border-b border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-900 sm:px-6">
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-9 rounded-xl text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                        onClick={onClose}
+                        disabled={isSubmitting}
+                        aria-label="关闭"
+                    >
+                        <X className="size-5" />
+                    </Button>
 
-                {/* Title */}
-                <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold text-stone-800">
-                        编辑图片
-                    </span>
-                    <span className="truncate text-xs text-stone-400">{imageName}</span>
+                    <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100">
+                            编辑图片
+                        </span>
+                        <span className="truncate text-xs text-stone-500 dark:text-stone-400">{imageName}</span>
+                    </div>
                 </div>
 
-                {/* Toolbar */}
-                <div className="flex items-center gap-1.5">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full text-stone-500 hover:text-stone-800 disabled:opacity-40"
-                        onClick={handleUndo}
-                        disabled={strokes.length === 0 || isSubmitting}
-                        aria-label="撤销"
-                    >
-                        <Undo2 className="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full text-stone-500 hover:text-stone-800 disabled:opacity-40"
-                        onClick={handleRedo}
-                        disabled={redoStrokes.length === 0 || isSubmitting}
-                        aria-label="重做"
-                    >
-                        <Redo2 className="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full text-stone-500 hover:text-stone-800 disabled:opacity-40"
-                        onClick={handleClear}
-                        disabled={!hasSelection || isSubmitting}
-                        aria-label="清空选区"
-                    >
-                        <Trash2 className="size-4" />
-                    </Button>
-
-                    {/* Selection mode toggle */}
-                    <Button
-                        variant={selectionMode ? "default" : "outline"}
-                        size="sm"
-                        className={cn(
-                            "ml-1 gap-1.5 rounded-full px-3 text-xs font-medium transition-all",
-                            selectionMode
-                                ? "bg-blue-500 text-white shadow-md hover:bg-blue-600"
-                                : "border-stone-300 text-stone-600 hover:border-blue-400 hover:text-blue-600",
-                        )}
-                        onClick={() => setSelectionMode((v) => !v)}
-                        disabled={isSubmitting}
-                    >
-                        <Brush className="size-3.5" />
-                        {selectionMode ? "画笔模式" : "开始选区"}
-                    </Button>
+                {/* Selection status badge */}
+                <div className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    hasSelection
+                        ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/50 dark:text-blue-300"
+                        : "border-stone-200 bg-stone-50 text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400"
+                )}>
+                    {hasSelection ? `已选择 ${strokes.length} 个区域` : "尚未选择区域"}
                 </div>
             </header>
 
             {/* ── Main ───────────────────────────────────────────────────────────── */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {/* Helper bar + brush size */}
-                <div className="flex shrink-0 flex-col gap-2 px-4 py-3 sm:px-6">
-                    {/* helper hint */}
-                    <p className="text-center text-xs text-stone-400">
-                        {selectionMode
-                            ? "在图片上拖拽涂抹以创建选区，选区将作为编辑区域"
-                            : "点击「开始选区」，然后在图片上涂抹需要编辑的区域"}
-                    </p>
-
-                    {/* Brush size slider – only shown in selection mode */}
-                    {selectionMode && (
-                        <div className="flex items-center gap-3 px-2">
-                            <span className="shrink-0 text-xs text-stone-500">笔刷大小</span>
-                            <input
-                                type="range"
-                                min={4}
-                                max={120}
-                                step={2}
-                                value={brushSize}
-                                onChange={(e) => setBrushSize(Number(e.target.value))}
-                                className="h-1.5 flex-1 cursor-pointer accent-blue-500"
-                            />
-                            <span className="w-7 shrink-0 text-right text-xs tabular-nums text-stone-500">
-                                {brushSize}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
+            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
                 {/* Image preview area */}
                 <div
                     ref={containerRef}
-                    className="relative mx-auto flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-2 sm:px-6"
+                    className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-stone-100/50 dark:bg-stone-900/50"
                 >
                     <div
                         style={{
@@ -540,15 +505,13 @@ export function ImageEditModal({
                                 setImgDisplaySize({ w: el.clientWidth, h: el.clientHeight });
                                 setImgNaturalSize({ w: el.naturalWidth, h: el.naturalHeight });
                             }}
-                            className="max-h-full max-w-full select-none rounded-[20px] object-contain shadow-lg"
+                            className="max-h-full max-w-full select-none rounded-2xl object-contain shadow-2xl"
                         />
 
                         {/* Overlay canvas */}
                         <canvas
                             ref={overlayCanvasRef}
-                            className={cn(
-                                "pointer-events-none absolute rounded-[20px]",
-                            )}
+                            className="pointer-events-none absolute rounded-2xl"
                             style={{
                                 width: imgDisplaySize.w,
                                 height: imgDisplaySize.h,
@@ -560,7 +523,7 @@ export function ImageEditModal({
                         {/* Touch / pointer interaction layer */}
                         <div
                             className={cn(
-                                "absolute rounded-[20px]",
+                                "absolute rounded-2xl",
                                 selectionMode && !isPanning ? "cursor-none" : isPanning ? "cursor-grabbing" : "cursor-default",
                             )}
                             style={{
@@ -580,7 +543,7 @@ export function ImageEditModal({
                         {/* Brush cursor indicator */}
                         {selectionMode && brushCursorPx && !isPanning && (
                             <div
-                                className="pointer-events-none absolute rounded-full border-2 border-blue-500 bg-blue-300/30"
+                                className="pointer-events-none absolute rounded-full border-2 border-blue-500 bg-blue-400/20 dark:border-blue-400 dark:bg-blue-500/20"
                                 style={{
                                     width: brushSize,
                                     height: brushSize,
@@ -591,13 +554,162 @@ export function ImageEditModal({
                         )}
                     </div>
                 </div>
+
+                {/* Floating toolbar - Top Left */}
+                <div className="absolute left-4 top-4 flex flex-col gap-2">
+                    {/* Brush mode toggle */}
+                    <div className="rounded-2xl border border-stone-200 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95">
+                        <Button
+                            variant={selectionMode ? "default" : "ghost"}
+                            size="sm"
+                            className={cn(
+                                "gap-1.5 rounded-xl px-3 text-xs font-medium transition-all",
+                                selectionMode
+                                    ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                                    : "text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100",
+                            )}
+                            onClick={() => setSelectionMode((v) => !v)}
+                            disabled={isSubmitting}
+                        >
+                            <Brush className="size-3.5" />
+                            {selectionMode ? "画笔模式" : "开始选区"}
+                        </Button>
+                    </div>
+
+                    {/* Brush size control - only shown in selection mode */}
+                    {selectionMode && (
+                        <div className="flex flex-col gap-1.5 rounded-2xl border border-stone-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-medium text-stone-600 dark:text-stone-400">笔刷</span>
+                                <span className="text-xs font-semibold tabular-nums text-stone-900 dark:text-stone-100">{brushSize}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-7 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                                    onClick={() => setBrushSize((prev) => Math.max(4, prev - 4))}
+                                    disabled={brushSize <= 4}
+                                >
+                                    <Minus className="size-3.5" />
+                                </Button>
+                                <input
+                                    type="range"
+                                    min={4}
+                                    max={120}
+                                    step={2}
+                                    value={brushSize}
+                                    onChange={(e) => setBrushSize(Number(e.target.value))}
+                                    className="h-1.5 w-24 cursor-pointer accent-blue-500 dark:accent-blue-600"
+                                />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-7 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                                    onClick={() => setBrushSize((prev) => Math.min(120, prev + 4))}
+                                    disabled={brushSize >= 120}
+                                >
+                                    <Plus className="size-3.5" />
+                                </Button>
+                            </div>
+                            <div className="text-[10px] text-stone-400 dark:text-stone-500">
+                                快捷键: [ ]
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Floating toolbar - Top Right */}
+                <div className="absolute right-4 top-4 flex flex-col gap-2">
+                    {/* Edit controls */}
+                    <div className="flex gap-1.5 rounded-2xl border border-stone-200 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-40 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                            onClick={handleUndo}
+                            disabled={strokes.length === 0 || isSubmitting}
+                            title="撤销 (⌘Z)"
+                        >
+                            <Undo2 className="size-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-40 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                            onClick={handleRedo}
+                            disabled={redoStrokes.length === 0 || isSubmitting}
+                            title="重做 (⇧⌘Z)"
+                        >
+                            <Redo2 className="size-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-stone-500 hover:bg-rose-100 hover:text-rose-600 disabled:opacity-40 dark:text-stone-400 dark:hover:bg-rose-900/30 dark:hover:text-rose-400"
+                            onClick={handleClear}
+                            disabled={!hasSelection || isSubmitting}
+                            title="清空选区"
+                        >
+                            <Trash2 className="size-4" />
+                        </Button>
+                    </div>
+
+                    {/* Zoom controls */}
+                    <div className="flex flex-col gap-1.5 rounded-2xl border border-stone-200 bg-white/95 p-1.5 shadow-lg backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                            onClick={() => setScale((prev) => Math.min(5, prev * 1.2))}
+                            disabled={scale >= 5}
+                            title="放大"
+                        >
+                            <ZoomIn className="size-4" />
+                        </Button>
+                        <div className="px-1 text-center text-[10px] font-medium tabular-nums text-stone-600 dark:text-stone-400">
+                            {Math.round(scale * 100)}%
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                            onClick={() => setScale((prev) => Math.max(0.1, prev / 1.2))}
+                            disabled={scale <= 0.1}
+                            title="缩小"
+                        >
+                            <ZoomOut className="size-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 rounded-lg px-2 text-[10px] text-stone-500 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                            onClick={() => {
+                                setScale(1);
+                                setOffset({ x: 0, y: 0 });
+                            }}
+                            title="重置视图"
+                        >
+                            重置
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Helper hint - Bottom Center */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                    <div className="rounded-full border border-stone-200 bg-white/95 px-4 py-2 text-xs text-stone-600 shadow-lg backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/95 dark:text-stone-400">
+                        {selectionMode
+                            ? "拖拽涂抹创建选区 · 中键拖拽平移 · 滚轮缩放"
+                            : "点击「开始选区」开始编辑"}
+                    </div>
+                </div>
             </div>
 
             {/* ── Footer ─────────────────────────────────────────────────────────── */}
-            <footer className="shrink-0 border-t border-stone-200 px-4 py-4 sm:px-6">
+            <footer className="shrink-0 border-t border-stone-200 bg-white px-4 py-4 dark:border-stone-800 dark:bg-stone-900 sm:px-6">
                 <div className="mx-auto flex max-w-3xl flex-col gap-3">
                     {/* Prompt textarea */}
-                    <div className="relative rounded-[28px] border border-stone-200 bg-white shadow-sm transition-shadow focus-within:border-stone-300 focus-within:shadow-md">
+                    <div className="relative rounded-2xl border border-stone-200 bg-stone-50 shadow-sm transition-all focus-within:border-stone-300 focus-within:bg-white focus-within:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:focus-within:border-stone-600 dark:focus-within:bg-stone-800">
                         <Textarea
                             placeholder="描述你希望如何修改选区内的内容…"
                             value={prompt}
@@ -605,8 +717,8 @@ export function ImageEditModal({
                             disabled={isSubmitting}
                             rows={3}
                             className={cn(
-                                "resize-none rounded-[28px] border-0 bg-transparent px-5 py-4 text-sm text-stone-800",
-                                "placeholder:text-stone-400 focus-visible:ring-0",
+                                "resize-none rounded-2xl border-0 bg-transparent px-5 py-4 text-sm text-stone-900",
+                                "placeholder:text-stone-400 focus-visible:ring-0 dark:text-stone-100 dark:placeholder:text-stone-500",
                                 "min-h-[80px] max-h-[180px]",
                             )}
                             onKeyDown={(e) => {
@@ -617,26 +729,14 @@ export function ImageEditModal({
                             }}
                         />
 
-                        {/* Submit row */}
-                        <div className="flex items-center justify-between px-4 pb-3">
-                            {/* Selection status */}
-                            <span
-                                className={cn(
-                                    "text-xs",
-                                    hasSelection ? "text-blue-500" : "text-stone-400",
-                                )}
-                            >
-                                {hasSelection
-                                    ? `已选择 ${strokes.length} 个区域`
-                                    : "尚未选择区域"}
-                            </span>
-
+                        {/* Submit button */}
+                        <div className="flex items-center justify-end px-4 pb-3">
                             <Button
                                 onClick={() => void handleSubmit()}
                                 disabled={isSubmitting || !prompt.trim() || !hasSelection}
                                 className={cn(
                                     "rounded-full px-5 text-sm font-medium transition-all",
-                                    "bg-stone-800 text-white hover:bg-stone-700",
+                                    "bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200",
                                     "disabled:opacity-50",
                                 )}
                             >
@@ -671,10 +771,14 @@ export function ImageEditModal({
                         </div>
                     </div>
 
-                    {/* Keyboard hint */}
-                    <p className="text-center text-xs text-stone-400">
-                        按 <kbd className="rounded border border-stone-200 px-1 font-mono text-[10px]">⌘ Enter</kbd> 快速提交
-                    </p>
+                    {/* Keyboard hints */}
+                    <div className="flex items-center justify-center gap-4 text-[10px] text-stone-400 dark:text-stone-500">
+                        <span>⌘ Enter 提交</span>
+                        <span>·</span>
+                        <span>B 切换画笔</span>
+                        <span>·</span>
+                        <span>[ ] 调整笔刷</span>
+                    </div>
                 </div>
             </footer>
         </div>

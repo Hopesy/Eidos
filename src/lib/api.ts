@@ -332,9 +332,7 @@ export async function fetchRequestLogs() {
 // ─── 版本信息 ─────────────────────────────────────────────────────────────────
 
 export async function fetchVersionInfo() {
-  return httpRequest<VersionInfo>("/api/version", {
-    redirectOnUnauthorized: false,
-  });
+  return httpRequest<VersionInfo>("/api/version");
 }
 
 // ─── 图像生成 ─────────────────────────────────────────────────────────────────

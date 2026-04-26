@@ -961,6 +961,20 @@ function parseSsePayload(raw: string) {
   };
 }
 
+function buildNoImageReturnedError(textReply: string) {
+  const normalized = cleanToken(textReply);
+  const lower = normalized.toLowerCase();
+  if (
+    lower.includes("upload") ||
+    lower.includes("please upload") ||
+    normalized.includes("请上传") ||
+    normalized.includes("源图")
+  ) {
+    return "上游未识别到上传源图，未返回图片结果";
+  }
+  return "上游未返回图片结果";
+}
+
 function extractImageIds(mapping: Record<string, unknown>) {
   const fileIds: string[] = [];
   for (const node of Object.values(mapping)) {
@@ -1248,10 +1262,7 @@ async function collectGeneratedItems(
     });
     const textReply = parsed.text?.trim();
     if (textReply) {
-      return {
-        created: Math.floor(Date.now() / 1000),
-        data: [{ text: textReply }],
-      };
+      throw new ImageGenerationError(buildNoImageReturnedError(textReply));
     }
     throw new ImageGenerationError("no image returned from upstream");
   }

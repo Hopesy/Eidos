@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { ensureAccountWatcherStarted, fetchAccountRemoteInfo, refreshAccountState } from "@/server/account-service";
 import { jsonError, jsonOk } from "@/server/response";
 
@@ -11,7 +10,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAuthKey(request);
     await ensureAccountWatcherStarted();
 
     const { id } = await params;

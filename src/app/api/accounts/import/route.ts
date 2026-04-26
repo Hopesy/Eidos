@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { addAccounts, ensureAccountWatcherStarted, refreshAccounts } from "@/server/account-service";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
@@ -68,7 +67,6 @@ function extractTokens(raw: string): string[] {
 
 export async function POST(request: NextRequest) {
     try {
-        await requireAuthKey(request);
         await ensureAccountWatcherStarted();
 
         const formData = await request.formData();

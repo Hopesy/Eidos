@@ -5,9 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
-  Github,
   ImageIcon,
-  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   RefreshCcw,
@@ -166,18 +164,6 @@ function DesktopTopNav({
 
         <div className="mt-auto space-y-1.5">
           <ThemeToggle collapsed={collapsed} />
-          <button
-            type="button"
-            onClick={() => setShowUpdateDialog(true)}
-            className={cn(
-              "flex w-full items-center justify-center text-sm font-medium text-stone-900 transition hover:text-stone-700 dark:text-stone-100 dark:hover:text-stone-300",
-              collapsed ? "py-1.5" : "gap-2 py-1.5",
-            )}
-            title={collapsed ? "检查更新" : undefined}
-          >
-            <RefreshCcw className="size-4" />
-            {!collapsed ? "检查更新" : null}
-          </button>
           <a
             href={repositoryUrl}
             target="_blank"
@@ -193,14 +179,18 @@ function DesktopTopNav({
             </svg>
             {!collapsed ? "GitHub" : null}
           </a>
-          <div
+          <button
+            type="button"
+            onClick={() => setShowUpdateDialog(true)}
             className={cn(
-              "text-center text-xs text-stone-400 dark:text-stone-500",
+              "flex w-full items-center justify-center gap-1.5 text-xs text-stone-400 transition hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300",
               collapsed ? "py-0.5" : "py-0.5",
             )}
+            title="检查更新"
           >
+            <RefreshCcw className="size-3" />
             {versionLabel}
-          </div>
+          </button>
         </div>
         <UpdateDialog open={showUpdateDialog} onClose={() => setShowUpdateDialog(false)} />
       </div>

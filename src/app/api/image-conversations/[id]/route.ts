@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { deleteImageConversationRecord, getImageConversationRecord, saveImageConversationRecord } from "@/server/image-conversation-store";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
@@ -11,7 +10,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAuthKey(request);
     const { id } = await params;
     const item = await getImageConversationRecord(id);
     if (!item) {
@@ -28,7 +26,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAuthKey(request);
     const { id } = await params;
     const body = (await request.json()) as Record<string, unknown>;
     return jsonOk({ item: await saveImageConversationRecord({ ...body, id }) });
@@ -42,7 +39,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireAuthKey(request);
     const { id } = await params;
     return jsonOk(await deleteImageConversationRecord(id));
   } catch (error) {

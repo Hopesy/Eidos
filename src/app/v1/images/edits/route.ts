@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
 import { persistImageResponseItems } from "@/server/image-file-store";
 import { logger } from "@/server/logger";
@@ -21,7 +20,6 @@ export async function POST(request: NextRequest) {
     let logModel = "gpt-image-1";
     let usedApiService = false;
     try {
-        await requireAuthKey(request);
         await ensureAccountWatcherStarted();
 
         const contentType = request.headers.get("content-type") || "";

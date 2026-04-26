@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { runSync } from "@/server/cpa-sync";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
@@ -8,7 +7,6 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
     try {
-        await requireAuthKey(request);
 
         const body = (await request.json()) as { direction?: string };
         const direction = String(body.direction || "").trim();

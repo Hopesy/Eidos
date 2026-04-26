@@ -930,7 +930,7 @@ export default function ImagePage() {
     setImagePrompt("");
     setImageCount("1");
     setImageSize("auto");
-    setImageQuality("auto");
+    setImageQuality("medium");
     setUpscaleScale("2x");
     setReuseLatestResultForGenerate(true);
     setSourceImages([]);

@@ -2,10 +2,6 @@ import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 import webConfig from "@/constants/common-env";
 
-type RequestConfig = AxiosRequestConfig & {
-    redirectOnUnauthorized?: boolean;
-};
-
 const request = axios.create({
     baseURL: webConfig.apiUrl.replace(/\/$/, ""),
 });
@@ -37,18 +33,16 @@ type RequestOptions = {
     method?: string;
     body?: unknown;
     headers?: Record<string, string>;
-    redirectOnUnauthorized?: boolean;
     signal?: AbortSignal;
 };
 
 export async function httpRequest<T>(path: string, options: RequestOptions = {}) {
-    const { method = "GET", body, headers, redirectOnUnauthorized = true, signal } = options;
-    const config: RequestConfig = {
+    const { method = "GET", body, headers, signal } = options;
+    const config: AxiosRequestConfig = {
         url: path,
         method,
         data: body,
         headers,
-        redirectOnUnauthorized,
         signal,
     };
     const response = await request.request<T>(config);

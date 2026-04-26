@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuthKey } from "@/server/auth";
 import { getSavedConfig, setSavedConfig } from "@/server/config-store";
 import { jsonError, jsonOk } from "@/server/response";
 
@@ -24,7 +23,6 @@ function sanitizeConfig(value: Record<string, unknown>) {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAuthKey(request);
 
     const saved = getSavedConfig();
     if (saved) {
@@ -55,7 +53,6 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    await requireAuthKey(request);
     const body = (await request.json()) as Record<string, unknown>;
     const sanitized = sanitizeConfig(body);
     setSavedConfig(sanitized);

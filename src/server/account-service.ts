@@ -746,6 +746,86 @@ export async function editWithPool(
   }
 }
 
+export async function upscaleWithPool(
+  prompt: string,
+  model: string,
+  image: File,
+  options: {
+    scale?: number;
+  } = {},
+) {
+  const startedAt = new Date().toISOString();
+  const startTime = Date.now();
+  const route = "upscale";
+  const operation = "upscale";
+  const scale = options.scale ?? 2;
+  let lastAccountEmail: string | undefined;
+  let lastAccountType: string | undefined;
+
+  const requestToken = await getAvailableAccessToken();
+  const account = await getAccount(requestToken);
+  if (account) {
+    lastAccountEmail = account.email ?? undefined;
+    lastAccountType = account.type ?? undefined;
+  }
+
+  try {
+    const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, {
+      images: [image],
+    }) as { created: number; data: Array<Record<string, unknown>> };
+
+    result.data = await persistImageResponseItems(result.data, {
+      route,
+      operation,
+      model,
+      prompt,
+      accountEmail: account?.email ?? null,
+      accountType: account?.type ?? null,
+    }, { keepBase64: true });
+
+    await markImageResult(requestToken, true);
+
+    addRequestLog({
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      endpoint: "POST /v1/images/upscale",
+      operation,
+      route,
+      model,
+      count: 1,
+      success: true,
+      durationMs: Date.now() - startTime,
+      accountEmail: lastAccountEmail,
+      accountType: lastAccountType,
+    });
+    logger.info("account-service", "图片放大完成", {
+      model,
+      scale,
+      elapsedMs: Date.now() - startTime,
+      accountEmail: lastAccountEmail ?? null,
+    });
+    return result;
+  } catch (error) {
+    await markImageResult(requestToken, false);
+    const message = error instanceof Error ? error.message : String(error);
+    addRequestLog({
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      endpoint: "POST /v1/images/upscale",
+      operation,
+      route,
+      model,
+      count: 1,
+      success: false,
+      error: message.slice(0, 300),
+      durationMs: Date.now() - startTime,
+      accountEmail: lastAccountEmail,
+      accountType: lastAccountType,
+    });
+    throw error;
+  }
+}
+
 export async function ensureAccountWatcherStarted() {
   // 定期自动刷新已禁用，账号状态由用户手动刷新
 }
