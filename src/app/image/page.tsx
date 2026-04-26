@@ -22,7 +22,6 @@ import {
   fetchAccounts,
   generateImage,
   upscaleImage,
-  type InpaintSourceReference,
   type Account,
   type ImageGenerationQuality,
   type ImageGenerationSize,
@@ -496,19 +495,6 @@ function buildProcessingStatus(
   };
 }
 
-function buildInpaintSourceReference(image: StoredImage): InpaintSourceReference | undefined {
-  if (!image.file_id || !image.gen_id || !image.source_account_id) {
-    return undefined;
-  }
-  return {
-    original_file_id: image.file_id,
-    original_gen_id: image.gen_id,
-    conversation_id: image.conversation_id,
-    parent_message_id: image.parent_message_id,
-    source_account_id: image.source_account_id,
-  };
-}
-
 function humanizeError(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error ?? "处理图片失败");
   const lower = raw.toLowerCase();
@@ -540,29 +526,6 @@ function humanizeError(error: unknown): string {
     return "提示词可能违反内容政策，请修改后重试";
   }
   return raw;
-}
-
-function extractErrorCode(error: unknown) {
-  if (typeof error !== "object" || !error) {
-    return "";
-  }
-  const code = "code" in error ? (error as { code?: unknown }).code : undefined;
-  if (typeof code === "string") {
-    return code;
-  }
-  return "";
-}
-
-function shouldFallbackSelectionEdit(error: unknown) {
-  const code = extractErrorCode(error);
-  const message = error instanceof Error ? error.message : "";
-  const normalized = `${code} ${message}`.toLowerCase();
-  return (
-    normalized.includes("invalid_image_reference") ||
-    normalized.includes("reference") ||
-    normalized.includes("source_reference") ||
-    normalized.includes("所属账号")
-  );
 }
 
 function openImageInNewTab(dataUrl: string) {
@@ -1148,7 +1111,6 @@ export default function ImagePage() {
       return;
     }
 
-    const sourceReference = buildInpaintSourceReference(editorTarget.image);
     const conversationId = editorTarget.conversationId;
     const turnId = makeId();
     const now = new Date().toISOString();
@@ -1210,30 +1172,16 @@ export default function ImagePage() {
         turns: [...(current.turns ?? []), draftTurn],
       }));
 
-      let fallbackImageFile = await dataUrlToFile(
+      const sourceImageFile = await dataUrlToFile(
         editorTarget.sourceDataUrl,
         editorTarget.imageName || "source.png",
       );
-      let data;
-      try {
-        data = await editImage({
-          prompt,
-          images: [fallbackImageFile],
-          mask: mask.file,
-          sourceReference,
-          model: imageModel,
-        });
-      } catch (error) {
-        if (!sourceReference || !shouldFallbackSelectionEdit(error)) {
-          throw error;
-        }
-        data = await editImage({
-          prompt,
-          images: [fallbackImageFile],
-          mask: mask.file,
-          model: imageModel,
-        });
-      }
+      const data = await editImage({
+        prompt,
+        images: [sourceImageFile],
+        mask: mask.file,
+        model: imageModel,
+      });
       const resultItems = mergeResultImages(turnId, data.data || [], 1);
       const failedCount = countFailures(resultItems);
       const durationMs = Date.now() - startedAt;

@@ -198,6 +198,43 @@ function isImageAccountAvailable(account: AccountRecord | null) {
   return Boolean(account && account.status !== "禁用" && account.quota > 0);
 }
 
+function isRetryableImageError(message: string) {
+  const normalized = String(message || "").toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  if (
+    normalized.includes("content policy") ||
+    normalized.includes("safety") ||
+    normalized.includes("policy") ||
+    normalized.includes("unsupported") ||
+    normalized.includes("invalid_image") ||
+    normalized.includes("bad request") ||
+    normalized.includes("400") ||
+    normalized.includes("401") ||
+    normalized.includes("403")
+  ) {
+    return false;
+  }
+  return (
+    normalized.includes("fetch failed") ||
+    normalized.includes("network error") ||
+    normalized.includes("request timed out") ||
+    normalized.includes("timed out") ||
+    normalized.includes("timeout") ||
+    normalized.includes("terminated") ||
+    normalized.includes("econnreset") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("etimedout") ||
+    normalized.includes("und_err") ||
+    normalized.includes("socket") ||
+    normalized.includes("502") ||
+    normalized.includes("503") ||
+    normalized.includes("504") ||
+    normalized.includes("service unavailable")
+  );
+}
+
 async function listRecords() {
   const raw = await readAccounts();
   return raw
@@ -551,6 +588,14 @@ export async function generateWithPool(
           attempted.add(requestToken);
           continue;
         }
+        if (isRetryableImageError(message)) {
+          logger.warn("account-service", `第 ${requestIndex} 次请求：错误可重试，切换下一个 token`, {
+            token: tokenHint,
+            error: message.slice(0, 200),
+          });
+          attempted.add(requestToken);
+          continue;
+        }
         break;
       }
     }
@@ -669,6 +714,144 @@ export async function generateWithPool(
   };
 }
 
+async function runAttachmentTaskWithPool(
+  prompt: string,
+  model: string,
+  params: {
+    images: File[];
+    mask?: File | null;
+    size?: ImageGenerationSize;
+    quality?: ImageGenerationQuality;
+  },
+  requestMeta: {
+    endpoint: string;
+    route: string;
+    operation: string;
+    count: number;
+    successLogMessage?: string;
+    successLogData?: Record<string, unknown>;
+  },
+) {
+  const startedAt = new Date().toISOString();
+  const startTime = Date.now();
+  const lastErrors: string[] = [];
+  let lastAccountEmail: string | undefined;
+  let lastAccountType: string | undefined;
+
+  const attempted = new Set<string>();
+  while (true) {
+    let requestToken = "";
+    try {
+      requestToken = await getAvailableAccessToken(attempted);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      lastErrors.push(message);
+      break;
+    }
+
+    const account = await getAccount(requestToken);
+    const tokenHint = requestToken.slice(0, 16) + "...";
+    if (account) {
+      lastAccountEmail = account.email ?? undefined;
+      lastAccountType = account.type ?? undefined;
+    }
+
+    try {
+      const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, params) as {
+        created: number;
+        data: Array<Record<string, unknown>>;
+      };
+
+      result.data = await persistImageResponseItems(result.data, {
+        route: requestMeta.route,
+        operation: requestMeta.operation,
+        model,
+        prompt,
+        accountEmail: account?.email ?? null,
+        accountType: account?.type ?? null,
+      }, { keepBase64: true });
+
+      await markImageResult(requestToken, true);
+      addRequestLog({
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        endpoint: requestMeta.endpoint,
+        operation: requestMeta.operation,
+        route: requestMeta.route,
+        model,
+        count: requestMeta.count,
+        success: true,
+        durationMs: Date.now() - startTime,
+        accountEmail: lastAccountEmail,
+        accountType: lastAccountType,
+      });
+      if (requestMeta.successLogMessage) {
+        logger.info("account-service", requestMeta.successLogMessage, {
+          accountEmail: lastAccountEmail ?? null,
+          elapsedMs: Date.now() - startTime,
+          ...requestMeta.successLogData,
+        });
+      }
+      return result;
+    } catch (error) {
+      await markImageResult(requestToken, false);
+      const message = error instanceof Error ? error.message : String(error);
+      lastErrors.push(message);
+      logger.error("account-service", `${requestMeta.operation} 请求失败`, {
+        token: tokenHint,
+        error: message.slice(0, 200),
+      });
+      if (isTokenInvalidError(message)) {
+        logger.warn("account-service", "Token 无效，自动移除", { token: tokenHint });
+        await removeToken(requestToken);
+        attempted.add(requestToken);
+        continue;
+      }
+      if (isRetryableImageError(message)) {
+        logger.warn("account-service", `${requestMeta.operation} 错误可重试，切换下一个 token`, {
+          token: tokenHint,
+          error: message.slice(0, 200),
+        });
+        attempted.add(requestToken);
+        continue;
+      }
+
+      addRequestLog({
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        endpoint: requestMeta.endpoint,
+        operation: requestMeta.operation,
+        route: requestMeta.route,
+        model,
+        count: requestMeta.count,
+        success: false,
+        error: message.slice(0, 300),
+        durationMs: Date.now() - startTime,
+        accountEmail: lastAccountEmail,
+        accountType: lastAccountType,
+      });
+      throw error;
+    }
+  }
+
+  const detail = lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts";
+  addRequestLog({
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    endpoint: requestMeta.endpoint,
+    operation: requestMeta.operation,
+    route: requestMeta.route,
+    model,
+    count: requestMeta.count,
+    success: false,
+    error: detail.slice(0, 300),
+    durationMs: Date.now() - startTime,
+    accountEmail: lastAccountEmail,
+    accountType: lastAccountType,
+  });
+  throw new ImageGenerationError(detail);
+}
+
 export async function editWithPool(
   prompt: string,
   model: string,
@@ -679,71 +862,22 @@ export async function editWithPool(
     imageQuality?: ImageGenerationQuality;
   } = {},
 ) {
-  const startedAt = new Date().toISOString();
-  const startTime = Date.now();
-  const route = "edits";
-  const operation = "edit";
-  let lastAccountEmail: string | undefined;
-  let lastAccountType: string | undefined;
-
-  const requestToken = await getAvailableAccessToken();
-  const account = await getAccount(requestToken);
-  if (account) {
-    lastAccountEmail = account.email ?? undefined;
-    lastAccountType = account.type ?? undefined;
-  }
-
-  try {
-    const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, {
+  return runAttachmentTaskWithPool(
+    prompt,
+    model,
+    {
       images,
       mask,
       size: options.imageSize,
       quality: options.imageQuality,
-    }) as { created: number; data: Array<Record<string, unknown>> };
-
-    result.data = await persistImageResponseItems(result.data, {
-      route,
-      operation,
-      model,
-      prompt,
-      accountEmail: account?.email ?? null,
-      accountType: account?.type ?? null,
-    }, { keepBase64: true });
-
-    await markImageResult(requestToken, true);
-    addRequestLog({
-      startedAt,
-      finishedAt: new Date().toISOString(),
+    },
+    {
       endpoint: "POST /v1/images/edits",
-      operation,
-      route,
-      model,
+      operation: "edit",
+      route: "edits",
       count: 1,
-      success: true,
-      durationMs: Date.now() - startTime,
-      accountEmail: lastAccountEmail,
-      accountType: lastAccountType,
-    });
-    return result;
-  } catch (error) {
-    await markImageResult(requestToken, false);
-    const message = error instanceof Error ? error.message : String(error);
-    addRequestLog({
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      endpoint: "POST /v1/images/edits",
-      operation,
-      route,
-      model,
-      count: 1,
-      success: false,
-      error: message.slice(0, 300),
-      durationMs: Date.now() - startTime,
-      accountEmail: lastAccountEmail,
-      accountType: lastAccountType,
-    });
-    throw error;
-  }
+    },
+  );
 }
 
 export async function upscaleWithPool(
@@ -754,76 +888,23 @@ export async function upscaleWithPool(
     scale?: number;
   } = {},
 ) {
-  const startedAt = new Date().toISOString();
-  const startTime = Date.now();
-  const route = "upscale";
   const operation = "upscale";
   const scale = options.scale ?? 2;
-  let lastAccountEmail: string | undefined;
-  let lastAccountType: string | undefined;
-
-  const requestToken = await getAvailableAccessToken();
-  const account = await getAccount(requestToken);
-  if (account) {
-    lastAccountEmail = account.email ?? undefined;
-    lastAccountType = account.type ?? undefined;
-  }
-
-  try {
-    const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, {
+  return runAttachmentTaskWithPool(
+    prompt,
+    model,
+    {
       images: [image],
-    }) as { created: number; data: Array<Record<string, unknown>> };
-
-    result.data = await persistImageResponseItems(result.data, {
-      route,
-      operation,
-      model,
-      prompt,
-      accountEmail: account?.email ?? null,
-      accountType: account?.type ?? null,
-    }, { keepBase64: true });
-
-    await markImageResult(requestToken, true);
-
-    addRequestLog({
-      startedAt,
-      finishedAt: new Date().toISOString(),
+    },
+    {
       endpoint: "POST /v1/images/upscale",
       operation,
-      route,
-      model,
       count: 1,
-      success: true,
-      durationMs: Date.now() - startTime,
-      accountEmail: lastAccountEmail,
-      accountType: lastAccountType,
-    });
-    logger.info("account-service", "图片放大完成", {
-      model,
-      scale,
-      elapsedMs: Date.now() - startTime,
-      accountEmail: lastAccountEmail ?? null,
-    });
-    return result;
-  } catch (error) {
-    await markImageResult(requestToken, false);
-    const message = error instanceof Error ? error.message : String(error);
-    addRequestLog({
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      endpoint: "POST /v1/images/upscale",
-      operation,
-      route,
-      model,
-      count: 1,
-      success: false,
-      error: message.slice(0, 300),
-      durationMs: Date.now() - startTime,
-      accountEmail: lastAccountEmail,
-      accountType: lastAccountType,
-    });
-    throw error;
-  }
+      route: "upscale",
+      successLogMessage: "图片放大完成",
+      successLogData: { model, scale },
+    },
+  );
 }
 
 export async function ensureAccountWatcherStarted() {
