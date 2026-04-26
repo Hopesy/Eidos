@@ -5,7 +5,7 @@
 - UI：App Router + React 19
 - 组件：标准 shadcn/ui 组件基线
 - 主题：已按 `tweakcn` 的 **Supabase** 风格变量整理，后续换主题只需要继续替换 CSS variables
-- 服务端：Next.js Route Handlers 承载登录、账号管理、额度刷新与 OpenAI 兼容图片接口
+- 服务端：Next.js Route Handlers 承载账号管理、额度刷新与 OpenAI 兼容图片接口
 - 存储：结构化数据写入本地 SQLite `data/eidos.db`；图片文件写入 `data/images/`，上传源图/遮罩写入 `data/uploads/`
 - 运行时：纯 Node.js / Next.js，不再包含 Python 入口、依赖或服务层
 
@@ -159,11 +159,9 @@ set PORT=3001 && pnpm dev
 可选环境变量：
 
 ```powershell
-$env:CHATGPT2API_AUTH_KEY='your-auth-key'
 $env:REFRESH_ACCOUNT_INTERVAL_MINUTE='5'
 ```
 
-- `CHATGPT2API_AUTH_KEY`：设置后启用接口鉴权；不设置则本地默认免鉴权
 - `REFRESH_ACCOUNT_INTERVAL_MINUTE`：限制账号后台刷新轮询间隔，默认 `5`
 - `PORT`：开发服务监听端口，未设置时 Next.js 默认使用 `3000`
 
@@ -172,7 +170,6 @@ $env:REFRESH_ACCOUNT_INTERVAL_MINUTE='5'
 - Web UI: `http://127.0.0.1:3000`
 - 若以上文方式指定端口，则访问：`http://127.0.0.1:3001`
 - API 示例:
-  - `POST /auth/login`
   - `GET /api/accounts`
   - `POST /api/accounts/refresh`
   - `POST /v1/images/generations`
@@ -189,18 +186,6 @@ $env:REFRESH_ACCOUNT_INTERVAL_MINUTE='5'
 pnpm build
 pnpm start
 ```
-
----
-
-## 鉴权
-
-所有管理接口与 OpenAI 兼容接口都需要：
-
-```http
-Authorization: Bearer <auth-key>
-```
-
-仅当你设置了 `CHATGPT2API_AUTH_KEY` 环境变量时才需要携带这个请求头。
 
 ---
 

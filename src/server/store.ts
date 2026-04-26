@@ -39,7 +39,13 @@ function createAccountId(accessToken: string) {
 function parseAccount(row: Record<string, unknown>): AccountRecord | null {
   try {
     const parsed = JSON.parse(String(row.data_json || "{}")) as AccountRecord;
-    return parsed && typeof parsed === "object" ? parsed : null;
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    return {
+      ...parsed,
+      updated_at: cleanNullableString(row.updated_at),
+    };
   } catch {
     return null;
   }
@@ -94,7 +100,7 @@ function upsertAccountStatement() {
 
 async function readAccountsUnlocked() {
   const rows = getDb()
-    .prepare("SELECT data_json FROM accounts ORDER BY created_at ASC, access_token ASC")
+    .prepare("SELECT data_json, updated_at FROM accounts ORDER BY created_at ASC, access_token ASC")
     .all();
   return rows.map(parseAccount).filter((item): item is AccountRecord => Boolean(item));
 }

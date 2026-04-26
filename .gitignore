@@ -1,5 +1,10 @@
 # Dependencies
 node_modules
+electron/node_modules
+
+# Desktop packaging
+electron/app
+electron/dist
 .pnp
 .pnp.*
 .yarn/*

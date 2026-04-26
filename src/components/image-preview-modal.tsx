@@ -17,8 +17,10 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
+  const [magnifierZoom, setMagnifierZoom] = useState(3);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const currentMousePos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!open) return;
@@ -31,6 +33,8 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "q" || e.key === "Q") {
+        // 使用当前存储的鼠标位置
+        setMagnifierPos({ x: currentMousePos.current.x, y: currentMousePos.current.y });
         setShowMagnifier(true);
       }
     };
@@ -61,6 +65,7 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       setOffset({ x: 0, y: 0 });
       setIsPanning(false);
       setShowMagnifier(false);
+      setMagnifierZoom(3);
     }
   }, [open, imageSrc]);
 
@@ -72,13 +77,21 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY;
-      const zoomFactor = delta > 0 ? 0.9 : 1.1;
-      setScale((prev) => Math.max(0.1, Math.min(5, prev * zoomFactor)));
+
+      // 如果放大镜开启，调整放大镜倍率
+      if (showMagnifier) {
+        const zoomChange = delta > 0 ? -0.5 : 0.5;
+        setMagnifierZoom((prev) => Math.max(1.5, Math.min(10, prev + zoomChange)));
+      } else {
+        // 否则调整图片缩放
+        const zoomFactor = delta > 0 ? 0.9 : 1.1;
+        setScale((prev) => Math.max(0.1, Math.min(5, prev * zoomFactor)));
+      }
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
-  }, [open]);
+  }, [open, showMagnifier]);
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     // Middle mouse button or left button for panning
@@ -90,6 +103,9 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
   };
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // 始终更新当前鼠标位置
+    currentMousePos.current = { x: e.clientX, y: e.clientY };
+
     if (isPanning) {
       setOffset({
         x: e.clientX - panStart.x,
@@ -148,31 +164,56 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       {/* Magnifier */}
       {showMagnifier && (
         <div
-          className="pointer-events-none fixed z-50 overflow-hidden rounded-full border-4 border-white shadow-2xl"
+          className="pointer-events-none fixed z-50"
           style={{
-            width: 200,
-            height: 200,
-            left: magnifierPos.x - 100,
-            top: magnifierPos.y - 100,
-            backgroundImage: `url(${imageSrc})`,
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: `${(imageRef.current?.naturalWidth || 0) * 2.5}px ${(imageRef.current?.naturalHeight || 0) * 2.5}px`,
-            backgroundPosition: (() => {
-              const img = imageRef.current;
-              if (!img) return '0 0';
-              const rect = img.getBoundingClientRect();
-              const x = ((magnifierPos.x - rect.left) / rect.width) * 100;
-              const y = ((magnifierPos.y - rect.top) / rect.height) * 100;
-              return `${x}% ${y}%`;
-            })(),
+            left: magnifierPos.x - 120,
+            top: magnifierPos.y - 120,
           }}
-        />
+        >
+          {/* Outer glow */}
+          <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl" />
+
+          {/* Magnifier circle */}
+          <div
+            className="relative overflow-hidden rounded-full shadow-2xl ring-4 ring-white/90"
+            style={{
+              width: 240,
+              height: 240,
+              backgroundImage: `url(${imageSrc})`,
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: `${(imageRef.current?.naturalWidth || 0) * magnifierZoom}px ${(imageRef.current?.naturalHeight || 0) * magnifierZoom}px`,
+              backgroundPosition: (() => {
+                const img = imageRef.current;
+                if (!img) return '0 0';
+                const rect = img.getBoundingClientRect();
+                const x = ((magnifierPos.x - rect.left) / rect.width) * 100;
+                const y = ((magnifierPos.y - rect.top) / rect.height) * 100;
+                return `${x}% ${y}%`;
+              })(),
+            }}
+          >
+            {/* Inner highlight */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent" />
+
+            {/* Crosshair */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="absolute h-8 w-px bg-white/60 -translate-x-1/2 -translate-y-1/2" />
+              <div className="absolute h-px w-8 bg-white/60 -translate-x-1/2 -translate-y-1/2" />
+              <div className="absolute size-1 rounded-full bg-white/80 -translate-x-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+
+          {/* Zoom indicator */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+            {magnifierZoom.toFixed(1)}x
+          </div>
+        </div>
       )}
 
       {/* Hint */}
       {!showMagnifier && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-xs text-white backdrop-blur-sm">
-          按住 Q 键显示放大镜
+          按住 Q 键显示放大镜 · 滚轮调整倍率
         </div>
       )}
     </div>

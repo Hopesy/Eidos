@@ -88,14 +88,14 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
   }, []);
 
   return (
-    <aside className="order-3 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:min-h-0">
+    <aside className="order-3 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="border-b border-stone-200/40 bg-stone-50/50 px-4 py-3">
+        <div className="border-b border-stone-200/40 bg-stone-50/50 px-4 py-3 dark:border-stone-700 dark:bg-stone-800/50">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <FileImage className="size-3.5 text-stone-400" />
-              <span className="text-xs font-medium text-stone-500">文件</span>
-              <span className="rounded-full bg-stone-200 px-1.5 py-0.5 text-[9px] font-medium text-stone-500">
+              <FileImage className="size-3.5 text-stone-400 dark:text-stone-500" />
+              <span className="text-xs font-medium text-stone-500 dark:text-stone-400">文件</span>
+              <span className="rounded-full bg-stone-200 px-1.5 py-0.5 text-[9px] font-medium text-stone-500 dark:bg-stone-700 dark:text-stone-400">
                 {files.length}
               </span>
             </div>
@@ -103,7 +103,7 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
               type="button"
               onClick={() => void loadFiles(true)}
               disabled={isRefreshing}
-              className="inline-flex size-6 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-stone-200/50 hover:text-stone-500 disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex size-6 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-stone-200/50 hover:text-stone-500 disabled:pointer-events-none disabled:opacity-40 dark:text-stone-500 dark:hover:bg-stone-700/50 dark:hover:text-stone-400"
               title="刷新列表"
             >
               <RefreshCw className={cn("size-3", isRefreshing && "animate-spin")} />
@@ -113,30 +113,30 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {isLoading ? (
-            <div className="flex items-center gap-2 rounded-xl px-3 py-3 text-xs text-stone-400">
+            <div className="flex items-center gap-2 rounded-xl px-3 py-3 text-xs text-stone-400 dark:text-stone-500">
               <LoaderCircle className="size-4 animate-spin" />
               读取中…
             </div>
           ) : files.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-3 py-12 text-center">
-              <div className="rounded-xl bg-stone-100 p-3">
-                <FileImage className="size-5 text-stone-400" />
+              <div className="rounded-xl bg-stone-100 p-3 dark:bg-stone-800">
+                <FileImage className="size-5 text-stone-400 dark:text-stone-500" />
               </div>
-              <p className="text-xs text-stone-400">还没有图片文件</p>
+              <p className="text-xs text-stone-400 dark:text-stone-500">还没有图片文件</p>
             </div>
           ) : (
             <div className="space-y-1.5">
               {files.map((file) => (
                 <div
                   key={file.id}
-                  className="group relative overflow-hidden rounded-xl bg-white/60 transition-all duration-200 hover:bg-white hover:shadow-md"
+                  className="group relative overflow-hidden rounded-xl bg-white/60 transition-all duration-200 hover:bg-white hover:shadow-md dark:bg-stone-800/60 dark:hover:bg-stone-800"
                 >
                   <button
                     type="button"
                     onClick={() => onOpenImage?.(file.public_path)}
                     className="flex w-full gap-3 p-2.5 text-left"
                   >
-                    <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200/50 shadow-sm ring-1 ring-stone-900/5">
+                    <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200/50 shadow-sm ring-1 ring-stone-900/5 dark:from-stone-700 dark:to-stone-800/50 dark:ring-stone-700">
                       <Image
                         src={file.public_path}
                         alt={file.file_path}
@@ -146,13 +146,13 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
                     </div>
 
                     <div className="min-w-0 flex-1 py-0.5">
-                      <div className="truncate text-xs font-medium text-stone-700" title={file.file_path}>
+                      <div className="truncate text-xs font-medium text-stone-700 dark:text-stone-300" title={file.file_path}>
                         {file.file_path.split("/").pop()}
                       </div>
-                      <div className="mt-1 text-[10px] text-stone-400">
+                      <div className="mt-1 text-[10px] text-stone-400 dark:text-stone-500">
                         {formatFileSize(file.size_bytes)}
                       </div>
-                      <div className="mt-0.5 text-[10px] text-stone-400">
+                      <div className="mt-0.5 text-[10px] text-stone-400 dark:text-stone-500">
                         {formatFileTime(file.created_at)}
                       </div>
                     </div>

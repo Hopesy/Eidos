@@ -34,6 +34,7 @@ export type Account = {
   success: number;
   fail: number;
   lastUsedAt: string | null;
+  updatedAt?: string | null;
   // 新增字段
   fileName?: string;
   provider?: string;
@@ -220,20 +221,6 @@ type AccountUpdateResponse = {
   item: Account;
   items: Account[];
 };
-
-// ─── 认证 ─────────────────────────────────────────────────────────────────────
-
-export async function login(authKey: string) {
-  const normalizedAuthKey = String(authKey || "").trim();
-  return httpRequest<{ ok: boolean }>("/auth/login", {
-    method: "POST",
-    body: {},
-    headers: {
-      Authorization: `Bearer ${normalizedAuthKey}`,
-    },
-    redirectOnUnauthorized: false,
-  });
-}
 
 // ─── Account CRUD ─────────────────────────────────────────────────────────────
 

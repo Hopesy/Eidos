@@ -58,7 +58,7 @@ function HintTooltip({ text }: { text: string }) {
                 className="size-4 text-stone-400 transition-colors hover:text-stone-600"
                 aria-hidden="true"
             />
-            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block">
+            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
                 {text}
             </span>
         </span>
@@ -75,7 +75,7 @@ function LabelWithHint({
     hint?: string;
 }) {
     return (
-        <label htmlFor={id} className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-stone-700">
+        <label htmlFor={id} className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-stone-700 dark:text-stone-300">
             <span>{label}</span>
             {hint ? <HintTooltip text={hint} /> : null}
         </label>
@@ -92,11 +92,11 @@ function ConfigSection({
     children: React.ReactNode;
 }) {
     return (
-        <Card className="border-stone-200/60 bg-white shadow-sm rounded-2xl">
+        <Card className="border-stone-200/60 bg-white shadow-sm rounded-2xl dark:border-stone-700 dark:bg-stone-900">
             <CardContent className="px-5 py-4">
                 <div className="mb-3">
-                    <h2 className="text-sm font-semibold tracking-tight text-stone-900">{title}</h2>
-                    {description ? <p className="mt-0.5 text-xs leading-5 text-stone-500">{description}</p> : null}
+                    <h2 className="text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">{title}</h2>
+                    {description ? <p className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{description}</p> : null}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">{children}</div>
             </CardContent>
@@ -137,14 +137,14 @@ function ToggleField({
     onCheckedChange: (checked: boolean) => void;
 }) {
     return (
-        <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 md:col-span-2">
+        <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 md:col-span-2 dark:border-stone-700 dark:bg-stone-800/50">
             <div className="flex items-center gap-2.5">
                 <Checkbox id={id} checked={checked} onCheckedChange={(value) => onCheckedChange(Boolean(value))} />
                 <div className="min-w-0">
-                    <label htmlFor={id} className="text-sm font-medium text-stone-700">
+                    <label htmlFor={id} className="text-sm font-medium text-stone-700 dark:text-stone-300">
                         {label}
                     </label>
-                    {hint ? <p className="mt-0.5 text-xs leading-5 text-stone-500">{hint}</p> : null}
+                    {hint ? <p className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{hint}</p> : null}
                 </div>
             </div>
         </div>
@@ -238,20 +238,20 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
+        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-4">
-                    <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm" />
+                    <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm dark:from-stone-100 dark:to-stone-300" />
                     <div className="flex-1 -translate-y-[10px]">
-                        <h1 className="text-[28px] font-bold tracking-tight text-stone-950">配置管理</h1>
-                        <p className="mt-1 text-[13px] leading-relaxed text-stone-500">管理系统配置与服务参数</p>
+                        <h1 className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-50">配置管理</h1>
+                        <p className="mt-1 text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">管理系统配置与服务参数</p>
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button
                         type="button"
                         variant="outline"
-                        className="h-9 rounded-full border-stone-300/60 bg-white px-3 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow"
+                        className="h-9 rounded-full border-stone-300/60 bg-white px-3 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600 dark:hover:bg-stone-700"
                         onClick={() => void restoreDefaults()}
                         disabled={loading || saving || restoringDefaults}
                     >
@@ -260,7 +260,7 @@ export default function SettingsPage() {
                     </Button>
                     <Button
                         type="button"
-                        className="h-9 rounded-full bg-gradient-to-b from-stone-900 to-stone-800 px-4 text-sm font-medium text-white shadow-md transition-all hover:shadow-lg"
+                        className="h-9 rounded-full bg-gradient-to-b from-stone-900 to-stone-800 px-4 text-sm font-medium text-white shadow-md transition-all hover:shadow-lg dark:from-stone-100 dark:to-stone-200 dark:text-stone-900"
                         onClick={() => void saveConfig()}
                         disabled={loading || saving || !isDirty}
                     >

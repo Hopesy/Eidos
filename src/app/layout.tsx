@@ -24,7 +24,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Toaster position="top-center" richColors />
           <main
-            className="box-border h-screen min-h-0 overflow-hidden bg-[#f5f5f3] p-1.5 text-stone-900 lg:p-1.5"
+            className="box-border h-screen min-h-0 overflow-hidden bg-[#f5f5f3] p-1.5 text-stone-900 dark:bg-stone-950 dark:text-stone-100 lg:p-1.5"
             style={{
               fontFamily:
                 '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif',

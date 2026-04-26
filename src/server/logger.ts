@@ -6,8 +6,9 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
-const repoRoot = process.cwd();
-const logsDir = path.join(repoRoot, "logs");
+const logsDir = path.resolve(
+    process.env.EIDOS_LOGS_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "logs"),
+);
 
 let logsDirReady = false;
 

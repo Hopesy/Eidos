@@ -162,6 +162,7 @@ function normalizeAccount(input: Record<string, unknown>): AccountRecord | null 
     success: Math.max(0, Number(input.success ?? 0) || 0),
     fail: Math.max(0, Number(input.fail ?? 0) || 0),
     last_used_at: cleanToken(input.last_used_at) || null,
+    updated_at: cleanToken(input.updated_at) || null,
     fp: input.fp && typeof input.fp === "object" ? (input.fp as Record<string, unknown>) : undefined,
   };
 }
@@ -181,6 +182,7 @@ function publicAccount(account: AccountRecord): PublicAccount {
     success: account.success,
     fail: account.fail,
     lastUsedAt: account.last_used_at,
+    updatedAt: account.updated_at ?? null,
   };
 }
 

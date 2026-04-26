@@ -7,8 +7,10 @@ const DEFAULT_HOST = "0.0.0.0";
 const DEFAULT_PORT = 3000;
 const DEFAULT_REFRESH_INTERVAL_MINUTE = 5;
 
-const repoRoot = process.cwd();
-const dataDir = path.join(repoRoot, "data");
+const repoRoot = path.resolve(/* turbopackIgnore: true */ process.cwd());
+const dataDir = path.resolve(
+  process.env.EIDOS_DATA_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "data"),
+);
 const versionFile = path.join(repoRoot, "VERSION");
 
 async function readVersion() {
@@ -26,11 +28,9 @@ export async function getRuntimeConfig(): Promise<RuntimeConfig> {
   if (!runtimeConfigPromise) {
     runtimeConfigPromise = (async () => {
       await mkdir(dataDir, { recursive: true });
-      const authKey = String(process.env.CHATGPT2API_AUTH_KEY || "").trim();
       const refreshAccountIntervalMinute = Number(process.env.REFRESH_ACCOUNT_INTERVAL_MINUTE || DEFAULT_REFRESH_INTERVAL_MINUTE);
 
       return {
-        authKey,
         host: String(process.env.HOST || DEFAULT_HOST),
         port: Number(process.env.PORT || DEFAULT_PORT),
         accountsFile: path.join(dataDir, "accounts.json"),

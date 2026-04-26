@@ -14,6 +14,7 @@ export type AccountRecord = {
   success: number;
   fail: number;
   last_used_at: string | null;
+  updated_at?: string | null;
   fp?: Record<string, unknown>;
   [key: string]: unknown;
 };
@@ -32,10 +33,10 @@ export type PublicAccount = {
   success: number;
   fail: number;
   lastUsedAt: string | null;
+  updatedAt?: string | null;
 };
 
 export type RuntimeConfig = {
-  authKey: string;
   host: string;
   port: number;
   accountsFile: string;

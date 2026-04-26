@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/select";
 import {
   deleteAccounts,
-  fetchAccountQuota,
   fetchAccounts,
   fetchSyncStatus,
   importAccountFiles,
@@ -51,7 +50,6 @@ import {
   updateAccount,
   type Account,
   type AccountImportResponse,
-  type AccountQuotaResponse,
   type AccountStatus,
   type AccountType,
   type SyncAccount,
@@ -176,40 +174,19 @@ function extractImageGenLimit(account: Account) {
   };
 }
 
-function mergeImageGenLimit(
-  limitsProgress: Account["limits_progress"],
-  remaining: number | null | undefined,
-  resetAfter: string | null | undefined,
-) {
-  const next = Array.isArray(limitsProgress) ? [...limitsProgress] : [];
-  const currentIndex = next.findIndex((item) => item.feature_name === "image_gen");
-  const nextItem = {
-    feature_name: "image_gen",
-    remaining: typeof remaining === "number" ? remaining : undefined,
-    reset_after: resetAfter || undefined,
-  };
+const accountStatusSortOrder: Record<AccountStatus, number> = {
+  正常: 0,
+  限流: 1,
+  异常: 2,
+  禁用: 3,
+};
 
-  if (currentIndex >= 0) {
-    next[currentIndex] = {
-      ...next[currentIndex],
-      ...nextItem,
-    };
-    return next;
+function toSortTime(value?: string | null) {
+  if (!value) {
+    return 0;
   }
-
-  next.push(nextItem);
-  return next;
-}
-
-function applyQuotaResultToAccount(account: Account, quota: AccountQuotaResponse): Account {
-  return {
-    ...account,
-    status: quota.status,
-    type: quota.type,
-    quota: quota.quota,
-    restoreAt: quota.image_gen_reset_after || account.restoreAt,
-    limits_progress: mergeImageGenLimit(account.limits_progress, quota.image_gen_remaining, quota.image_gen_reset_after),
-  };
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
 }
 
 function normalizeSyncStatus(payload: SyncStatusResponse | null) {
@@ -247,10 +224,6 @@ export default function AccountsPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [quotaRefreshingId, setQuotaRefreshingId] = useState<string | null>(null);
-  const [accountQuotaMap, setAccountQuotaMap] = useState<Record<string, AccountQuotaResponse>>(
-    () => cachedAccountsView?.quotaMap ?? {},
-  );
   const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
   const [isSyncLoading, setIsSyncLoading] = useState(true);
   const [syncRunningDirection, setSyncRunningDirection] = useState<"pull" | "push" | "both" | null>(null);
@@ -262,9 +235,6 @@ export default function AccountsPage() {
     try {
       const data = await fetchAccounts();
       setAccounts(normalizeAccounts(data.items));
-      setAccountQuotaMap((prev) =>
-        Object.fromEntries(Object.entries(prev).filter(([id]) => data.items.some((item) => item.id === id))),
-      );
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
     } catch (error) {
       const message = error instanceof Error ? error.message : "加载账户失败";
@@ -330,13 +300,12 @@ export default function AccountsPage() {
     }
     setCachedAccountsView({
       items: accounts,
-      quotaMap: accountQuotaMap,
     });
-  }, [accountQuotaMap, accounts, isLoading]);
+  }, [accounts, isLoading]);
 
   const filteredAccounts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return accounts.filter((account) => {
+    const filtered = accounts.filter((account) => {
       const searchMatched =
         normalizedQuery.length === 0 ||
         (account.email ?? "").toLowerCase().includes(normalizedQuery) ||
@@ -345,6 +314,14 @@ export default function AccountsPage() {
       const typeMatched = typeFilter === "all" || account.type === typeFilter;
       const statusMatched = statusFilter === "all" || account.status === statusFilter;
       return searchMatched && typeMatched && statusMatched;
+    });
+
+    return filtered.sort((a, b) => {
+      const statusDelta = accountStatusSortOrder[a.status] - accountStatusSortOrder[b.status];
+      if (statusDelta !== 0) {
+        return statusDelta;
+      }
+      return toSortTime(b.updatedAt ?? b.lastUsedAt) - toSortTime(a.updatedAt ?? a.lastUsedAt);
     });
   }, [accounts, query, statusFilter, typeFilter]);
 
@@ -446,6 +423,7 @@ export default function AccountsPage() {
       const data = await refreshAccounts(accessTokens);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      await loadSync({ silent: true, force: true });
       if (data.errors.length > 0) {
         const firstError = data.errors[0]?.error;
         toast.error(
@@ -462,28 +440,8 @@ export default function AccountsPage() {
     }
   };
 
-  const handleRefreshAccountQuota = async (account: Account) => {
-    setQuotaRefreshingId(account.id);
-    try {
-      const data = await fetchAccountQuota(account.id);
-      setAccountQuotaMap((prev) => ({
-        ...prev,
-        [account.id]: data,
-      }));
-      setAccounts((prev) => prev.map((item) => (item.id === account.id ? applyQuotaResultToAccount(item, data) : item)));
-
-      if (data.refresh_error) {
-        toast.error(data.refresh_error);
-        return;
-      }
-      const remainingText = typeof data.image_gen_remaining === "number" ? `${data.image_gen_remaining}` : "—";
-      toast.success(`图片额度已刷新，剩余 ${remainingText}`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "刷新图片额度失败";
-      toast.error(message);
-    } finally {
-      setQuotaRefreshingId(null);
-    }
+  const handleRefreshAllLocalCredentials = async () => {
+    await handleRefreshSelectedAccounts(accounts.map((item) => item.access_token));
   };
 
   const handleRunSync = async (direction: "pull" | "push" | "both") => {
@@ -691,11 +649,11 @@ export default function AccountsPage() {
                 <Button
                   variant="outline"
                   className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700"
-                  onClick={() => void loadSync({ force: true })}
-                  disabled={isSyncLoading || syncRunningDirection !== null}
+                  onClick={() => void handleRefreshAllLocalCredentials()}
+                  disabled={accounts.length === 0 || isRefreshing || syncRunningDirection !== null}
                 >
-                  <RefreshCw className={cn("size-4", isSyncLoading ? "animate-spin" : "")} />
-                  刷新
+                  <RefreshCw className={cn("size-4", isRefreshing ? "animate-spin" : "")} />
+                  刷新本地凭证
                 </Button>
                 <Button
                   className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
@@ -933,11 +891,9 @@ export default function AccountsPage() {
                   {currentRows.map((account) => {
                     const status = statusMeta[account.status];
                     const StatusIcon = status.icon;
-                    const liveQuota = accountQuotaMap[account.id];
                     const imageGenLimit = extractImageGenLimit(account);
-                    const imageGenRemaining = liveQuota?.image_gen_remaining ?? imageGenLimit.remaining;
-                    const imageGenRestore = formatRestoreAt(liveQuota?.image_gen_reset_after || imageGenLimit.resetAfter);
-                    const isQuotaRefreshing = quotaRefreshingId === account.id;
+                    const imageGenRemaining = imageGenLimit.remaining;
+                    const imageGenRestore = formatRestoreAt(imageGenLimit.resetAfter);
 
                     return (
                       <tr
@@ -1017,14 +973,6 @@ export default function AccountsPage() {
                               {imageGenRemaining == null ? "—" : formatQuota(imageGenRemaining)}
                             </span>
                             <span className="text-[11px] text-stone-400">/ {formatQuota(account.quota)}</span>
-                            <button
-                              type="button"
-                              className="rounded p-0.5 text-stone-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-stone-100 hover:text-stone-600"
-                              onClick={() => void handleRefreshAccountQuota(account)}
-                              disabled={isQuotaRefreshing}
-                            >
-                              <RefreshCw className={cn("size-3", isQuotaRefreshing ? "animate-spin" : "")} />
-                            </button>
                           </div>
                         </td>
 

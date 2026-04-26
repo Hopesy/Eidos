@@ -1,7 +1,6 @@
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 import webConfig from "@/constants/common-env";
-import { clearStoredAuthKey, getStoredAuthKey } from "@/store/auth";
 
 type RequestConfig = AxiosRequestConfig & {
     redirectOnUnauthorized?: boolean;
@@ -13,11 +12,7 @@ const request = axios.create({
 
 request.interceptors.request.use(async (config) => {
     const nextConfig = { ...config };
-    const authKey = await getStoredAuthKey();
     const headers = { ...(nextConfig.headers || {}) } as Record<string, string>;
-    if (authKey && !headers.Authorization) {
-        headers.Authorization = `Bearer ${authKey}`;
-    }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     nextConfig.headers = headers;
@@ -27,20 +22,13 @@ request.interceptors.request.use(async (config) => {
 request.interceptors.response.use(
     (response) => response,
     async (error: AxiosError<{ detail?: { error?: string }; error?: string; message?: string }>) => {
-        const status = error.response?.status;
-        const shouldRedirect = (error.config as RequestConfig | undefined)?.redirectOnUnauthorized !== false;
-        if (status === 401 && shouldRedirect && typeof window !== "undefined") {
-            await clearStoredAuthKey();
-            window.location.href = "/login";
-        }
-
         const payload = error.response?.data;
         const message =
             payload?.detail?.error ||
             payload?.error ||
             payload?.message ||
             error.message ||
-            `请求失败 (${status || 500})`;
+            `请求失败 (${error.response?.status || 500})`;
         return Promise.reject(new Error(message));
     },
 );

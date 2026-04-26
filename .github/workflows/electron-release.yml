@@ -1,0 +1,48 @@
+name: electron-release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install electron dependencies
+        run: npm ci
+        working-directory: electron
+
+      - name: Build Windows package
+        run: npm run dist:win
+        working-directory: electron
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eidos-windows-installer
+          path: electron/dist/*
+
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: electron/dist/*
+          generate_release_notes: true

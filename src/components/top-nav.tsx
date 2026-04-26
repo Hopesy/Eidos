@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Activity,
   ImageIcon,
-  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings2,
@@ -16,9 +15,7 @@ import {
 
 import { fetchVersionInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { clearStoredAuthKey } from "@/store/auth";
-import { clearCachedAccountsView } from "@/store/accounts-view-cache";
-import { clearCachedSyncStatus } from "@/store/sync-status-cache";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const repositoryUrl = "https://github.com/peiyizhi0724/Eidos";
 
@@ -40,14 +37,12 @@ type DesktopTopNavProps = {
   pathname: string;
   defaultCollapsed: boolean;
   versionLabel: string;
-  onLogout: () => Promise<void>;
 };
 
 function DesktopTopNav({
   pathname,
   defaultCollapsed,
   versionLabel,
-  onLogout,
 }: DesktopTopNavProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
@@ -58,7 +53,7 @@ function DesktopTopNav({
         collapsed ? "w-[60px]" : "w-[176px]",
       )}
     >
-      <div className="flex h-full w-full flex-col rounded-[18px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+      <div className="flex h-full w-full flex-col rounded-[18px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-stone-700 dark:bg-stone-900 dark:shadow-none">
         <div
           className={cn(
             "gap-2",
@@ -78,7 +73,8 @@ function DesktopTopNav({
           >
             <span
               className={cn(
-                "flex items-center justify-center rounded-2xl bg-white text-stone-900 shadow-sm",
+                "flex items-center justify-center rounded-2xl shadow-sm",
+                "bg-white text-stone-900 dark:bg-stone-800 dark:text-stone-100",
                 collapsed ? "size-11" : "size-10",
               )}
             >
@@ -86,10 +82,10 @@ function DesktopTopNav({
             </span>
             {!collapsed ? (
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900">
+                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">
                   EIDOS
                 </span>
-                <span className="block truncate text-xs text-stone-500">
+                <span className="block truncate text-xs text-stone-500 dark:text-stone-400">
                   EIDOS 图片工作区
                 </span>
               </span>
@@ -99,7 +95,9 @@ function DesktopTopNav({
           <button
             type="button"
             className={cn(
-              "inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:bg-stone-50 hover:text-stone-900",
+              "inline-flex items-center justify-center rounded-2xl border transition-all",
+              "border-stone-200 bg-white text-stone-600 hover:bg-stone-50 hover:text-stone-900",
+              "dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-100",
               collapsed ? "size-11" : "size-10",
             )}
             onClick={() => setCollapsed((current) => !current)}
@@ -127,23 +125,23 @@ function DesktopTopNav({
                     ? "justify-center rounded-2xl px-0 py-1.5"
                     : "items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3",
                   !collapsed && (active
-                    ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-                    : "border-transparent text-stone-600 hover:border-white/80 hover:bg-white/75 hover:text-stone-900"),
+                    ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
+                    : "border-transparent text-stone-600 hover:border-white/80 hover:bg-white/75 hover:text-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100"),
                 )}
                 title={collapsed ? item.label : undefined}
               >
                 {!collapsed && active ? (
-                  <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-stone-950" />
+                  <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-stone-950 dark:bg-stone-100" />
                 ) : null}
                 <span
                   className={cn(
                     "flex shrink-0 items-center justify-center rounded-2xl transition-all duration-200",
                     collapsed ? "size-10" : "size-9",
                     active
-                      ? "bg-stone-950 text-white shadow-[0_8px_20px_rgba(15,23,42,0.20)]"
+                      ? "bg-stone-950 text-white shadow-[0_8px_20px_rgba(15,23,42,0.20)] dark:bg-stone-100 dark:text-stone-900"
                       : collapsed
-                        ? "text-stone-500 hover:bg-white/80 hover:text-stone-900"
-                        : "bg-white/85 text-stone-600 group-hover:bg-white group-hover:text-stone-900",
+                        ? "text-stone-500 hover:bg-white/80 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                        : "bg-white/85 text-stone-600 group-hover:bg-white group-hover:text-stone-900 dark:bg-stone-800/50 dark:text-stone-400 dark:group-hover:bg-stone-800 dark:group-hover:text-stone-100",
                   )}
                 >
                   <Icon className={cn(collapsed ? "size-5" : "size-4")} />
@@ -167,28 +165,19 @@ function DesktopTopNav({
             target="_blank"
             rel="noreferrer"
             className={cn(
-              "block rounded-2xl bg-white/70 text-xs text-stone-500 shadow-sm transition hover:bg-white hover:text-stone-700",
+              "block rounded-2xl text-xs shadow-sm transition",
+              "bg-white/70 text-stone-500 hover:bg-white hover:text-stone-700",
+              "dark:bg-stone-800/50 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-300",
               collapsed ? "px-2 py-3 text-center" : "px-4 py-3",
             )}
             title="打开 GitHub 仓库"
           >
-            {!collapsed ? <div className="font-medium text-stone-700">版本</div> : null}
+            {!collapsed ? <div className="font-medium text-stone-700 dark:text-stone-300">版本</div> : null}
             <div className={cn(!collapsed ? "mt-1" : "font-medium")}>
               {versionLabel}
             </div>
           </a>
-          <button
-            type="button"
-            className={cn(
-              "flex w-full items-center rounded-2xl border border-stone-200 bg-white text-sm font-medium text-stone-700 transition hover:bg-stone-50",
-              collapsed ? "justify-center px-0 py-3" : "justify-center gap-2 px-4 py-3",
-            )}
-            onClick={() => void onLogout()}
-            title={collapsed ? "退出登录" : undefined}
-          >
-            <LogOut className="size-4" />
-            {!collapsed ? "退出登录" : null}
-          </button>
+          <ThemeToggle collapsed={collapsed} />
         </div>
       </div>
     </aside>
@@ -197,7 +186,6 @@ function DesktopTopNav({
 
 export function TopNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const isImageRoute = pathname === "/image" || pathname?.startsWith("/image/");
   const [versionLabel, setVersionLabel] = useState("读取中");
 
@@ -223,45 +211,27 @@ export function TopNav() {
     };
   }, []);
 
-  const handleLogout = async () => {
-    clearCachedAccountsView();
-    clearCachedSyncStatus();
-    await clearStoredAuthKey();
-    router.replace("/login");
-  };
-
-  if (pathname === "/login" || pathname?.startsWith("/login/")) {
-    return null;
-  }
-
   return (
     <>
       <header className="lg:hidden">
-        <div className="rounded-[16px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+        <div className="rounded-[16px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-stone-700 dark:bg-stone-900 dark:shadow-none">
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/image"
-              className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/70"
+              className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/70 dark:hover:bg-stone-800/50"
             >
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-white text-stone-900 shadow-sm">
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-stone-100">
                 <Sparkles className="size-4" />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900">
+                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">
                   EIDOS
                 </span>
-                <span className="block truncate text-xs text-stone-500">
+                <span className="block truncate text-xs text-stone-500 dark:text-stone-400">
                   EIDOS 图片工作区
                 </span>
               </span>
             </Link>
-            <button
-              type="button"
-              className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white px-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
-              onClick={() => void handleLogout()}
-            >
-              <LogOut className="size-4" />
-            </button>
           </div>
 
           <nav className="mt-3 grid grid-cols-2 gap-2">
@@ -275,17 +245,17 @@ export function TopNav() {
                   className={cn(
                     "group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-200",
                     active
-                      ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-                      : "border-transparent bg-white/60 text-stone-600 hover:border-white/80 hover:bg-white hover:text-stone-900",
+                      ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
+                      : "border-transparent bg-white/60 text-stone-600 hover:border-white/80 hover:bg-white hover:text-stone-900 dark:bg-stone-800/30 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100",
                   )}
                 >
-                  {active ? <span className="absolute inset-x-3 bottom-0 h-px bg-stone-950/10" /> : null}
+                  {active ? <span className="absolute inset-x-3 bottom-0 h-px bg-stone-950/10 dark:bg-stone-100/10" /> : null}
                   <span
                     className={cn(
                       "flex shrink-0 size-9 items-center justify-center rounded-xl transition-all duration-200",
                       active
-                        ? "bg-stone-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)]"
-                        : "bg-white text-stone-600 group-hover:bg-white group-hover:text-stone-900",
+                        ? "bg-stone-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)] dark:bg-stone-100 dark:text-stone-900"
+                        : "bg-white text-stone-600 group-hover:bg-white group-hover:text-stone-900 dark:bg-stone-800 dark:text-stone-400 dark:group-hover:bg-stone-800 dark:group-hover:text-stone-100",
                     )}
                   >
                     <Icon className="size-4" />
@@ -306,7 +276,6 @@ export function TopNav() {
         pathname={pathname}
         defaultCollapsed={isImageRoute}
         versionLabel={versionLabel}
-        onLogout={handleLogout}
       />
     </>
   );

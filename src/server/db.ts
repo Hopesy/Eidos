@@ -10,7 +10,9 @@ let db: Database | null = null;
 let migratedJson = false;
 
 export function getDataDir() {
-  return path.join(/* turbopackIgnore: true */ process.cwd(), "data");
+  return path.resolve(
+    process.env.EIDOS_DATA_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "data"),
+  );
 }
 
 export function getDatabasePath() {

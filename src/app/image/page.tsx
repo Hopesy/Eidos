@@ -10,6 +10,7 @@ import {
   type GenerationOption,
   type ImageModelOption,
   type ModeOption,
+  type ToolbarImageSize,
 } from "./_components/composer-panel";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { ConversationTurn } from "./_components/conversation-turn";
@@ -48,6 +49,7 @@ import {
   startImageTask,
   subscribeImageTasks,
 } from "@/store/image-active-tasks";
+import { getCachedImageWorkspaceState, setCachedImageWorkspaceState } from "@/store/image-workspace-cache";
 
 const imageModelOptions: Array<{ label: string; value: ImageModel }> = [
   { label: "gpt-image-2", value: "gpt-image-2" },
@@ -60,20 +62,31 @@ const modeOptions: Array<{ label: string; value: ImageMode; description: string 
   { label: "放大", value: "upscale", description: "提升清晰度并放大细节" },
 ];
 
-const upscaleOptions = ["2x", "4x"];
+const upscaleOptions = ["2x", "4x", "6x", "8x"];
 
-const imageSizeOptions: GenerationOption<ImageGenerationSize>[] = [
+const imageSizeOptions: GenerationOption<ToolbarImageSize>[] = [
   { label: "Auto", value: "auto" },
   { label: "1:1 方图", value: "1024x1024" },
   { label: "3:2 横图", value: "1536x1024" },
   { label: "2:3 竖图", value: "1024x1536" },
+  { label: "16:9 横屏", value: "1792x1024" },
+  { label: "9:16 竖屏", value: "1024x1792" },
 ];
 
 const imageQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
-  { label: "Auto", value: "auto" },
-  { label: "2K(中)", value: "medium" },
-  { label: "4K(高)", value: "high" },
+  { label: "2K", value: "medium" },
+  { label: "4K", value: "high" },
 ];
+
+function mapToolbarImageSizeToApiSize(size: ToolbarImageSize): ImageGenerationSize {
+  if (size === "1792x1024") {
+    return "1536x1024";
+  }
+  if (size === "1024x1792") {
+    return "1024x1536";
+  }
+  return size;
+}
 
 const inspirationExamples: InspirationExample[] = [
   {
@@ -210,6 +223,20 @@ function buildImageDataUrl(image: StoredImage) {
   return `data:image/png;base64,${image.b64_json}`;
 }
 
+function getLatestSuccessfulImage(turns: ImageConversationTurn[]) {
+  for (let turnIndex = turns.length - 1; turnIndex >= 0; turnIndex -= 1) {
+    const turn = turns[turnIndex];
+    const images = Array.isArray(turn.images) ? turn.images : [];
+    for (let imageIndex = images.length - 1; imageIndex >= 0; imageIndex -= 1) {
+      const image = images[imageIndex];
+      if (image.status === "success" && (image.url || image.b64_json)) {
+        return image;
+      }
+    }
+  }
+  return null;
+}
+
 function createLoadingImages(count: number, conversationId: string) {
   return Array.from({ length: count }, (_, index) => ({
     id: `${conversationId}-${index}`,
@@ -283,33 +310,7 @@ function mergeResultImages(
   }>,
   expected: number,
 ) {
-  const results: StoredImage[] = items.map((item, index) =>
-    (item.url || item.b64_json)
-      ? {
-        id: `${conversationId}-${index}`,
-        status: "success",
-        ...(item.url ? { url: item.url } : { b64_json: item.b64_json }),
-        image_id: item.image_id,
-        file_path: item.file_path,
-        revised_prompt: item.revised_prompt,
-        file_id: item.file_id,
-        gen_id: item.gen_id,
-        conversation_id: item.conversation_id,
-        parent_message_id: item.parent_message_id,
-        source_account_id: item.source_account_id,
-      }
-      : item.text
-        ? {
-          id: `${conversationId}-${index}`,
-          status: "success",
-          text: item.text,
-        }
-        : {
-          id: `${conversationId}-${index}`,
-          status: "error",
-          error: "接口没有返回图片数据",
-        },
-  );
+  const results: StoredImage[] = items.map((item, index) => createResultImage(`${conversationId}-${index}`, item));
 
   if (expected > results.length) {
     for (let index = results.length; index < expected; index += 1) {
@@ -322,6 +323,97 @@ function mergeResultImages(
   }
 
   return results;
+}
+
+function createResultImage(
+  id: string,
+  item: {
+    b64_json?: string;
+    url?: string;
+    image_id?: string;
+    file_path?: string;
+    revised_prompt?: string;
+    text?: string;
+    file_id?: string;
+    gen_id?: string;
+    conversation_id?: string;
+    parent_message_id?: string;
+    source_account_id?: string;
+  } | null | undefined,
+): StoredImage {
+  if (item?.url || item?.b64_json) {
+    return {
+      id,
+      status: "success",
+      ...(item.url ? { url: item.url } : { b64_json: item.b64_json }),
+      image_id: item.image_id,
+      file_path: item.file_path,
+      revised_prompt: item.revised_prompt,
+      file_id: item.file_id,
+      gen_id: item.gen_id,
+      conversation_id: item.conversation_id,
+      parent_message_id: item.parent_message_id,
+      source_account_id: item.source_account_id,
+    };
+  }
+
+  if (item?.text) {
+    return {
+      id,
+      status: "success",
+      text: item.text,
+    };
+  }
+
+  return {
+    id,
+    status: "error",
+    error: "接口没有返回图片数据",
+  };
+}
+
+function patchRetriedImages(
+  existingImages: StoredImage[],
+  retryIndexes: number[],
+  items: Array<{
+    b64_json?: string;
+    url?: string;
+    image_id?: string;
+    file_path?: string;
+    revised_prompt?: string;
+    text?: string;
+    file_id?: string;
+    gen_id?: string;
+    conversation_id?: string;
+    parent_message_id?: string;
+    source_account_id?: string;
+  }>,
+) {
+  const nextImages = existingImages.map((image) => ({ ...image }));
+  retryIndexes.forEach((slotIndex, resultIndex) => {
+    const current = nextImages[slotIndex];
+    if (!current) {
+      return;
+    }
+    nextImages[slotIndex] = createResultImage(current.id, items[resultIndex]);
+  });
+
+  if (items.length < retryIndexes.length) {
+    for (let index = items.length; index < retryIndexes.length; index += 1) {
+      const slotIndex = retryIndexes[index];
+      const current = nextImages[slotIndex];
+      if (!current) {
+        continue;
+      }
+      nextImages[slotIndex] = {
+        ...current,
+        status: "error",
+        error: "未返回足够数量的图片",
+      };
+    }
+  }
+
+  return nextImages;
 }
 
 function countFailures(images: StoredImage[]) {
@@ -482,9 +574,10 @@ function openImageInNewTab(dataUrl: string) {
 }
 
 export default function ImagePage() {
+  const cachedWorkspaceState = getCachedImageWorkspaceState();
   const didLoadQuotaRef = useRef(false);
   const mountedRef = useRef(true);
-  const draftSelectionRef = useRef(false);
+  const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -508,12 +601,13 @@ export default function ImagePage() {
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageCount, setImageCount] = useState("1");
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
-  const [imageSize, setImageSize] = useState<ImageGenerationSize>("auto");
-  const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("auto");
+  const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
+  const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
   const [upscaleScale, setUpscaleScale] = useState("2x");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
+  const [reuseLatestResultForGenerate, setReuseLatestResultForGenerate] = useState(true);
   const [conversations, setConversations] = useState<ImageConversation[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(cachedWorkspaceState.selectedConversationId);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [filesCollapsed, setFilesCollapsed] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
@@ -537,10 +631,30 @@ export default function ImagePage() {
     [conversations, selectedConversationId],
   );
   const selectedConversationTurns = useMemo(() => selectedConversation?.turns ?? [], [selectedConversation]);
+  const latestReusableImage = useMemo(
+    () => getLatestSuccessfulImage(selectedConversationTurns),
+    [selectedConversationTurns],
+  );
+  const latestReusableImageDataUrl = useMemo(
+    () => (latestReusableImage ? buildImageDataUrl(latestReusableImage) : ""),
+    [latestReusableImage],
+  );
   const parsedCount = useMemo(() => Math.max(1, Math.min(8, Number(imageCount) || 1)), [imageCount]);
   const imageSources = useMemo(() => sourceImages.filter((item) => item.role === "image"), [sourceImages]);
+  const visibleSourceImages = useMemo(
+    () => sourceImages.filter((item) => !item.hiddenInConversation),
+    [sourceImages],
+  );
   const maskSource = useMemo(() => sourceImages.find((item) => item.role === "mask") ?? null, [sourceImages]);
   const hasGenerateReferences = useMemo(() => mode === "generate" && imageSources.length > 0, [imageSources, mode]);
+  const canToggleLatestResultReference = useMemo(
+    () => mode === "generate" && Boolean(latestReusableImageDataUrl),
+    [latestReusableImageDataUrl, mode],
+  );
+  const isLatestResultReferenceEnabled = useMemo(
+    () => canToggleLatestResultReference && reuseLatestResultForGenerate,
+    [canToggleLatestResultReference, reuseLatestResultForGenerate],
+  );
   const processingStatus = useMemo(
     () =>
       activeRequest
@@ -552,11 +666,19 @@ export default function ImagePage() {
 
   const focusConversation = (conversationId: string) => {
     draftSelectionRef.current = false;
+    setCachedImageWorkspaceState({
+      selectedConversationId: conversationId,
+      isDraftSelection: false,
+    });
     setSelectedConversationId(conversationId);
   };
 
   const openDraftConversation = () => {
     draftSelectionRef.current = true;
+    setCachedImageWorkspaceState({
+      selectedConversationId: null,
+      isDraftSelection: true,
+    });
     setSelectedConversationId(null);
   };
 
@@ -597,17 +719,24 @@ export default function ImagePage() {
       }
       setConversations(nextItems);
       setSelectedConversationId((current) => {
+        let nextSelectedConversationId: string | null = current;
         if (current && nextItems.some((item) => item.id === current)) {
-          return current;
+          nextSelectedConversationId = current;
+        } else if (draftSelectionRef.current) {
+          nextSelectedConversationId = null;
+        } else {
+          const activeTaskConversationId = listActiveImageTasks()[0]?.conversationId;
+          if (activeTaskConversationId && nextItems.some((item) => item.id === activeTaskConversationId)) {
+            nextSelectedConversationId = activeTaskConversationId;
+          } else {
+            nextSelectedConversationId = nextItems[0]?.id ?? null;
+          }
         }
-        if (draftSelectionRef.current) {
-          return null;
-        }
-        const activeTaskConversationId = listActiveImageTasks()[0]?.conversationId;
-        if (activeTaskConversationId && nextItems.some((item) => item.id === activeTaskConversationId)) {
-          return activeTaskConversationId;
-        }
-        return nextItems[0]?.id ?? null;
+        setCachedImageWorkspaceState({
+          selectedConversationId: nextSelectedConversationId,
+          isDraftSelection: draftSelectionRef.current && nextSelectedConversationId === null,
+        });
+        return nextSelectedConversationId;
       });
     } catch (error) {
       if (!silent) {
@@ -706,6 +835,13 @@ export default function ImagePage() {
   }, [isSubmitting, submitStartedAt]);
 
   useEffect(() => {
+    setCachedImageWorkspaceState({
+      selectedConversationId,
+      isDraftSelection: draftSelectionRef.current && selectedConversationId === null,
+    });
+  }, [selectedConversationId]);
+
+  useEffect(() => {
     if (!pendingPickerMode || mode !== pendingPickerMode) {
       return;
     }
@@ -730,6 +866,40 @@ export default function ImagePage() {
     const maxHeight = Math.min(480, Math.max(260, Math.floor(window.innerHeight * 0.42)));
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
   }, [imagePrompt, mode]);
+
+  useEffect(() => {
+    setReuseLatestResultForGenerate(true);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    setSourceImages((prev) => {
+      const hiddenItems = prev.filter((item) => item.role === "image" && item.hiddenInConversation);
+      const visibleItems = prev.filter((item) => !(item.role === "image" && item.hiddenInConversation));
+
+      if (!isLatestResultReferenceEnabled || !latestReusableImageDataUrl) {
+        return hiddenItems.length > 0 ? visibleItems : prev;
+      }
+
+      if (
+        hiddenItems.length === 1 &&
+        hiddenItems[0]?.dataUrl === latestReusableImageDataUrl &&
+        hiddenItems[0]?.name === "reference.png"
+      ) {
+        return prev;
+      }
+
+      return [
+        ...visibleItems,
+        {
+          id: makeId(),
+          role: "image",
+          name: "reference.png",
+          dataUrl: latestReusableImageDataUrl,
+          hiddenInConversation: true,
+        },
+      ];
+    });
+  }, [isLatestResultReferenceEnabled, latestReusableImageDataUrl]);
 
   const persistConversation = async (conversation: ImageConversation) => {
     const normalizedConversation = normalizeConversation(conversation);
@@ -762,7 +932,36 @@ export default function ImagePage() {
     setImageSize("auto");
     setImageQuality("auto");
     setUpscaleScale("2x");
+    setReuseLatestResultForGenerate(true);
     setSourceImages([]);
+  };
+
+  const handleModeChange = (nextMode: ImageMode) => {
+    setMode(nextMode);
+    if (nextMode === "generate") {
+      setReuseLatestResultForGenerate(true);
+    }
+    setSourceImages((prev) => {
+      const visibleItems = prev.filter((item) => !item.hiddenInConversation);
+      if (nextMode !== "edit") {
+        return visibleItems.filter((item) => item.role !== "mask");
+      }
+
+      const hasExplicitImage = visibleItems.some((item) => item.role === "image");
+      if (hasExplicitImage || !latestReusableImageDataUrl) {
+        return visibleItems;
+      }
+
+      return [
+        {
+          id: makeId(),
+          role: "image",
+          name: "inherited-source.png",
+          dataUrl: latestReusableImageDataUrl,
+          hiddenInConversation: true,
+        },
+      ];
+    });
   };
 
   const openImagePickerForMode = (nextMode: ImageMode) => {
@@ -770,11 +969,11 @@ export default function ImagePage() {
       return;
     }
     setPendingPickerMode(nextMode);
-    setMode(nextMode);
+    handleModeChange(nextMode);
   };
 
   const applyPromptExample = (example: (typeof inspirationExamples)[number]) => {
-    setMode("generate");
+    handleModeChange("generate");
     setImageModel(example.model);
     setImageCount(String(example.count));
     setImageSize("auto");
@@ -883,14 +1082,26 @@ export default function ImagePage() {
     setSourceImages((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleToggleLatestResultReference = () => {
+    if (!latestReusableImageDataUrl) {
+      toast.error("当前会话还没有可沿用的生成结果");
+      return;
+    }
+    setReuseLatestResultForGenerate((prev) => !prev);
+    textareaRef.current?.focus();
+  };
+
   const seedFromResult = (conversationId: string, image: StoredImage, nextMode: ImageMode) => {
+    if (isSubmitting) {
+      return;
+    }
     const dataUrl = buildImageDataUrl(image);
     if (!dataUrl) {
       toast.error("当前图片没有可复用的数据");
       return;
     }
     focusConversation(conversationId);
-    setMode(nextMode);
+    handleModeChange(nextMode);
     setSourceImages([
       {
         id: makeId(),
@@ -906,6 +1117,9 @@ export default function ImagePage() {
   };
 
   const openSelectionEditor = (conversationId: string, turnId: string, image: StoredImage, imageName: string) => {
+    if (isSubmitting) {
+      return;
+    }
     const dataUrl = buildImageDataUrl(image);
     if (!dataUrl) {
       toast.error("当前图片没有可复用的数据");
@@ -1072,7 +1286,7 @@ export default function ImagePage() {
     }
   };
 
-  const handleRetryTurn = async (conversationId: string, turn: ImageConversationTurn) => {
+  const handleRetryTurn = async (conversationId: string, turn: ImageConversationTurn, imageId?: string) => {
     if (isSubmitting) {
       toast.error("正在处理中，请稍后再试");
       return;
@@ -1087,6 +1301,15 @@ export default function ImagePage() {
     const turnImageSize = turn.imageSize || "auto";
     const turnImageQuality = turn.imageQuality || "auto";
     const expectedCount = Math.max(1, turn.count || 1);
+    const failedIndexes = turn.images
+      .map((image, index) => (image.status === "error" ? index : -1))
+      .filter((index) => index >= 0);
+    const retryIndexes =
+      imageId != null
+        ? turn.images
+          .map((image, index) => (image.id === imageId ? index : -1))
+          .filter((index) => index >= 0)
+        : failedIndexes;
 
     if (turnMode === "generate" && !prompt) {
       toast.error("该记录缺少提示词，无法重试");
@@ -1096,10 +1319,22 @@ export default function ImagePage() {
       toast.error("该记录缺少源图，无法重试");
       return;
     }
+    if (retryIndexes.length === 0) {
+      toast.error("没有可重试的失败图片");
+      return;
+    }
 
-    // ── 重试时复用原有 turn id，直接在原地重置为 loading 状态 ──
+    // ── 重试时复用原有 turn id，仅重置失败槽位为 loading 状态 ──
     const turnId = turn.id;
-    const loadingImages = createLoadingImages(expectedCount, turnId);
+    const loadingImages = turn.images.map((image, index) =>
+      retryIndexes.includes(index)
+        ? {
+          id: image.id,
+          status: "loading" as const,
+        }
+        : image,
+    );
+    const retryCount = turnMode === "generate" && turnImageSources.length === 0 ? retryIndexes.length : 1;
 
     const startedAt = Date.now();
     setIsSubmitting(true);
@@ -1107,7 +1342,7 @@ export default function ImagePage() {
       conversationId,
       turnId,
       mode: turnMode,
-      count: expectedCount,
+      count: retryCount,
       variant: "standard",
     });
     setSubmitElapsedSeconds(0);
@@ -1117,7 +1352,7 @@ export default function ImagePage() {
       conversationId,
       turnId,
       mode: turnMode,
-      count: expectedCount,
+      count: retryCount,
       variant: "standard",
       startedAt,
     });
@@ -1151,13 +1386,13 @@ export default function ImagePage() {
             size: turnImageSize,
             quality: turnImageQuality,
           });
-          resultItems = mergeResultImages(turnId, data.data || [], 1);
+          resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
         } else {
-          const data = await generateImage(prompt, turn.model, expectedCount, {
+          const data = await generateImage(prompt, turn.model, retryIndexes.length, {
             size: turnImageSize,
             quality: turnImageQuality,
           });
-          resultItems = mergeResultImages(turnId, data.data || [], expectedCount);
+          resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
         }
       }
 
@@ -1167,13 +1402,13 @@ export default function ImagePage() {
         );
         const maskFile = turnMaskSource ? await dataUrlToFile(turnMaskSource.dataUrl, turnMaskSource.name || "mask.png") : null;
         const data = await editImage({ prompt, images: files, mask: maskFile, model: turn.model });
-        resultItems = mergeResultImages(turnId, data.data || [], 1);
+        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       }
 
       if (turnMode === "upscale") {
         const file = await dataUrlToFile(turnImageSources[0].dataUrl, turnImageSources[0].name || "upscale.png");
         const data = await upscaleImage({ image: file, prompt, scale: Number.parseInt(turnScale || "2", 10), model: turn.model });
-        resultItems = mergeResultImages(turnId, data.data || [], 1);
+        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       }
 
       const failedCount = countFailures(resultItems);
@@ -1208,11 +1443,15 @@ export default function ImagePage() {
               ...item,
               status: "error",
               error: message,
-              images: item.images.map((image) => ({
-                ...image,
-                status: "error" as const,
-                error: message,
-              })),
+              images: item.images.map((image, index) =>
+                retryIndexes.includes(index)
+                  ? {
+                    ...image,
+                    status: "error" as const,
+                    error: message,
+                  }
+                  : image,
+              ),
             }
             : item,
         ),
@@ -1256,11 +1495,11 @@ export default function ImagePage() {
       mode,
       prompt,
       model: imageModel,
-      imageSize: mode === "generate" ? imageSize : "auto",
+      imageSize: mode === "generate" ? mapToolbarImageSizeToApiSize(imageSize) : "auto",
       imageQuality: mode === "generate" ? imageQuality : "auto",
       count: expectedCount,
       scale: mode === "upscale" ? upscaleScale : undefined,
-      sourceImages: imageSources,
+      sourceImages,
       images: createLoadingImages(expectedCount, turnId),
       createdAt: now,
       status: "generating",
@@ -1389,14 +1628,14 @@ export default function ImagePage() {
             prompt,
             images: files,
             model: imageModel,
-            size: imageSize,
+            size: mapToolbarImageSizeToApiSize(imageSize),
             quality: imageQuality,
             signal,
           });
           resultItems = mergeResultImages(turnId, data.data || [], 1);
         } else {
           const data = await generateImage(prompt, imageModel, parsedCount, {
-            size: imageSize,
+            size: mapToolbarImageSizeToApiSize(imageSize),
             quality: imageQuality,
             signal,
           });
@@ -1533,31 +1772,31 @@ export default function ImagePage() {
         />
       ) : null}
 
-      <div className="order-1 flex flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden">
-        <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6">
+      <div className="order-1 flex flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden dark:border-stone-700 dark:bg-stone-900">
+        <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6 dark:border-stone-700 dark:bg-stone-900">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
                 onClick={() => setHistoryCollapsed((current) => !current)}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
                 title={historyCollapsed ? "展开历史" : "收起历史"}
               >
                 {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
               </button>
-              <h1 className="shrink-0 text-sm font-medium text-stone-900">图片工作台</h1>
-              <span className="text-stone-300">/</span>
+              <h1 className="shrink-0 text-sm font-medium text-stone-900 dark:text-stone-100">图片工作台</h1>
+              <span className="text-stone-300 dark:text-stone-600">/</span>
               {selectedConversation?.title ? (
-                <span className="truncate text-xs text-stone-500">{selectedConversation.title}</span>
+                <span className="truncate text-xs text-stone-500 dark:text-stone-400">{selectedConversation.title}</span>
               ) : (
-                <span className="truncate text-xs text-stone-400">新会话草稿</span>
+                <span className="truncate text-xs text-stone-400 dark:text-stone-500">新会话草稿</span>
               )}
             </div>
 
             <button
               type="button"
               onClick={() => setFilesCollapsed((current) => !current)}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
               title={filesCollapsed ? "展开文件" : "收起文件"}
             >
               {filesCollapsed ? <PanelRightOpen className="size-4" /> : <PanelRightClose className="size-4" />}
@@ -1567,7 +1806,7 @@ export default function ImagePage() {
 
         <div
           ref={resultsViewportRef}
-          className="hide-scrollbar min-h-0 flex-1 overflow-visible bg-[#fcfcfb] lg:overflow-y-auto"
+          className="hide-scrollbar min-h-0 flex-1 overflow-visible bg-[#fcfcfb] lg:overflow-y-auto dark:bg-stone-950"
         >
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
@@ -1591,8 +1830,8 @@ export default function ImagePage() {
                   onOpenImageInNewTab={openImageInNewTab}
                   onOpenSelectionEditor={openSelectionEditor}
                   onSeedFromResult={seedFromResult}
-                  onRetryTurn={(conversationId, currentTurn) => {
-                    void handleRetryTurn(conversationId, currentTurn);
+                  onRetryTurn={(conversationId, currentTurn, imageId) => {
+                    void handleRetryTurn(conversationId, currentTurn, imageId);
                   }}
                   onPreviewImage={(dataUrl) => setPreviewImage(dataUrl)}
                 />
@@ -1607,7 +1846,7 @@ export default function ImagePage() {
             imageModelOptions={imageModelOptions as ImageModelOption[]}
             modeOptions={modeOptions as ModeOption[]}
             mode={mode}
-            onModeChange={setMode}
+            onModeChange={handleModeChange}
             onImageModelChange={setImageModel}
             hasGenerateReferences={hasGenerateReferences}
             imageCount={imageCount}
@@ -1622,8 +1861,11 @@ export default function ImagePage() {
             upscaleOptions={upscaleOptions}
             onUpscaleScaleChange={setUpscaleScale}
             availableQuota={availableQuota}
-            sourceImages={sourceImages}
+            sourceImages={visibleSourceImages}
             onRemoveSourceImage={removeSourceImage}
+            canToggleLatestResultReference={canToggleLatestResultReference}
+            useLatestResultAsReference={isLatestResultReferenceEnabled}
+            onToggleLatestResultReference={handleToggleLatestResultReference}
             onOpenImageInNewTab={openImageInNewTab}
             textareaRef={textareaRef}
             imagePrompt={imagePrompt}

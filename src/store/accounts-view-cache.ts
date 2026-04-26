@@ -1,10 +1,9 @@
 "use client";
 
-import type { Account, AccountQuotaResponse } from "@/lib/api";
+import type { Account } from "@/lib/api";
 
 type CachedAccountsView = {
   items: Account[];
-  quotaMap: Record<string, AccountQuotaResponse>;
 };
 
 let cachedAccountsView: CachedAccountsView | null = null;

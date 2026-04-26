@@ -1,10 +1,12 @@
-import type { ImgHTMLAttributes } from "react";
+import { forwardRef, type ImgHTMLAttributes } from "react";
 
 type AppImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string;
   unoptimized?: boolean;
 };
 
-export function AppImage({ _unoptimized, ...props }: AppImageProps & { _unoptimized?: boolean }) {
-  return <img {...props} />;
-}
+export const AppImage = forwardRef<HTMLImageElement, AppImageProps & { _unoptimized?: boolean }>(
+  function AppImage({ _unoptimized, ...props }, ref) {
+    return <img ref={ref} {...props} />;
+  },
+);
