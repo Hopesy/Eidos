@@ -12,14 +12,30 @@ const dataDir = path.resolve(
   process.env.EIDOS_DATA_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "data"),
 );
 const versionFile = path.join(repoRoot, "VERSION");
+const packageJsonFile = path.join(repoRoot, "package.json");
 
 async function readVersion() {
   try {
     const value = (await readFile(versionFile, "utf8")).trim();
-    return value || "0.0.0";
-  } catch {
-    return "0.0.0";
+    if (value) {
+      return value;
+    }
+  } catch {}
+
+  try {
+    const packageJson = JSON.parse(await readFile(packageJsonFile, "utf8")) as { version?: string };
+    const version = String(packageJson.version || "").trim();
+    if (version) {
+      return version;
+    }
+  } catch {}
+
+  const envVersion = String(process.env.NEXT_PUBLIC_APP_VERSION || "").trim();
+  if (envVersion) {
+    return envVersion;
   }
+
+  return "0.0.0";
 }
 
 let runtimeConfigPromise: Promise<RuntimeConfig> | null = null;
