@@ -6,15 +6,19 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
-const logsDir = path.resolve(
-    process.env.EIDOS_LOGS_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "logs"),
-);
+function getLogsDir(): string {
+    const envLogsDir = process.env.EIDOS_LOGS_DIR?.trim();
+    if (envLogsDir) {
+        return path.resolve(/*turbopackIgnore: true*/ envLogsDir);
+    }
+    return path.join(/*turbopackIgnore: true*/ process.cwd(), "logs");
+}
 
 let logsDirReady = false;
 
 async function ensureLogsDir(): Promise<void> {
     if (logsDirReady) return;
-    await mkdir(logsDir, { recursive: true });
+    await mkdir(/*turbopackIgnore: true*/ getLogsDir(), { recursive: true });
     logsDirReady = true;
 }
 
@@ -40,8 +44,8 @@ async function writeLog(level: string, module: string, message: string, data?: u
     // 异步写文件，不阻塞请求处理
     try {
         await ensureLogsDir();
-        const logFile = path.join(logsDir, `${todayStr()}.log`);
-        await appendFile(logFile, line, "utf8");
+        const logFile = path.join(getLogsDir(), `${todayStr()}.log`);
+        await appendFile(/*turbopackIgnore: true*/ logFile, line, "utf8");
     } catch {
         // 日志写入失败不应影响业务
     }

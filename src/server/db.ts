@@ -1,18 +1,29 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, copyFileSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
-import { DatabaseSync } from "node:sqlite";
+type Database = import("node:sqlite").DatabaseSync;
+type DatabaseSyncConstructor = typeof import("node:sqlite").DatabaseSync;
 
-type Database = InstanceType<typeof DatabaseSync>;
-
+const require = createRequire(import.meta.url);
+let DatabaseSyncCtor: DatabaseSyncConstructor | null = null;
 let db: Database | null = null;
 let migratedJson = false;
 
+function getDatabaseSyncCtor(): DatabaseSyncConstructor {
+  if (!DatabaseSyncCtor) {
+    DatabaseSyncCtor = (require("node:sqlite") as typeof import("node:sqlite")).DatabaseSync;
+  }
+  return DatabaseSyncCtor;
+}
+
 export function getDataDir() {
-  return path.resolve(
-    process.env.EIDOS_DATA_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "data"),
-  );
+  const configuredDataDir = process.env.EIDOS_DATA_DIR?.trim();
+  if (configuredDataDir) {
+    return path.resolve(/*turbopackIgnore: true*/ configuredDataDir);
+  }
+  return path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
 }
 
 export function getDatabasePath() {
@@ -138,11 +149,11 @@ function initializeSchema(database: Database) {
 
 function backupLegacyAccountsFile(accountsFile: string) {
   const backupDir = path.join(getDataDir(), "backups");
-  mkdirSync(backupDir, { recursive: true });
+  mkdirSync(/*turbopackIgnore: true*/ backupDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const backupFile = path.join(backupDir, `accounts-json-migrated-${stamp}.json`);
-  if (!existsSync(backupFile)) {
-    copyFileSync(accountsFile, backupFile);
+  if (!existsSync(/*turbopackIgnore: true*/ backupFile)) {
+    copyFileSync(/*turbopackIgnore: true*/ accountsFile, backupFile);
   }
 }
 
@@ -155,9 +166,9 @@ function migrateAccountsJsonIfNeeded(database: Database) {
   if (existingCount > 0) return;
 
   const accountsFile = path.join(getDataDir(), "accounts.json");
-  if (!existsSync(accountsFile)) return;
+  if (!existsSync(/*turbopackIgnore: true*/ accountsFile)) return;
 
-  const parsed = safeParseJson<unknown>(readFileSync(accountsFile, "utf8"), []);
+  const parsed = safeParseJson<unknown>(readFileSync(/*turbopackIgnore: true*/ accountsFile, "utf8"), []);
   if (!Array.isArray(parsed) || parsed.length === 0) return;
 
   database.exec("BEGIN IMMEDIATE");
@@ -219,7 +230,8 @@ function cleanNullableString(value: unknown) {
 
 export function getDb() {
   if (!db) {
-    mkdirSync(getDataDir(), { recursive: true });
+    mkdirSync(/*turbopackIgnore: true*/ getDataDir(), { recursive: true });
+    const DatabaseSync = getDatabaseSyncCtor();
     db = new DatabaseSync(getDatabasePath());
     initializeSchema(db);
     migrateAccountsJsonIfNeeded(db);
@@ -241,8 +253,8 @@ export function withTransaction<T>(task: (database: Database) => T): T {
 }
 
 export function readJsonFile<T>(filePath: string, fallback: T): T {
-  if (!existsSync(filePath)) return fallback;
-  return safeParseJson<T>(readFileSync(filePath, "utf8"), fallback);
+  if (!existsSync(/*turbopackIgnore: true*/ filePath)) return fallback;
+  return safeParseJson<T>(readFileSync(/*turbopackIgnore: true*/ filePath, "utf8"), fallback);
 }
 
 

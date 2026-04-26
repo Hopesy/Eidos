@@ -1,41 +1,28 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import packageJson from "../../package.json";
 import type { RuntimeConfig } from "@/server/types";
 
 const DEFAULT_HOST = "0.0.0.0";
 const DEFAULT_PORT = 3000;
 const DEFAULT_REFRESH_INTERVAL_MINUTE = 5;
 
-const repoRoot = path.resolve(/* turbopackIgnore: true */ process.cwd());
-const dataDir = path.resolve(
-  process.env.EIDOS_DATA_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "data"),
-);
-const versionFile = path.join(repoRoot, "VERSION");
-const packageJsonFile = path.join(repoRoot, "package.json");
+function getDataDir() {
+  const configuredDataDir = process.env.EIDOS_DATA_DIR?.trim();
+  if (configuredDataDir) {
+    return path.resolve(/*turbopackIgnore: true*/ configuredDataDir);
+  }
+  return path.join(/*turbopackIgnore: true*/ process.cwd(), "data");
+}
 
 async function readVersion() {
-  try {
-    const value = (await readFile(versionFile, "utf8")).trim();
-    if (value) {
-      return value;
-    }
-  } catch {}
-
-  try {
-    const packageJson = JSON.parse(await readFile(packageJsonFile, "utf8")) as { version?: string };
-    const version = String(packageJson.version || "").trim();
-    if (version) {
-      return version;
-    }
-  } catch {}
-
   const envVersion = String(process.env.NEXT_PUBLIC_APP_VERSION || "").trim();
   if (envVersion) {
     return envVersion;
   }
 
-  return "0.0.0";
+  return packageJson.version || "0.0.0";
 }
 
 let runtimeConfigPromise: Promise<RuntimeConfig> | null = null;
@@ -43,7 +30,8 @@ let runtimeConfigPromise: Promise<RuntimeConfig> | null = null;
 export async function getRuntimeConfig(): Promise<RuntimeConfig> {
   if (!runtimeConfigPromise) {
     runtimeConfigPromise = (async () => {
-      await mkdir(dataDir, { recursive: true });
+      const dataDir = getDataDir();
+      await mkdir(/*turbopackIgnore: true*/ dataDir, { recursive: true });
       const refreshAccountIntervalMinute = Number(process.env.REFRESH_ACCOUNT_INTERVAL_MINUTE || DEFAULT_REFRESH_INTERVAL_MINUTE);
 
       return {
@@ -63,7 +51,7 @@ export async function getRuntimeConfig(): Promise<RuntimeConfig> {
 }
 
 export function getRepoRoot() {
-  return repoRoot;
+  return process.cwd();
 }
 
 export async function getAppVersion() {

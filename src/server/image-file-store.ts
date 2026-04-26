@@ -76,8 +76,8 @@ function makeRelativeImagePath(role: ImageRole, id: string, extension: string) {
 }
 
 function getSafeAbsoluteDataPath(relativePath: string) {
-  const dataRoot = path.resolve(getDataDir());
-  const absolutePath = path.resolve(dataRoot, relativePath);
+  const dataRoot = getDataDir();
+  const absolutePath = path.resolve(/*turbopackIgnore: true*/ dataRoot, relativePath);
   if (!absolutePath.startsWith(dataRoot + path.sep) && absolutePath !== dataRoot) {
     throw new Error(`path escapes data dir: ${relativePath}`);
   }
@@ -181,8 +181,8 @@ export async function saveBase64Image(input: {
   const extension = extensionForMime(mimeType);
   const filePath = makeRelativeImagePath(role, id, extension);
   const absolutePath = getSafeAbsoluteDataPath(filePath);
-  await mkdir(path.dirname(absolutePath), { recursive: true });
-  await writeFile(absolutePath, buffer);
+  await mkdir(/*turbopackIgnore: true*/ path.dirname(absolutePath), { recursive: true });
+  await writeFile(/*turbopackIgnore: true*/ absolutePath, buffer);
 
   const createdAt = nowIso();
   const publicPath = `/api/images/${id}`;
@@ -253,7 +253,7 @@ export async function deleteImageFilesIfUnreferenced(imageIds: string[], exclude
     }
     const absolutePath = getSafeAbsoluteDataPath(record.file_path);
     try {
-      await unlink(absolutePath);
+      await unlink(/*turbopackIgnore: true*/ absolutePath);
     } catch (error) {
       const code = (error as NodeJS.ErrnoException).code;
       if (code !== "ENOENT") {
@@ -279,7 +279,7 @@ export async function readImageFileBytes(id: string) {
   if (!record) return null;
   return {
     record,
-    bytes: await readFile(getSafeAbsoluteDataPath(record.file_path)),
+    bytes: await readFile(/*turbopackIgnore: true*/ getSafeAbsoluteDataPath(record.file_path)),
   };
 }
 
