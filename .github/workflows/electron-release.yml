@@ -39,6 +39,29 @@ jobs:
         run: npm run dist:win
         working-directory: electron
 
+      - name: Extract release notes from CHANFELOG.md
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $changelogPath = Join-Path $env:GITHUB_WORKSPACE "CHANFELOG.md"
+          if (-not (Test-Path $changelogPath)) {
+            throw "CHANFELOG.md not found: $changelogPath"
+          }
+
+          $content = Get-Content -Path $changelogPath -Raw -Encoding utf8
+          $escapedTag = [Regex]::Escape($tag)
+          $pattern = "(?ms)^##\s*\[$escapedTag\][^\r\n]*\r?\n.*?(?=^##\s*\[|\z)"
+          $match = [Regex]::Match($content, $pattern)
+
+          if (-not $match.Success) {
+            throw "Release notes for tag '$tag' not found in CHANFELOG.md"
+          }
+
+          $releaseNotesPath = Join-Path $env:RUNNER_TEMP "release-notes.md"
+          $notes = $match.Value.Trim()
+          Set-Content -Path $releaseNotesPath -Value $notes -Encoding utf8
+          "RELEASE_NOTES_PATH=$releaseNotesPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
@@ -49,4 +72,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: electron/dist/*
-          generate_release_notes: true
+          body_path: ${{ env.RELEASE_NOTES_PATH }}
+          generate_release_notes: false
