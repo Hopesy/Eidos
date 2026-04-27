@@ -11,13 +11,13 @@ import {
   RefreshCcw,
   Settings2,
   Shield,
-  Sparkles,
 } from "lucide-react";
 
 import { fetchVersionInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UpdateDialog } from "@/components/update-dialog";
+import { BrandMark } from "@/components/brand-mark";
 
 const repositoryUrl = "https://github.com/Hopesy/Eidos";
 
@@ -53,7 +53,7 @@ function DesktopTopNav({
     <aside
       className={cn(
         "hidden shrink-0 transition-[width] duration-200 lg:flex",
-        collapsed ? "w-[60px]" : "w-[176px]",
+        collapsed ? "w-[60px]" : "w-[196px]",
       )}
     >
       <div className="flex h-full w-full flex-col rounded-[18px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-stone-700 dark:bg-stone-900 dark:shadow-none">
@@ -74,23 +74,10 @@ function DesktopTopNav({
                 : "min-w-0 flex-1 gap-3 px-3 py-3",
             )}
           >
-            <span
-              className={cn(
-                "flex items-center justify-center rounded-2xl shadow-sm",
-                "bg-white text-stone-900 dark:bg-stone-800 dark:text-stone-100",
-                collapsed ? "size-11" : "size-10",
-              )}
-            >
-              <Sparkles className={cn(collapsed ? "size-5" : "size-4")} />
-            </span>
+            <BrandMark className={cn(collapsed ? "size-9" : "size-8")} />
             {!collapsed ? (
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">
-                  EIDOS
-                </span>
-                <span className="block truncate text-xs text-stone-500 dark:text-stone-400">
-                  EIDOS 图片工作区
-                </span>
+              <span className="min-w-0 truncate text-sm font-semibold tracking-[0.18em] text-stone-900 dark:text-stone-100">
+                EIDOS
               </span>
             ) : null}
           </Link>
@@ -234,16 +221,9 @@ export function TopNav() {
               href="/image"
               className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/70 dark:hover:bg-stone-800/50"
             >
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-stone-100">
-                <Sparkles className="size-4" />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">
-                  EIDOS
-                </span>
-                <span className="block truncate text-xs text-stone-500 dark:text-stone-400">
-                  EIDOS 图片工作区
-                </span>
+              <BrandMark className="size-10" />
+              <span className="min-w-0 truncate text-sm font-semibold tracking-[0.18em] text-stone-900 dark:text-stone-100">
+                EIDOS
               </span>
             </Link>
           </div>

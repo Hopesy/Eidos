@@ -9,7 +9,7 @@ import {
     LoaderCircle,
     RotateCcw,
     Sparkles,
-    ZoomIn,
+    Maximize2,
     Download,
 } from "lucide-react";
 
@@ -155,7 +155,11 @@ export function ConversationTurn({
                                     : "grid-cols-1 lg:grid-cols-2",
                         )}
                     >
-                        {turn.images.map((image, index) => (
+                        {turn.images.map((image, index) => {
+                            const shouldShowErrorState = image.status === "error" || (!isProcessing && turn.status === "error");
+                            const errorMessage = image.error || turn.error || "未知错误";
+
+                            return (
                             <div
                                 key={image.id}
                                 className={cn(
@@ -237,7 +241,7 @@ export function ConversationTurn({
                                                 disabled={isSubmitting}
                                                 title="放大"
                                             >
-                                                <ZoomIn className="size-3.5" />
+                                                <Maximize2 className="size-3.5" />
                                             </button>
                                             <button
                                                 type="button"
@@ -249,7 +253,7 @@ export function ConversationTurn({
                                             </button>
                                         </div>
                                     </>
-                                ) : image.status === "error" ? (
+                                ) : shouldShowErrorState ? (
                                     /* ── 错误态 ── */
                                     <div className="flex min-h-[240px] min-w-[240px] flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
                                         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
@@ -259,7 +263,7 @@ export function ConversationTurn({
                                             <div className="space-y-1">
                                                 <p className="text-sm font-medium text-rose-600 dark:text-rose-400">处理失败</p>
                                                 <p className="line-clamp-3 max-w-[280px] text-xs leading-5 text-stone-500 dark:text-stone-400">
-                                                    {image.error || "未知错误"}
+                                                    {errorMessage}
                                                 </p>
                                             </div>
                                         </div>
@@ -315,7 +319,8 @@ export function ConversationTurn({
                                     </div>
                                 )}
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : null}
             </div>

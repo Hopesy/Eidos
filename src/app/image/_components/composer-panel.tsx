@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClipboardEvent, RefObject } from "react";
-import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, ZoomIn, Square, RectangleHorizontal, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash } from "lucide-react";
+import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, Maximize2, Square, RectangleHorizontal, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
@@ -117,7 +117,7 @@ export function ComposerPanel({
                             >
                                 {item.value === "generate" && <Sparkles className="size-3.5" />}
                                 {item.value === "edit" && <Pencil className="size-3.5" />}
-                                {item.value === "upscale" && <ZoomIn className="size-3.5" />}
+                                {item.value === "upscale" && <Maximize2 className="size-3.5" />}
                                 {item.label}
                             </button>
                         ))}
@@ -165,7 +165,7 @@ export function ComposerPanel({
                                         {imageSizeOptions.map((item) => (
                                             <SelectItem key={item.value} value={item.value}>
                                                 <div className="flex items-center gap-2">
-                                                    {item.value === "auto" && <Sparkles className="size-3.5" />}
+                                                    {item.value === "auto" && <Ratio className="size-3.5" />}
                                                     {item.value === "1024x1024" && <Square className="size-3.5" />}
                                                     {item.value === "1536x1024" && <RectangleHorizontal className="size-3.5" />}
                                                     {item.value === "1024x1536" && <RectangleVertical className="size-3.5" />}
@@ -309,7 +309,7 @@ export function ComposerPanel({
                                         }}
                                     >
                                         <Sparkles className="size-3.5" />
-                                        沿用上一张
+                                        引用上张
                                     </Button>
                                 ) : null}
 

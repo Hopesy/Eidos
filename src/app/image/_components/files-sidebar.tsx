@@ -88,7 +88,7 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
   }, []);
 
   return (
-    <aside className="order-3 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
+    <aside className="order-3 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:h-full lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
       <div className="flex h-full min-h-0 flex-col">
         <div className="border-b border-stone-200/40 bg-stone-50/50 px-4 py-3 dark:border-stone-700 dark:bg-stone-800/50">
           <div className="flex items-center justify-between gap-2">

@@ -24,6 +24,18 @@ const pruneAfterCopy = [
   "scripts",
   "src",
 ];
+const sharpPackages = [
+  "node_modules/.pnpm/@img+colour@1.1.0",
+  "node_modules/.pnpm/@img+sharp-win32-x64@0.34.5",
+  "node_modules/.pnpm/@img+sharp-win32-x64@0.35.1",
+  "node_modules/.pnpm/@img+sharp-libvips-win32-x64@1.1.0",
+  "node_modules/.pnpm/sharp@0.34.5",
+  "node_modules/.pnpm/sharp@0.35.1",
+  "node_modules/.pnpm/detect-libc@2.1.2",
+  "node_modules/.pnpm/semver@7.7.4",
+  "node_modules/sharp",
+  "node_modules/@img",
+];
 
 async function fileExists(target) {
   try {
@@ -70,6 +82,9 @@ async function main() {
   }
 
   for (const relativePath of pruneAfterCopy) {
+    await rm(path.join(targetStandaloneDir, relativePath), { recursive: true, force: true });
+  }
+  for (const relativePath of sharpPackages) {
     await rm(path.join(targetStandaloneDir, relativePath), { recursive: true, force: true });
   }
 

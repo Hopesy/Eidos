@@ -1,9 +1,8 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import type { ImageModel } from "@/lib/api";
+import { BrandMark } from "@/components/brand-mark";
 
 export type InspirationExample = {
     id: string;
@@ -24,11 +23,13 @@ export function EmptyState({ examples, onApplyExample }: EmptyStateProps) {
     return (
         <div className="mx-auto flex max-w-[1080px] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center gap-3 text-center">
-                <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-stone-900 to-stone-700 shadow-lg dark:from-stone-100 dark:to-stone-300">
-                    <Sparkles className="size-6 text-white dark:text-stone-900" />
-                </div>
-                <div className="space-y-1">
-                    <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">开始创作</h2>
+                <BrandMark className="size-11" />
+                <div className="flex w-full flex-col items-center space-y-1">
+                    <div className="flex translate-x-[5px] items-center justify-center gap-2 whitespace-nowrap text-stone-900 dark:text-stone-100">
+                        <div className="text-lg font-semibold leading-none tracking-[0.22em]">EIDOS</div>
+                        <span className="text-[3.375rem] leading-none">·</span>
+                        <h2 className="text-xl font-bold leading-none">开始创作</h2>
+                    </div>
                     <p className="text-sm text-stone-500 dark:text-stone-400">上传参考图、输入文字，描述你想生成的图片</p>
                 </div>
             </div>

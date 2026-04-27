@@ -479,6 +479,21 @@ async function startServer() {
     process.stderr.write(`[eidos-server] ${chunk}`);
   });
 
+  const serverLogPath = path.join(userDataDir, "logs", "server.log");
+  mkdir(path.join(userDataDir, "logs"), { recursive: true }).catch(() => {});
+  let serverLogStream = null;
+  try {
+    serverLogStream = createWriteStream(serverLogPath, { flags: "a" });
+  } catch {
+    // ignore — log file unavailable
+  }
+  serverProcess.stdout?.on("data", (chunk) => {
+    if (serverLogStream) serverLogStream.write(`[out] ${chunk}`);
+  });
+  serverProcess.stderr?.on("data", (chunk) => {
+    if (serverLogStream) serverLogStream.write(`[err] ${chunk}`);
+  });
+
   serverProcess.once("exit", (code) => {
     if (!isQuitting) {
       void dialog.showErrorBox(

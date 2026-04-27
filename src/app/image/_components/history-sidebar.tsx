@@ -84,7 +84,7 @@ export function HistorySidebar({
   onClearHistory,
 }: HistorySidebarProps) {
   return (
-    <aside className="order-2 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
+    <aside className="order-2 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:h-full lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
       <div className="flex h-full min-h-0 flex-col">
         {/* 头部 */}
         <div className="border-b border-stone-200/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/80">
@@ -134,7 +134,7 @@ export function HistorySidebar({
               <p className="text-xs text-stone-400 dark:text-stone-500">还没有历史记录</p>
             </div>
           ) : (
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {conversations.map((conversation) => {
                 const active = conversation.id === selectedConversationId;
                 const previewSrc = buildConversationPreviewSource(conversation);
@@ -153,7 +153,7 @@ export function HistorySidebar({
                     <button
                       type="button"
                       onClick={() => onSelect(conversation.id)}
-                      className="flex w-full gap-3 p-2.5 pr-9 text-left"
+                      className="flex w-full gap-3 p-1.5 pr-9 text-left"
                     >
                       {/* 缩略图 */}
                       <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-stone-100 to-stone-200/50 shadow-sm ring-1 ring-stone-900/5 dark:from-stone-700 dark:to-stone-800/50 dark:ring-stone-700">
