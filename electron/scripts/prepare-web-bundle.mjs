@@ -1,4 +1,4 @@
-import { cp, lstat, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,8 +12,6 @@ const targetAppDir = path.join(electronRoot, "app");
 const targetStandaloneDir = path.join(targetAppDir, "standalone");
 const targetStaticDir = path.join(targetStandaloneDir, ".next", "static");
 const targetPublicDir = path.join(targetStandaloneDir, "public");
-const sourceStandaloneNodeModulesDir = path.join(sourceStandaloneDir, "node_modules");
-const targetStandaloneNodeModulesDir = path.join(targetStandaloneDir, "node_modules");
 const pruneAfterCopy = [
   ".git",
   ".github",
@@ -69,35 +67,6 @@ async function readVersion() {
   return String(packageJson.version || "0.0.0");
 }
 
-async function removeStandaloneTopLevelCopiesBackedByPnpmStore() {
-  const entries = await readdir(sourceStandaloneNodeModulesDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.name === ".pnpm") {
-      continue;
-    }
-
-    const sourceEntry = path.join(sourceStandaloneNodeModulesDir, entry.name);
-    const targetEntry = path.join(targetStandaloneNodeModulesDir, entry.name);
-    let sourceStat;
-    try {
-      sourceStat = await lstat(sourceEntry);
-    } catch {
-      continue;
-    }
-
-    if (!sourceStat.isSymbolicLink()) {
-      continue;
-    }
-
-    const copiedExists = await directoryExists(targetEntry);
-    if (!copiedExists) {
-      continue;
-    }
-
-    await rm(targetEntry, { recursive: true, force: true });
-  }
-}
-
 async function main() {
   if (!(await directoryExists(sourceStandaloneDir))) {
     throw new Error("缺少 .next/standalone，请先在仓库根目录执行 pnpm build");
@@ -121,8 +90,6 @@ async function main() {
   for (const relativePath of sharpPackages) {
     await rm(path.join(targetStandaloneDir, relativePath), { recursive: true, force: true });
   }
-
-  await removeStandaloneTopLevelCopiesBackedByPnpmStore();
 
   await writeFile(path.join(targetStandaloneDir, "VERSION"), `${await readVersion()}\n`, "utf8");
   console.log(`Prepared desktop web bundle at ${targetStandaloneDir}`);
