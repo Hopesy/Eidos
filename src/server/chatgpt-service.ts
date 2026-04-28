@@ -1,6 +1,6 @@
 import { generateWithPool } from "@/server/account-service";
 import { parseImageCount } from "@/server/image-request";
-import { ImageGenerationError } from "@/server/providers/openai-client";
+import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
 import { ApiError } from "@/server/response";
 
 const IMAGE_MODELS = new Set(["gpt-image-1", "gpt-image-2"]);
@@ -164,7 +164,10 @@ export async function createChatCompletion(body: Record<string, unknown>) {
     return buildChatImageCompletion(model, await generateWithPool(prompt, model, count));
   } catch (error) {
     if (error instanceof ImageGenerationError) {
-      throw new ApiError(502, error.message);
+      throw new ApiError(502, error.message, {
+        error: error.message,
+        ...getImageErrorMeta(error),
+      });
     }
     throw error;
   }
@@ -218,7 +221,10 @@ export async function createResponse(body: Record<string, unknown>) {
     };
   } catch (error) {
     if (error instanceof ImageGenerationError) {
-      throw new ApiError(502, error.message);
+      throw new ApiError(502, error.message, {
+        error: error.message,
+        ...getImageErrorMeta(error),
+      });
     }
     throw error;
   }

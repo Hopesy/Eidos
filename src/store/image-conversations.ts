@@ -20,6 +20,13 @@ export type StoredSourceImage = {
   hiddenInConversation?: boolean;
   image_id?: string;
   file_path?: string;
+  file_id?: string;
+  gen_id?: string;
+  response_id?: string;
+  image_generation_call_id?: string;
+  conversation_id?: string;
+  parent_message_id?: string;
+  source_account_id?: string;
 };
 
 export type StoredImage = {
@@ -35,9 +42,18 @@ export type StoredImage = {
   // Extended fields for multi-turn / edit / upscale support
   file_id?: string;
   gen_id?: string;
+  response_id?: string;
+  image_generation_call_id?: string;
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id?: string;
+  failureKind?: string;
+  retryAction?: string;
+  retryable?: boolean;
+  stage?: string;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
 };
 
 export type ImageConversationStatus = "generating" | "success" | "error";
@@ -58,6 +74,15 @@ export type ImageConversationTurn = {
   status: ImageConversationStatus;
   error?: string;
   durationMs?: number;
+  failureKind?: string;
+  retryAction?: string;
+  retryable?: boolean;
+  stage?: string;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
 };
 
 export type ImageConversation = {

@@ -1,24 +1,30 @@
 import { NextRequest } from "next/server";
 
-import { editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
-import { persistImageResponseItems } from "@/server/image-file-store";
+import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
 import { logger } from "@/server/logger";
-import { addRequestLog } from "@/server/request-log-store";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {
-    editImageResultWithApiService,
-    editImageResultWithResponsesApiService,
+    getImageErrorMeta,
     ImageGenerationError,
 } from "@/server/providers/openai-client";
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 
 export const runtime = "nodejs";
 
+function resolveImageErrorStatus(error: ImageGenerationError) {
+    if (error.statusCode === 401) {
+        return 401;
+    }
+    if (error.statusCode === 429) {
+        return 429;
+    }
+    if (error.kind === "input_blocked") {
+        return 400;
+    }
+    return 502;
+}
+
 export async function POST(request: NextRequest) {
-    const startedAt = new Date().toISOString();
-    const startedAtMs = Date.now();
-    let logModel = "gpt-image-1";
-    let usedApiService = false;
     try {
         await ensureAccountWatcherStarted();
 
@@ -29,6 +35,17 @@ export async function POST(request: NextRequest) {
         let quality: ImageGenerationQuality = "auto";
         let images: File[] = [];
         let mask: File | null = null;
+        let sourceReference:
+            | {
+                originalFileId: string;
+                originalGenId: string;
+                previousResponseId?: string;
+                imageGenerationCallId?: string;
+                conversationId?: string;
+                parentMessageId?: string;
+                sourceAccountId?: string;
+            }
+            | null = null;
 
         if (contentType.includes("multipart/form-data")) {
             const formData = await request.formData();
@@ -39,6 +56,19 @@ export async function POST(request: NextRequest) {
             images = formData.getAll("image").filter((item): item is File => item instanceof File);
             const maskValue = formData.get("mask");
             mask = maskValue instanceof File ? maskValue : null;
+            const originalFileId = String(formData.get("original_file_id") || "").trim();
+            const originalGenId = String(formData.get("original_gen_id") || "").trim();
+            if (originalFileId && originalGenId) {
+                sourceReference = {
+                    originalFileId,
+                    originalGenId,
+                    previousResponseId: String(formData.get("previous_response_id") || "").trim() || undefined,
+                    imageGenerationCallId: String(formData.get("image_generation_call_id") || "").trim() || undefined,
+                    conversationId: String(formData.get("conversation_id") || "").trim() || undefined,
+                    parentMessageId: String(formData.get("parent_message_id") || "").trim() || undefined,
+                    sourceAccountId: String(formData.get("source_account_id") || "").trim() || undefined,
+                };
+            }
         } else {
             const body = (await request.json()) as Record<string, unknown>;
             prompt = String(body.prompt || "").trim();
@@ -50,7 +80,6 @@ export async function POST(request: NextRequest) {
         if (!prompt) {
             throw new ApiError(400, "prompt is required");
         }
-        logModel = model;
         if (images.length === 0) {
             throw new ApiError(400, "edit image is required");
         }
@@ -61,6 +90,7 @@ export async function POST(request: NextRequest) {
             quality,
             imageCount: images.length,
             hasMask: Boolean(mask),
+            prompt,
             promptLength: prompt.length,
             contentType,
         });
@@ -68,45 +98,18 @@ export async function POST(request: NextRequest) {
         const imageApiService = getImageApiServiceConfig();
         let result;
         if (imageApiService) {
-            usedApiService = true;
-            result = imageApiService.apiStyle === "responses"
-                ? await editImageResultWithResponsesApiService(imageApiService, {
-                    prompt,
-                    images,
-                    mask,
-                    size,
-                    quality,
-                })
-                : await editImageResultWithApiService(imageApiService, {
-                prompt,
-                model,
-                images,
-                mask,
-                size,
-                quality,
-            });
-            result.data = await persistImageResponseItems(result.data, {
-                route: "edits",
-                operation: "edit",
-                model,
-                prompt,
-                accountEmail: "图像 API 服务",
-                accountType: "api_service",
-            }, { keepBase64: true });
-
-            const finishedAt = new Date().toISOString();
-            addRequestLog({
-                startedAt,
-                finishedAt,
-                endpoint: "POST /v1/images/edits",
-                operation: "edit",
-                route: "edits",
-                model,
-                count: 1,
-                success: true,
-                durationMs: Date.now() - startedAtMs,
-                accountEmail: "图像 API 服务",
-                accountType: "api_service",
+            result = await editWithApiService(prompt, model, images, mask, {
+                imageSize: size,
+                imageQuality: quality,
+                sourceReference: sourceReference ? {
+                    originalFileId: sourceReference.originalFileId,
+                    originalGenId: sourceReference.originalGenId,
+                    previousResponseId: sourceReference.previousResponseId,
+                    imageGenerationCallId: sourceReference.imageGenerationCallId,
+                    conversationId: sourceReference.conversationId,
+                    parentMessageId: sourceReference.parentMessageId,
+                    sourceAccountId: sourceReference.sourceAccountId,
+                } : null,
             });
         } else {
             result = await editWithPool(prompt, model, images, mask, {
@@ -121,28 +124,16 @@ export async function POST(request: NextRequest) {
         });
         return jsonOk(result);
     } catch (error) {
-        if (usedApiService && error instanceof Error) {
-            addRequestLog({
-                startedAt,
-                finishedAt: new Date().toISOString(),
-                endpoint: "POST /v1/images/edits",
-                operation: "edit",
-                route: "edits",
-                model: logModel,
-                count: 1,
-                success: false,
-                error: error.message.slice(0, 300),
-                durationMs: Date.now() - startedAtMs,
-                accountEmail: "图像 API 服务",
-                accountType: "api_service",
-            });
-        }
         logger.error("images.edits.route", "request:failed", {
             message: error instanceof Error ? error.message : String(error),
             name: error instanceof Error ? error.name : typeof error,
+            ...getImageErrorMeta(error),
         });
         if (error instanceof ImageGenerationError) {
-            return jsonError(new ApiError(502, error.message));
+            return jsonError(new ApiError(resolveImageErrorStatus(error), error.message, {
+                error: error.message,
+                ...getImageErrorMeta(error),
+            }));
         }
         return jsonError(error);
     }

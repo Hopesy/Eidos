@@ -21,6 +21,19 @@ export type RequestLogEntry = {
   durationMs: number;
   accountEmail?: string;
   accountType?: string;
+  failureKind?: string;
+  retryAction?: string;
+  retryable?: boolean;
+  stage?: string;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
+  attemptCount?: number;
+  finalStatus?: "success" | "partial" | "failed";
+  apiStyle?: string;
+  statusCode?: number;
 };
 
 const MAX_LOGS = 500;

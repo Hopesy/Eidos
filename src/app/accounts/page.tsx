@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import {
@@ -56,6 +56,7 @@ import {
   type SyncStatus,
   type SyncStatusResponse,
 } from "@/lib/api";
+import { APP_CREDENTIALS_REFRESHED_EVENT } from "@/lib/app-startup-refresh";
 import { cn } from "@/lib/utils";
 import { getCachedAccountsView, setCachedAccountsView } from "@/store/accounts-view-cache";
 import { getCachedSyncStatus, setCachedSyncStatus } from "@/store/sync-status-cache";
@@ -113,29 +114,25 @@ function formatQuota(value: number) {
   return String(Math.max(0, value));
 }
 
-function formatRestoreAt(value?: string | null) {
+function formatRelativeTime(value?: string | null) {
   if (!value) {
-    return { absolute: "—", absoluteShort: "—", relative: "" };
+    return "—";
   }
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return { absolute: value, absoluteShort: value, relative: "" };
+    return "—";
   }
 
   const diffMs = Math.max(0, date.getTime() - Date.now());
+  if (diffMs <= 0) {
+    return "已到恢复时间";
+  }
+
   const totalHours = Math.ceil(diffMs / (1000 * 60 * 60));
   const days = Math.floor(totalHours / 24);
   const hours = totalHours % 24;
-  const relative = diffMs > 0 ? `剩余 ${days}d ${hours}h` : "已到恢复时间";
-
-  const pad = (num: number) => String(num).padStart(2, "0");
-  const absoluteShort = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
-  const absolute = `${absoluteShort}:${pad(date.getSeconds())}`;
-
-  return { absolute, absoluteShort, relative };
+  return `剩余 ${days}d ${hours}h`;
 }
 
 function formatQuotaSummary(accounts: Account[]) {
@@ -189,6 +186,20 @@ function toSortTime(value?: string | null) {
   return Number.isNaN(time) ? 0 : time;
 }
 
+function formatTableTime(value?: string | null) {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  const pad = (num: number) => String(num).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 function normalizeSyncStatus(payload: SyncStatusResponse | null) {
   return {
     configured: payload?.configured ?? false,
@@ -207,6 +218,7 @@ function normalizeSyncStatus(payload: SyncStatusResponse | null) {
 }
 
 export default function AccountsPage() {
+  const router = useRouter();
   const cachedAccountsView = getCachedAccountsView();
   const didLoadRef = useRef(false);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -220,7 +232,8 @@ export default function AccountsPage() {
   const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
   const [editQuota, setEditQuota] = useState("0");
   const [isLoading, setIsLoading] = useState(() => !cachedAccountsView);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshingAction, setRefreshingAction] = useState<"all" | "selected" | null>(null);
+  const [refreshingRowToken, setRefreshingRowToken] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -292,6 +305,17 @@ export default function AccountsPage() {
     }
     didLoadRef.current = true;
     void Promise.all([loadAccounts(Boolean(cachedAccountsView)), loadSync({ revalidate: true })]);
+  }, []);
+
+  useEffect(() => {
+    const handleCredentialsRefreshed = () => {
+      void loadAccounts(true);
+    };
+
+    window.addEventListener(APP_CREDENTIALS_REFRESHED_EVENT, handleCredentialsRefreshed);
+    return () => {
+      window.removeEventListener(APP_CREDENTIALS_REFRESHED_EVENT, handleCredentialsRefreshed);
+    };
   }, []);
 
   useEffect(() => {
@@ -412,13 +436,24 @@ export default function AccountsPage() {
     }
   };
 
-  const handleRefreshSelectedAccounts = async (accessTokens: string[]) => {
+  const isAnyRefreshRunning = refreshingAction !== null || refreshingRowToken !== null;
+
+  const handleRefreshSelectedAccounts = async (
+    accessTokens: string[],
+    source: "all" | "selected" | "row" = "selected",
+    rowToken?: string,
+  ) => {
     if (accessTokens.length === 0) {
       toast.error("没有需要刷新的账户");
       return;
     }
 
-    setIsRefreshing(true);
+    if (source === "row") {
+      setRefreshingRowToken(rowToken ?? accessTokens[0] ?? null);
+    } else {
+      setRefreshingAction(source);
+    }
+
     try {
       const data = await refreshAccounts(accessTokens);
       setAccounts(normalizeAccounts(data.items));
@@ -436,15 +471,33 @@ export default function AccountsPage() {
       const message = error instanceof Error ? error.message : "刷新账户失败";
       toast.error(message);
     } finally {
-      setIsRefreshing(false);
+      if (source === "row") {
+        setRefreshingRowToken(null);
+      } else {
+        setRefreshingAction(null);
+      }
     }
   };
 
   const handleRefreshAllLocalCredentials = async () => {
-    await handleRefreshSelectedAccounts(accounts.map((item) => item.access_token));
+    await handleRefreshSelectedAccounts(
+      accounts.map((item) => item.access_token),
+      "all",
+    );
   };
 
   const handleRunSync = async (direction: "pull" | "push" | "both") => {
+    if (!syncView.configured) {
+      toast.info("CPA 同步未配置", {
+        description: "如需使用 CPA pull / push / both，请先前往配置页填写并保存。",
+        action: {
+          label: "前往配置",
+          onClick: () => router.push("/settings"),
+        },
+      });
+      return;
+    }
+
     setSyncRunningDirection(direction);
     try {
       const result = await runSync(direction);
@@ -521,14 +574,6 @@ export default function AccountsPage() {
             <p className="mt-1 text-[13px] leading-relaxed text-stone-500">管理账号池与同步配置</p>
           </div>
         </div>
-        {!isSyncLoading && !syncView.configured ? (
-          <div className="flex items-center gap-1.5 self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-600">
-            <span>CPA 同步未配置</span>
-            <Link href="/settings" className="font-medium underline underline-offset-2 hover:text-amber-800">
-              前往配置
-            </Link>
-          </div>
-        ) : null}
       </div>
 
       <input
@@ -650,15 +695,15 @@ export default function AccountsPage() {
                   variant="outline"
                   className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700"
                   onClick={() => void handleRefreshAllLocalCredentials()}
-                  disabled={accounts.length === 0 || isRefreshing || syncRunningDirection !== null}
+                  disabled={accounts.length === 0 || isAnyRefreshRunning || syncRunningDirection !== null}
                 >
-                  <RefreshCw className={cn("size-4", isRefreshing ? "animate-spin" : "")} />
+                  <RefreshCw className={cn("size-4", refreshingAction === "all" ? "animate-spin" : "")} />
                   刷新本地凭证
                 </Button>
                 <Button
                   className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
                   onClick={() => void handleRunSync("both")}
-                  disabled={!syncView.configured || isSyncLoading || syncRunningDirection !== null}
+                  disabled={isSyncLoading || syncRunningDirection !== null}
                 >
                   {syncRunningDirection !== null ? (
                     <LoaderCircle className="size-4 animate-spin" />
@@ -840,10 +885,10 @@ export default function AccountsPage() {
                 <Button
                   variant="ghost"
                   className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100"
-                  onClick={() => void handleRefreshSelectedAccounts(selectedTokens)}
-                  disabled={selectedTokens.length === 0 || isRefreshing}
+                  onClick={() => void handleRefreshSelectedAccounts(selectedTokens, "selected")}
+                  disabled={selectedTokens.length === 0 || isAnyRefreshRunning}
                 >
-                  {isRefreshing ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                  {refreshingAction === "selected" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
                   刷新选中账号信息
                 </Button>
                 <Button
@@ -873,7 +918,7 @@ export default function AccountsPage() {
             </div>
 
             <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-375px)]">
-              <table className="w-full min-w-[1060px] text-left">
+              <table className="w-full min-w-[1240px] text-left">
                 <thead className="border-b border-stone-100/80 bg-stone-50/60">
                   <tr>
                     <th className="w-10 px-3 py-2 text-center">
@@ -883,6 +928,7 @@ export default function AccountsPage() {
                     <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">状态</th>
                     <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">类型</th>
                     <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片额度</th>
+                    <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">刷新时间</th>
                     <th className="w-40 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片重置</th>
                     <th className="w-28 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">操作</th>
                   </tr>
@@ -893,7 +939,7 @@ export default function AccountsPage() {
                     const StatusIcon = status.icon;
                     const imageGenLimit = extractImageGenLimit(account);
                     const imageGenRemaining = imageGenLimit.remaining;
-                    const imageGenRestore = formatRestoreAt(imageGenLimit.resetAfter);
+                    const imageGenRestore = formatRelativeTime(imageGenLimit.resetAfter);
 
                     return (
                       <tr
@@ -976,20 +1022,16 @@ export default function AccountsPage() {
                           </div>
                         </td>
 
+                        {/* 刷新时间 */}
+                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
+                          <span className="font-mono tabular-nums text-xs text-stone-500">
+                            {formatTableTime(account.lastRefreshedAt)}
+                          </span>
+                        </td>
+
                         {/* 图片重置 */}
                         <td className="px-3 py-1.5 text-center text-xs text-stone-500 whitespace-nowrap">
-                          {imageGenRestore.relative ? (
-                            <div
-                              className="flex items-center justify-center gap-1.5"
-                              title={imageGenRestore.absolute !== "—" ? imageGenRestore.absolute : undefined}
-                            >
-                              <span className="font-medium text-stone-700">{imageGenRestore.relative}</span>
-                              <span className="text-stone-300">·</span>
-                              <span className="font-mono tabular-nums text-stone-400">{imageGenRestore.absoluteShort}</span>
-                            </div>
-                          ) : (
-                            <span className="font-mono tabular-nums text-stone-400">{imageGenRestore.absoluteShort}</span>
-                          )}
+                          <span className="font-medium text-stone-700">{imageGenRestore}</span>
                         </td>
 
                         {/* 操作 */}
@@ -1007,10 +1049,15 @@ export default function AccountsPage() {
                             <button
                               type="button"
                               className="rounded-lg p-1.5 transition hover:bg-sky-50 hover:text-sky-500"
-                              onClick={() => void handleRefreshSelectedAccounts([account.access_token])}
+                              onClick={() => void handleRefreshSelectedAccounts([account.access_token], "row", account.access_token)}
+                              disabled={isAnyRefreshRunning}
                               title="刷新状态"
                             >
-                              <RefreshCw className="size-3.5" />
+                              {refreshingRowToken === account.access_token ? (
+                                <LoaderCircle className="size-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="size-3.5" />
+                              )}
                             </button>
                             <button
                               type="button"

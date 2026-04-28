@@ -20,12 +20,15 @@ import { FilesSidebar } from "./_components/files-sidebar";
 import {
   editImage,
   fetchAccounts,
+  fetchRecoverableImageTasks,
   generateImage,
+  recoverImageTask,
   upscaleImage,
   type Account,
   type ImageGenerationQuality,
   type ImageGenerationSize,
   type ImageModel,
+  type RecoverableImageTaskItem,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
@@ -49,6 +52,8 @@ import {
   subscribeImageTasks,
 } from "@/store/image-active-tasks";
 import { getCachedImageWorkspaceState, setCachedImageWorkspaceState } from "@/store/image-workspace-cache";
+import { ApiRequestError } from "@/lib/request";
+import { APP_CREDENTIALS_REFRESHED_EVENT } from "@/lib/app-startup-refresh";
 
 const imageModelOptions: Array<{ label: string; value: ImageModel }> = [
   { label: "gpt-image-2", value: "gpt-image-2" },
@@ -136,6 +141,7 @@ type ActiveRequestState = {
   mode: import("@/store/image-conversations").ImageMode;
   count: number;
   variant: "standard" | "selection-edit";
+  imageId?: string;
 };
 
 function buildConversationTitle(mode: ImageMode, prompt: string, scale: string) {
@@ -292,6 +298,50 @@ async function dataUrlToFile(dataUrl: string, fileName: string) {
   return new File([blob], fileName, { type: blob.type || "image/png" });
 }
 
+function createSourceImageFromResult(image: StoredImage, name: string, hiddenInConversation = false): StoredSourceImage | null {
+  const dataUrl = buildImageDataUrl(image);
+  if (!dataUrl) {
+    return null;
+  }
+  return {
+    id: makeId(),
+    role: "image",
+    name,
+    dataUrl,
+    hiddenInConversation,
+    image_id: image.image_id,
+    file_path: image.file_path,
+    file_id: image.file_id,
+    gen_id: image.gen_id,
+    response_id: image.response_id,
+    image_generation_call_id: image.image_generation_call_id,
+    conversation_id: image.conversation_id,
+    parent_message_id: image.parent_message_id,
+    source_account_id: image.source_account_id,
+  };
+}
+
+function buildSourceReference(source: StoredSourceImage | null | undefined) {
+  if (!source) {
+    return null;
+  }
+  const originalFileId = String(source.file_id || "").trim();
+  const originalGenId = String(source.gen_id || source.response_id || "").trim();
+  const sourceAccountId = String(source.source_account_id || "").trim();
+  if (!originalFileId || !sourceAccountId || !originalGenId) {
+    return null;
+  }
+  return {
+    original_file_id: originalFileId,
+    original_gen_id: originalGenId,
+    previous_response_id: String(source.response_id || "").trim() || undefined,
+    image_generation_call_id: String(source.image_generation_call_id || "").trim() || undefined,
+    conversation_id: String(source.conversation_id || "").trim() || undefined,
+    parent_message_id: String(source.parent_message_id || "").trim() || undefined,
+    source_account_id: sourceAccountId,
+  };
+}
+
 function mergeResultImages(
   conversationId: string,
   items: Array<{
@@ -303,6 +353,8 @@ function mergeResultImages(
     text?: string;
     file_id?: string;
     gen_id?: string;
+    response_id?: string;
+    image_generation_call_id?: string;
     conversation_id?: string;
     parent_message_id?: string;
     source_account_id?: string;
@@ -335,6 +387,8 @@ function createResultImage(
     text?: string;
     file_id?: string;
     gen_id?: string;
+    response_id?: string;
+    image_generation_call_id?: string;
     conversation_id?: string;
     parent_message_id?: string;
     source_account_id?: string;
@@ -350,9 +404,16 @@ function createResultImage(
       revised_prompt: item.revised_prompt,
       file_id: item.file_id,
       gen_id: item.gen_id,
+      response_id: item.response_id,
+      image_generation_call_id: item.image_generation_call_id,
       conversation_id: item.conversation_id,
       parent_message_id: item.parent_message_id,
       source_account_id: item.source_account_id,
+      failureKind: undefined,
+      retryAction: undefined,
+      retryable: undefined,
+      stage: undefined,
+      upstreamConversationId: undefined,
     };
   }
 
@@ -383,6 +444,8 @@ function patchRetriedImages(
     text?: string;
     file_id?: string;
     gen_id?: string;
+    response_id?: string;
+    image_generation_call_id?: string;
     conversation_id?: string;
     parent_message_id?: string;
     source_account_id?: string;
@@ -417,6 +480,74 @@ function patchRetriedImages(
 
 function countFailures(images: StoredImage[]) {
   return images.filter((image) => image.status === "error").length;
+}
+
+function findRecoverableTurn(conversations: ImageConversation[]) {
+  return conversations
+    .flatMap((conversation) =>
+      (conversation.turns ?? []).map((turn) => ({
+        conversationId: conversation.id,
+        turn,
+      })),
+    )
+    .filter(({ turn }) =>
+      turn.status === "error" &&
+      Boolean(turn.retryable) &&
+      Boolean(turn.upstreamConversationId) &&
+      (turn.retryAction === "resume_polling" || turn.retryAction === "retry_download"),
+    )
+    .sort((a, b) => b.turn.createdAt.localeCompare(a.turn.createdAt))[0] ?? null;
+}
+
+function findRecoverableTaskCandidate(
+  tasks: RecoverableImageTaskItem[],
+  conversations: ImageConversation[],
+) {
+  const byConversation = new Map(conversations.map((conversation) => [conversation.id, conversation]));
+  const sortedTasks = [...tasks].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+
+  for (const task of sortedTasks) {
+    const conversationId = String(task.localConversationId || "").trim();
+    const turnId = String(task.localTurnId || "").trim();
+    if (!conversationId || !turnId) {
+      continue;
+    }
+    const conversation = byConversation.get(conversationId);
+    if (!conversation) {
+      continue;
+    }
+    const turn = (conversation.turns ?? []).find((item) => item.id === turnId);
+    if (!turn || turn.status !== "error") {
+      continue;
+    }
+    const mergedTurn: ImageConversationTurn = {
+      ...turn,
+      mode: task.mode || turn.mode,
+      prompt: String(task.prompt || task.revisedPrompt || turn.prompt || ""),
+      model: (String(task.model || turn.model || "gpt-image-1") || "gpt-image-1") as ImageModel,
+      failureKind: String(task.failureKind || turn.failureKind || "").trim() || turn.failureKind,
+      retryAction: String(task.retryAction || turn.retryAction || "").trim() || turn.retryAction,
+      retryable: typeof task.retryable === "boolean" ? task.retryable : turn.retryable,
+      stage: String(task.stage || turn.stage || "").trim() || turn.stage,
+      upstreamConversationId:
+        String(task.upstreamConversationId || turn.upstreamConversationId || "").trim() || turn.upstreamConversationId,
+      upstreamResponseId:
+        String(task.upstreamResponseId || turn.upstreamResponseId || "").trim() || turn.upstreamResponseId,
+      imageGenerationCallId:
+        String(task.imageGenerationCallId || turn.imageGenerationCallId || "").trim() || turn.imageGenerationCallId,
+      sourceAccountId:
+        String(task.sourceAccountId || turn.sourceAccountId || "").trim() || turn.sourceAccountId,
+      fileIds: Array.isArray(task.fileIds) && task.fileIds.length > 0 ? task.fileIds : turn.fileIds,
+      error: String(task.error || turn.error || "").trim() || turn.error,
+    };
+    return {
+      task,
+      conversationId,
+      turn: mergedTurn,
+    };
+  }
+
+  return null;
 }
 
 function formatProcessingDuration(totalSeconds: number) {
@@ -496,6 +627,26 @@ function buildProcessingStatus(
 }
 
 function humanizeError(error: unknown): string {
+  if (error instanceof ApiRequestError) {
+    if (error.failureKind === "accepted_pending") {
+      return "任务已提交到上游，当前仍在处理中。建议稍后继续等待，而不是立即重新提交。";
+    }
+    if (error.failureKind === "result_fetch_failed") {
+      return "图片结果已就绪，但下载失败。建议优先重试下载，而不是重新生成。";
+    }
+    if (error.failureKind === "source_invalid") {
+      return "上游未识别到源图，请重新上传源图后重试。";
+    }
+    if (error.failureKind === "account_blocked") {
+      return "当前账号不可用、已限流或授权失效，请切换账号或稍后再试。";
+    }
+    if (error.failureKind === "input_blocked") {
+      return "请求被上游拒绝，请修改提示词、图片或参数后重试。";
+    }
+    if (error.failureKind === "submit_failed") {
+      return "图片请求提交失败，请稍后重新提交。";
+    }
+  }
   const raw = error instanceof Error ? error.message : String(error ?? "处理图片失败");
   const lower = raw.toLowerCase();
   if (lower.includes("fetch failed") || lower.includes("failed to fetch") || lower.includes("network") || lower.includes("econnrefused")) {
@@ -528,6 +679,33 @@ function humanizeError(error: unknown): string {
   return raw;
 }
 
+function extractRequestFailureMeta(error: unknown) {
+  if (!(error instanceof ApiRequestError)) {
+    return {
+      failureKind: undefined,
+      retryAction: undefined,
+      retryable: undefined,
+      stage: undefined,
+      upstreamConversationId: undefined,
+      upstreamResponseId: undefined,
+      imageGenerationCallId: undefined,
+      sourceAccountId: undefined,
+      fileIds: undefined,
+    };
+  }
+  return {
+    failureKind: error.failureKind,
+    retryAction: error.retryAction,
+    retryable: error.retryable,
+    stage: error.stage,
+    upstreamConversationId: error.upstreamConversationId,
+    upstreamResponseId: error.upstreamResponseId,
+    imageGenerationCallId: error.imageGenerationCallId,
+    sourceAccountId: error.sourceAccountId,
+    fileIds: error.fileIds,
+  };
+}
+
 function openImageInNewTab(dataUrl: string) {
   const w = window.open("", "_blank");
   if (w) {
@@ -541,6 +719,7 @@ export default function ImagePage() {
   const didLoadQuotaRef = useRef(false);
   const mountedRef = useRef(true);
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
+  const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -576,6 +755,7 @@ export default function ImagePage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableQuota, setAvailableQuota] = useState("加载中");
+  const [recoverableTasks, setRecoverableTasks] = useState<RecoverableImageTaskItem[]>([]);
   const [activeRequest, setActiveRequest] = useState<ActiveRequestState | null>(null);
   const [submitStartedAt, setSubmitStartedAt] = useState<number | null>(null);
   const [submitElapsedSeconds, setSubmitElapsedSeconds] = useState(0);
@@ -598,10 +778,21 @@ export default function ImagePage() {
     () => getLatestSuccessfulImage(selectedConversationTurns),
     [selectedConversationTurns],
   );
-  const latestReusableImageDataUrl = useMemo(
-    () => (latestReusableImage ? buildImageDataUrl(latestReusableImage) : ""),
+  const latestReusableSourceImage = useMemo(
+    () => (latestReusableImage ? createSourceImageFromResult(latestReusableImage, "reference.png", true) : null),
     [latestReusableImage],
   );
+  const latestReusableImageDataUrl = useMemo(
+    () => latestReusableSourceImage?.dataUrl || "",
+    [latestReusableSourceImage],
+  );
+  const latestTurnGeneratedMultipleImages = useMemo(() => {
+    const latestTurn = selectedConversationTurns[selectedConversationTurns.length - 1] ?? null;
+    if (!latestTurn || latestTurn.mode !== "generate") {
+      return false;
+    }
+    return Number(latestTurn.count || 1) > 1;
+  }, [selectedConversationTurns]);
   const parsedCount = useMemo(() => Math.max(1, Math.min(8, Number(imageCount) || 1)), [imageCount]);
   const imageSources = useMemo(() => sourceImages.filter((item) => item.role === "image"), [sourceImages]);
   const visibleSourceImages = useMemo(
@@ -675,12 +866,16 @@ export default function ImagePage() {
       if (withLoading && mountedRef.current) {
         setIsLoadingHistory(true);
       }
-      const items = await listImageConversations();
+      const [items, recoverableResponse] = await Promise.all([
+        listImageConversations(),
+        fetchRecoverableImageTasks(30).catch(() => ({ items: [] as RecoverableImageTaskItem[] })),
+      ]);
       const nextItems = normalize ? await normalizeConversationHistory(items) : items;
       if (!mountedRef.current) {
         return;
       }
       setConversations(nextItems);
+      setRecoverableTasks(Array.isArray(recoverableResponse.items) ? recoverableResponse.items : []);
       setSelectedConversationId((current) => {
         let nextSelectedConversationId: string | null = current;
         if (current && nextItems.some((item) => item.id === current)) {
@@ -768,6 +963,27 @@ export default function ImagePage() {
   }, []);
 
   useEffect(() => {
+    const handleCredentialsRefreshed = () => {
+      void (async () => {
+        try {
+          const data = await fetchAccounts();
+          if (!mountedRef.current) {
+            return;
+          }
+          setAvailableQuota(formatAvailableQuota(data.items));
+        } catch {
+          // 启动后的静默刷新失败不打断用户操作
+        }
+      })();
+    };
+
+    window.addEventListener(APP_CREDENTIALS_REFRESHED_EVENT, handleCredentialsRefreshed);
+    return () => {
+      window.removeEventListener(APP_CREDENTIALS_REFRESHED_EVENT, handleCredentialsRefreshed);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectedConversation && !isSubmitting) {
       return;
     }
@@ -831,21 +1047,21 @@ export default function ImagePage() {
   }, [imagePrompt, mode]);
 
   useEffect(() => {
-    setReuseLatestResultForGenerate(true);
-  }, [selectedConversationId]);
+    setReuseLatestResultForGenerate(!latestTurnGeneratedMultipleImages);
+  }, [latestTurnGeneratedMultipleImages, selectedConversationId]);
 
   useEffect(() => {
     setSourceImages((prev) => {
       const hiddenItems = prev.filter((item) => item.role === "image" && item.hiddenInConversation);
       const visibleItems = prev.filter((item) => !(item.role === "image" && item.hiddenInConversation));
 
-      if (!isLatestResultReferenceEnabled || !latestReusableImageDataUrl) {
+      if (!isLatestResultReferenceEnabled || !latestReusableSourceImage) {
         return hiddenItems.length > 0 ? visibleItems : prev;
       }
 
       if (
         hiddenItems.length === 1 &&
-        hiddenItems[0]?.dataUrl === latestReusableImageDataUrl &&
+        hiddenItems[0]?.dataUrl === latestReusableSourceImage.dataUrl &&
         hiddenItems[0]?.name === "reference.png"
       ) {
         return prev;
@@ -854,15 +1070,12 @@ export default function ImagePage() {
       return [
         ...visibleItems,
         {
+          ...latestReusableSourceImage,
           id: makeId(),
-          role: "image",
-          name: "reference.png",
-          dataUrl: latestReusableImageDataUrl,
-          hiddenInConversation: true,
         },
       ];
     });
-  }, [isLatestResultReferenceEnabled, latestReusableImageDataUrl]);
+  }, [isLatestResultReferenceEnabled, latestReusableSourceImage]);
 
   const persistConversation = async (conversation: ImageConversation) => {
     const normalizedConversation = normalizeConversation(conversation);
@@ -901,9 +1114,6 @@ export default function ImagePage() {
 
   const handleModeChange = (nextMode: ImageMode) => {
     setMode(nextMode);
-    if (nextMode === "generate") {
-      setReuseLatestResultForGenerate(true);
-    }
     setSourceImages((prev) => {
       const visibleItems = prev.filter((item) => !item.hiddenInConversation);
       if (nextMode !== "edit") {
@@ -911,17 +1121,15 @@ export default function ImagePage() {
       }
 
       const hasExplicitImage = visibleItems.some((item) => item.role === "image");
-      if (hasExplicitImage || !latestReusableImageDataUrl) {
+      if (hasExplicitImage || !latestReusableSourceImage) {
         return visibleItems;
       }
 
       return [
         {
+          ...latestReusableSourceImage,
           id: makeId(),
-          role: "image",
           name: "inherited-source.png",
-          dataUrl: latestReusableImageDataUrl,
-          hiddenInConversation: true,
         },
       ];
     });
@@ -1058,21 +1266,14 @@ export default function ImagePage() {
     if (isSubmitting) {
       return;
     }
-    const dataUrl = buildImageDataUrl(image);
-    if (!dataUrl) {
+    const sourceImage = createSourceImageFromResult(image, "source.png");
+    if (!sourceImage) {
       toast.error("当前图片没有可复用的数据");
       return;
     }
     focusConversation(conversationId);
     handleModeChange(nextMode);
-    setSourceImages([
-      {
-        id: makeId(),
-        role: "image",
-        name: "source.png",
-        dataUrl,
-      },
-    ]);
+    setSourceImages([sourceImage]);
     if (nextMode === "upscale") {
       setImagePrompt("");
     }
@@ -1114,6 +1315,7 @@ export default function ImagePage() {
     const conversationId = editorTarget.conversationId;
     const turnId = makeId();
     const now = new Date().toISOString();
+    const selectionSourceImage = createSourceImageFromResult(editorTarget.image, editorTarget.imageName || "source.png");
     const draftTurn = createConversationTurn({
       turnId,
       title: buildConversationTitle("edit", prompt, upscaleScale),
@@ -1124,7 +1326,7 @@ export default function ImagePage() {
       imageQuality: "auto",
       count: 1,
       sourceImages: [
-        {
+        selectionSourceImage ?? {
           id: makeId(),
           role: "image",
           name: editorTarget.imageName,
@@ -1180,6 +1382,7 @@ export default function ImagePage() {
         prompt,
         images: [sourceImageFile],
         mask: mask.file,
+        sourceReference: buildSourceReference(selectionSourceImage),
         model: imageModel,
       });
       const resultItems = mergeResultImages(turnId, data.data || [], 1);
@@ -1196,6 +1399,15 @@ export default function ImagePage() {
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
               durationMs,
+              failureKind: undefined,
+              retryAction: undefined,
+              retryable: undefined,
+              stage: undefined,
+              upstreamConversationId: undefined,
+              upstreamResponseId: undefined,
+              imageGenerationCallId: undefined,
+              sourceAccountId: undefined,
+              fileIds: undefined,
             }
             : turn,
         ),
@@ -1208,6 +1420,7 @@ export default function ImagePage() {
       }
     } catch (error) {
       const message = humanizeError(error);
+      const failureMeta = extractRequestFailureMeta(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -1216,10 +1429,26 @@ export default function ImagePage() {
               ...turn,
               status: "error",
               error: message,
+              failureKind: failureMeta.failureKind,
+              retryAction: failureMeta.retryAction,
+              retryable: failureMeta.retryable,
+              stage: failureMeta.stage,
+              upstreamConversationId: failureMeta.upstreamConversationId,
+              upstreamResponseId: failureMeta.upstreamResponseId,
+              imageGenerationCallId: failureMeta.imageGenerationCallId,
+              sourceAccountId: failureMeta.sourceAccountId,
+              fileIds: failureMeta.fileIds,
               images: turn.images.map((image) => ({
                 ...image,
                 status: "error" as const,
                 error: message,
+                failureKind: failureMeta.failureKind,
+                retryAction: failureMeta.retryAction,
+                retryable: failureMeta.retryable,
+                stage: failureMeta.stage,
+                upstreamConversationId: failureMeta.upstreamConversationId,
+                upstreamResponseId: failureMeta.upstreamResponseId,
+                imageGenerationCallId: failureMeta.imageGenerationCallId,
               })),
             }
             : turn,
@@ -1248,7 +1477,6 @@ export default function ImagePage() {
     const turnScale = turnMode === "upscale" ? turn.scale || "2x" : undefined;
     const turnImageSize = turn.imageSize || "auto";
     const turnImageQuality = turn.imageQuality || "auto";
-    const expectedCount = Math.max(1, turn.count || 1);
     const failedIndexes = turn.images
       .map((image, index) => (image.status === "error" ? index : -1))
       .filter((index) => index >= 0);
@@ -1292,6 +1520,7 @@ export default function ImagePage() {
       mode: turnMode,
       count: retryCount,
       variant: "standard",
+      imageId,
     });
     setSubmitElapsedSeconds(0);
     setSubmitStartedAt(startedAt);
@@ -1315,6 +1544,15 @@ export default function ImagePage() {
               ...item,
               status: "generating" as const,
               error: undefined,
+              failureKind: undefined,
+              retryAction: undefined,
+              retryable: undefined,
+              stage: undefined,
+              upstreamConversationId: undefined,
+              upstreamResponseId: undefined,
+              imageGenerationCallId: undefined,
+              sourceAccountId: undefined,
+              fileIds: undefined,
               images: loadingImages,
             }
             : item,
@@ -1322,7 +1560,18 @@ export default function ImagePage() {
       }));
 
       let resultItems: StoredImage[] = [];
-      if (turnMode === "generate") {
+      if ((turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") && turn.upstreamConversationId) {
+        const data = await recoverImageTask({
+          conversationId: turn.upstreamConversationId,
+          sourceAccountId: turn.sourceAccountId,
+          revisedPrompt: prompt,
+          fileIds: turn.fileIds,
+          waitMs: turn.retryAction === "resume_polling" ? 60000 : 15000,
+          model: turn.model,
+          mode: turnMode,
+        });
+        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+      } else if (turnMode === "generate") {
         if (turnImageSources.length > 0) {
           const files = await Promise.all(
             turnImageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`)),
@@ -1330,14 +1579,15 @@ export default function ImagePage() {
           const data = await editImage({
             prompt,
             images: files,
+            sourceReference: buildSourceReference(turnImageSources[0]),
             model: turn.model,
-            size: turnImageSize,
+            size: mapToolbarImageSizeToApiSize(turnImageSize as ToolbarImageSize),
             quality: turnImageQuality,
           });
           resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
         } else {
           const data = await generateImage(prompt, turn.model, retryIndexes.length, {
-            size: turnImageSize,
+            size: mapToolbarImageSizeToApiSize(turnImageSize as ToolbarImageSize),
             quality: turnImageQuality,
           });
           resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
@@ -1349,7 +1599,13 @@ export default function ImagePage() {
           turnImageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `image-${index + 1}.png`)),
         );
         const maskFile = turnMaskSource ? await dataUrlToFile(turnMaskSource.dataUrl, turnMaskSource.name || "mask.png") : null;
-        const data = await editImage({ prompt, images: files, mask: maskFile, model: turn.model });
+        const data = await editImage({
+          prompt,
+          images: files,
+          mask: maskFile,
+          sourceReference: buildSourceReference(turnImageSources[0]),
+          model: turn.model,
+        });
         resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       }
 
@@ -1371,6 +1627,15 @@ export default function ImagePage() {
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
               durationMs,
+              failureKind: undefined,
+              retryAction: undefined,
+              retryable: undefined,
+              stage: undefined,
+              upstreamConversationId: undefined,
+              upstreamResponseId: undefined,
+              imageGenerationCallId: undefined,
+              sourceAccountId: undefined,
+              fileIds: undefined,
             }
             : item,
         ),
@@ -1383,6 +1648,7 @@ export default function ImagePage() {
       }
     } catch (error) {
       const message = humanizeError(error);
+      const failureMeta = extractRequestFailureMeta(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((item) =>
@@ -1391,12 +1657,28 @@ export default function ImagePage() {
               ...item,
               status: "error",
               error: message,
+              failureKind: failureMeta.failureKind,
+              retryAction: failureMeta.retryAction,
+              retryable: failureMeta.retryable,
+              stage: failureMeta.stage,
+              upstreamConversationId: failureMeta.upstreamConversationId,
+              upstreamResponseId: failureMeta.upstreamResponseId,
+              imageGenerationCallId: failureMeta.imageGenerationCallId,
+              sourceAccountId: failureMeta.sourceAccountId,
+              fileIds: failureMeta.fileIds,
               images: item.images.map((image, index) =>
                 retryIndexes.includes(index)
                   ? {
                     ...image,
                     status: "error" as const,
                     error: message,
+                    failureKind: failureMeta.failureKind,
+                    retryAction: failureMeta.retryAction,
+                    retryable: failureMeta.retryable,
+                    stage: failureMeta.stage,
+                    upstreamConversationId: failureMeta.upstreamConversationId,
+                    upstreamResponseId: failureMeta.upstreamResponseId,
+                    imageGenerationCallId: failureMeta.imageGenerationCallId,
                   }
                   : image,
               ),
@@ -1412,6 +1694,30 @@ export default function ImagePage() {
       setSubmitStartedAt(null);
     }
   };
+
+  useEffect(() => {
+    if (isSubmitting || conversations.length === 0) {
+      return;
+    }
+    const taskCandidate = findRecoverableTaskCandidate(recoverableTasks, conversations);
+    const candidate = taskCandidate ?? findRecoverableTurn(conversations);
+    if (!candidate) {
+      return;
+    }
+    const key = taskCandidate
+      ? `task:${taskCandidate.task.id}:${taskCandidate.task.updatedAt}:${taskCandidate.turn.retryAction}:${taskCandidate.turn.upstreamConversationId}:${taskCandidate.turn.upstreamResponseId}:${(taskCandidate.turn.fileIds || []).join(",")}`
+      : `${candidate.conversationId}:${candidate.turn.id}:${candidate.turn.retryAction}:${candidate.turn.upstreamConversationId}:${(candidate.turn.fileIds || []).join(",")}`;
+    if (autoRecoveredTurnKeysRef.current.has(key)) {
+      return;
+    }
+    autoRecoveredTurnKeysRef.current.add(key);
+    const frame = window.requestAnimationFrame(() => {
+      void handleRetryTurn(candidate.conversationId, candidate.turn);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [conversations, isSubmitting, recoverableTasks]);
 
   const handleSubmit = async () => {
     const prompt = imagePrompt.trim();
@@ -1575,6 +1881,7 @@ export default function ImagePage() {
           const data = await editImage({
             prompt,
             images: files,
+            sourceReference: buildSourceReference(imageSources[0]),
             model: imageModel,
             size: mapToolbarImageSizeToApiSize(imageSize),
             quality: imageQuality,
@@ -1596,7 +1903,14 @@ export default function ImagePage() {
           imageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `image-${index + 1}.png`)),
         );
         const maskFile = maskSource ? await dataUrlToFile(maskSource.dataUrl, maskSource.name || "mask.png") : null;
-        const data = await editImage({ prompt, images: files, mask: maskFile, model: imageModel, signal });
+        const data = await editImage({
+          prompt,
+          images: files,
+          mask: maskFile,
+          sourceReference: buildSourceReference(imageSources[0]),
+          model: imageModel,
+          signal,
+        });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
       }
 
@@ -1618,6 +1932,15 @@ export default function ImagePage() {
               status: failedCount > 0 ? "error" : "success",
               error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
               durationMs,
+              failureKind: undefined,
+              retryAction: undefined,
+              retryable: undefined,
+              stage: undefined,
+              upstreamConversationId: undefined,
+              upstreamResponseId: undefined,
+              imageGenerationCallId: undefined,
+              sourceAccountId: undefined,
+              fileIds: undefined,
             }
             : turn,
         ),
@@ -1659,6 +1982,7 @@ export default function ImagePage() {
         }));
         return;
       }
+      const failureMeta = extractRequestFailureMeta(error);
       const message = humanizeError(error);
       await updateConversation(conversationId, (current) => ({
         ...current,
@@ -1668,10 +1992,26 @@ export default function ImagePage() {
               ...turn,
               status: "error",
               error: message,
+              failureKind: failureMeta.failureKind,
+              retryAction: failureMeta.retryAction,
+              retryable: failureMeta.retryable,
+              stage: failureMeta.stage,
+              upstreamConversationId: failureMeta.upstreamConversationId,
+              upstreamResponseId: failureMeta.upstreamResponseId,
+              imageGenerationCallId: failureMeta.imageGenerationCallId,
+              sourceAccountId: failureMeta.sourceAccountId,
+              fileIds: failureMeta.fileIds,
               images: turn.images.map((image) => ({
                 ...image,
                 status: "error" as const,
                 error: message,
+                failureKind: failureMeta.failureKind,
+                retryAction: failureMeta.retryAction,
+                retryable: failureMeta.retryable,
+                stage: failureMeta.stage,
+                upstreamConversationId: failureMeta.upstreamConversationId,
+                upstreamResponseId: failureMeta.upstreamResponseId,
+                imageGenerationCallId: failureMeta.imageGenerationCallId,
               })),
             }
             : turn,
@@ -1775,6 +2115,13 @@ export default function ImagePage() {
                   waitingDots={waitingDots}
                   submitElapsedSeconds={submitElapsedSeconds}
                   isSubmitting={isSubmitting}
+                  retryingImageId={
+                    isSubmitting &&
+                    activeRequest?.conversationId === selectedConversation.id &&
+                    activeRequest?.turnId === turn.id
+                      ? activeRequest.imageId ?? null
+                      : null
+                  }
                   onOpenImageInNewTab={openImageInNewTab}
                   onOpenSelectionEditor={openSelectionEditor}
                   onSeedFromResult={seedFromResult}

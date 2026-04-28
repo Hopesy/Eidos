@@ -179,7 +179,11 @@ function DesktopTopNav({
             {versionLabel}
           </button>
         </div>
-        <UpdateDialog open={showUpdateDialog} onClose={() => setShowUpdateDialog(false)} />
+        <UpdateDialog
+          open={showUpdateDialog}
+          onClose={() => setShowUpdateDialog(false)}
+          currentVersionLabel={versionLabel}
+        />
       </div>
     </aside>
   );

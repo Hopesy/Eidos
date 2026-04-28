@@ -25,6 +25,23 @@ function formatTime(value: string) {
     }).format(date);
 }
 
+function resolveFinalStatus(item: RequestLogItem) {
+    if (item.finalStatus === "success" || item.finalStatus === "partial" || item.finalStatus === "failed") {
+        return item.finalStatus;
+    }
+    return item.success ? "success" : "failed";
+}
+
+function finalStatusMeta(status: "success" | "partial" | "failed") {
+    if (status === "success") {
+        return { label: "成功", variant: "success" as const };
+    }
+    if (status === "partial") {
+        return { label: "部分完成", variant: "warning" as const };
+    }
+    return { label: "失败", variant: "danger" as const };
+}
+
 export default function RequestsPage() {
     const [items, setItems] = useState<RequestLogItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -77,9 +94,6 @@ export default function RequestsPage() {
 
     const sortedItems = useMemo(() => {
         return [...filteredItems].sort((a, b) => {
-            if (a.success !== b.success) {
-                return a.success ? 1 : -1;
-            }
             return (b.finishedAt || b.startedAt || "").localeCompare(a.finishedAt || a.startedAt || "");
         });
     }, [filteredItems]);
@@ -161,7 +175,7 @@ export default function RequestsPage() {
                 <CardContent className="p-0">
                     <div className="h-[420px] overflow-y-auto">
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[860px] text-left">
+                            <table className="w-full min-w-[1140px] text-left">
                                 <thead className="sticky top-0 z-10 border-b border-stone-100 bg-stone-50/95 backdrop-blur-sm dark:border-stone-800 dark:bg-stone-800/95">
                                     <tr>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">时间</th>
@@ -169,6 +183,10 @@ export default function RequestsPage() {
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">接口</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">模型</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">数量</th>
+                                        <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">尝试次数</th>
+                                        <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">最终态</th>
+                                        <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">API 风格</th>
+                                        <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">状态码</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">账号</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">耗时</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">结果</th>
@@ -179,7 +197,7 @@ export default function RequestsPage() {
                                     {isLoading
                                         ? Array.from({ length: 8 }).map((_, i) => (
                                             <tr key={i} className="animate-pulse border-b border-stone-100/80">
-                                                {Array.from({ length: 9 }).map((__, j) => (
+                                                {Array.from({ length: 13 }).map((__, j) => (
                                                     <td key={j} className="px-3 py-2">
                                                         <div className="h-3 w-16 rounded bg-stone-100" />
                                                     </td>
@@ -188,6 +206,11 @@ export default function RequestsPage() {
                                         ))
                                         : sortedItems.map((item) => (
                                             <tr key={item.id} className={`border-b text-xs transition-colors ${item.success ? "border-stone-100/80 text-stone-600 hover:bg-stone-50/70 dark:border-stone-800 dark:text-stone-400 dark:hover:bg-stone-800/70" : "border-rose-100 bg-rose-50/45 text-rose-900 hover:bg-rose-50/70 dark:border-rose-900/30 dark:bg-rose-900/20 dark:text-rose-300 dark:hover:bg-rose-900/30"}`}>
+                                                {(() => {
+                                                    const finalStatus = resolveFinalStatus(item);
+                                                    const finalMeta = finalStatusMeta(finalStatus);
+                                                    return (
+                                                        <>
                                                 <td className="whitespace-nowrap px-3 py-2">
                                                     <div className="text-[11px] font-medium text-stone-700">{formatTime(item.startedAt)}</div>
                                                     <div className="text-[10px] text-stone-400">{item.finishedAt ? formatTime(item.finishedAt) : "进行中"}</div>
@@ -200,6 +223,22 @@ export default function RequestsPage() {
                                                 <td className="whitespace-nowrap px-3 py-2 text-[10px] text-stone-500">{item.endpoint || "—"}</td>
                                                 <td className="whitespace-nowrap px-3 py-2 font-mono text-[10px] text-stone-700">{item.model || "—"}</td>
                                                 <td className="whitespace-nowrap px-3 py-2 text-center text-[10px] text-stone-600">{item.count ?? "—"}</td>
+                                                <td className="whitespace-nowrap px-3 py-2 text-center text-[10px] font-medium text-stone-700">
+                                                    {item.attemptCount ?? "—"}
+                                                </td>
+                                                <td className="whitespace-nowrap px-3 py-2">
+                                                    <Badge variant={finalMeta.variant} className="rounded-md px-1.5 py-0.5 text-[10px]">
+                                                        {finalMeta.label}
+                                                    </Badge>
+                                                </td>
+                                                <td className="whitespace-nowrap px-3 py-2">
+                                                    <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-600">
+                                                        {item.apiStyle || "—"}
+                                                    </span>
+                                                </td>
+                                                <td className="whitespace-nowrap px-3 py-2 text-center font-mono text-[10px] text-stone-600">
+                                                    {item.statusCode ?? "—"}
+                                                </td>
                                                 <td className="whitespace-nowrap px-3 py-2">
                                                     <div className="truncate text-[11px] text-stone-700" title={item.accountEmail || ""}>
                                                         {item.accountEmail || "—"}
@@ -217,17 +256,57 @@ export default function RequestsPage() {
                                                     </Badge>
                                                 </td>
                                                 <td className="px-3 py-2">
-                                                    {item.error ? (
-                                                        <div className={`max-w-[280px] rounded-lg border px-2 py-1.5 text-[10px] leading-4 ${item.success ? "border-stone-200 bg-stone-50 text-stone-500" : "border-rose-200 bg-white text-rose-700"}`} title={item.error}>
-                                                            <div className="flex items-start gap-1.5">
-                                                                {!item.success ? <AlertCircle className="mt-0.5 size-3 shrink-0" /> : null}
-                                                                <span className="line-clamp-2 break-all">{item.error}</span>
-                                                            </div>
+                                                    {item.error || item.failureKind || item.retryAction || item.stage || item.upstreamConversationId || item.upstreamResponseId ? (
+                                                        <div className={`max-w-[320px] space-y-1.5 rounded-lg border px-2 py-1.5 text-[10px] leading-4 ${item.success ? "border-stone-200 bg-stone-50 text-stone-500" : "border-rose-200 bg-white text-rose-700"}`}>
+                                                            {item.error ? (
+                                                                <div className="flex items-start gap-1.5" title={item.error}>
+                                                                    {!item.success ? <AlertCircle className="mt-0.5 size-3 shrink-0" /> : null}
+                                                                    <span className="line-clamp-2 break-all">{item.error}</span>
+                                                                </div>
+                                                            ) : null}
+                                                            {item.failureKind || item.retryAction || item.stage ? (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {item.failureKind ? (
+                                                                        <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                                            {item.failureKind}
+                                                                        </span>
+                                                                    ) : null}
+                                                                    {item.retryAction ? (
+                                                                        <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                                                            {item.retryAction}
+                                                                        </span>
+                                                                    ) : null}
+                                                                    {item.stage ? (
+                                                                        <span className="rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                                                                            {item.stage}
+                                                                        </span>
+                                                                    ) : null}
+                                                                </div>
+                                                            ) : null}
+                                                            {item.upstreamConversationId || item.upstreamResponseId ? (
+                                                                <div className="space-y-0.5 text-[10px] text-stone-500 dark:text-stone-400">
+                                                                    {item.upstreamConversationId ? (
+                                                                        <div className="break-all">
+                                                                            <span className="mr-1 text-stone-400">conv</span>
+                                                                            <span className="font-mono">{item.upstreamConversationId}</span>
+                                                                        </div>
+                                                                    ) : null}
+                                                                    {item.upstreamResponseId ? (
+                                                                        <div className="break-all">
+                                                                            <span className="mr-1 text-stone-400">resp</span>
+                                                                            <span className="font-mono">{item.upstreamResponseId}</span>
+                                                                        </div>
+                                                                    ) : null}
+                                                                </div>
+                                                            ) : null}
                                                         </div>
                                                     ) : (
                                                         <div className="text-[10px] text-stone-400">—</div>
                                                     )}
                                                 </td>
+                                                        </>
+                                                    );
+                                                })()}
                                             </tr>
                                         ))}
                                 </tbody>

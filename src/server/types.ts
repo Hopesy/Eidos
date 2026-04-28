@@ -15,6 +15,7 @@ export type AccountRecord = {
   fail: number;
   last_used_at: string | null;
   updated_at?: string | null;
+  last_refreshed_at?: string | null;
   fp?: Record<string, unknown>;
   [key: string]: unknown;
 };
@@ -34,6 +35,7 @@ export type PublicAccount = {
   fail: number;
   lastUsedAt: string | null;
   updatedAt?: string | null;
+  lastRefreshedAt?: string | null;
 };
 
 export type RuntimeConfig = {

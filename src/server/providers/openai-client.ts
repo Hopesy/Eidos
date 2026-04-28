@@ -10,7 +10,222 @@ const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const DEFAULT_MODEL = "gpt-4o";
 
-export class ImageGenerationError extends Error { }
+export type ImageFailureKind =
+  | "submit_failed"
+  | "accepted_pending"
+  | "source_invalid"
+  | "result_fetch_failed"
+  | "account_blocked"
+  | "input_blocked"
+  | "unknown";
+
+export type ImageRetryAction = "resubmit" | "resume_polling" | "retry_download" | "switch_account" | "revise_input" | "none";
+
+export type ImagePipelineStage =
+  | "validation"
+  | "account"
+  | "upload"
+  | "submit"
+  | "poll"
+  | "download"
+  | "api_service"
+  | "unknown";
+
+type ImageGenerationErrorOptions = {
+  kind?: ImageFailureKind;
+  retryAction?: ImageRetryAction;
+  retryable?: boolean;
+  stage?: ImagePipelineStage;
+  statusCode?: number;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
+};
+
+export class ImageGenerationError extends Error {
+  kind: ImageFailureKind;
+  retryAction: ImageRetryAction;
+  retryable: boolean;
+  stage: ImagePipelineStage;
+  statusCode?: number;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
+
+  constructor(message: string, options: ImageGenerationErrorOptions = {}) {
+    super(message);
+    this.name = "ImageGenerationError";
+    this.kind = options.kind ?? "unknown";
+    this.retryAction = options.retryAction ?? "none";
+    this.retryable = options.retryable ?? false;
+    this.stage = options.stage ?? "unknown";
+    this.statusCode = options.statusCode;
+    this.upstreamConversationId = options.upstreamConversationId;
+    this.upstreamResponseId = options.upstreamResponseId;
+    this.imageGenerationCallId = options.imageGenerationCallId;
+    this.sourceAccountId = options.sourceAccountId;
+    this.fileIds = options.fileIds;
+  }
+}
+
+function createImageError(message: string, options: ImageGenerationErrorOptions = {}) {
+  return new ImageGenerationError(message, options);
+}
+
+function parseUpstreamErrorPayload(raw: string) {
+  const text = String(raw || "").trim();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(text) as Record<string, unknown>;
+    const nestedError =
+      payload.error && typeof payload.error === "object"
+        ? (payload.error as Record<string, unknown>)
+        : payload;
+    const message = cleanToken(nestedError.message || payload.message || payload.error);
+    const code = cleanToken(nestedError.code || payload.code);
+    const type = cleanToken(nestedError.type || payload.type);
+    if (!message && !code && !type) {
+      return null;
+    }
+    return {
+      message,
+      code,
+      type,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeUpstreamErrorMessage(raw: string) {
+  const parsed = parseUpstreamErrorPayload(raw);
+  if (!parsed) {
+    return String(raw || "").trim();
+  }
+
+  if (parsed.code === "content_policy_violation" && parsed.message) {
+    return `内容审核拦截：${parsed.message}`;
+  }
+
+  return parsed.message || parsed.code || parsed.type || String(raw || "").trim();
+}
+
+function isInputBlockedMessage(message: string) {
+  const normalized = String(message || "").toLowerCase();
+  return (
+    normalized.includes("content policy") ||
+    normalized.includes("content_policy_violation") ||
+    normalized.includes("safety") ||
+    normalized.includes("policy") ||
+    normalized.includes("unsupported") ||
+    normalized.includes("invalid_image") ||
+    normalized.includes("bad request") ||
+    normalized.includes("cannot generate") ||
+    normalized.includes("unable to generate") ||
+    normalized.includes("抱歉，我不能") ||
+    normalized.includes("抱歉，我无法") ||
+    normalized.includes("无法生成") ||
+    normalized.includes("不能生成") ||
+    normalized.includes("性暗示") ||
+    normalized.includes("色情")
+  );
+}
+
+function isAccountBlockedMessage(message: string) {
+  const normalized = String(message || "").toLowerCase();
+  return (
+    normalized.includes("token_invalidated") ||
+    normalized.includes("token_revoked") ||
+    normalized.includes("authentication token has been invalidated") ||
+    normalized.includes("invalidated oauth token") ||
+    normalized.includes("rate limit") ||
+    normalized.includes("quota") ||
+    normalized.includes("429") ||
+    normalized.includes("401") ||
+    normalized.includes("unauthorized")
+  );
+}
+
+function buildHttpImageError(message: string, status: number, stage: ImagePipelineStage, fallbackKind: ImageFailureKind = "submit_failed") {
+  const normalizedMessage = normalizeUpstreamErrorMessage(message);
+  const isApiServiceStage = stage === "api_service";
+  if (status === 401 || status === 429) {
+    if (isApiServiceStage && status === 401) {
+      return createImageError(`图像 API 认证失败：${normalizedMessage}`, {
+        kind: "account_blocked",
+        retryAction: "none",
+        retryable: false,
+        stage,
+        statusCode: status,
+      });
+    }
+    if (isApiServiceStage && status === 429) {
+      return createImageError(`图像 API 限流：${normalizedMessage}`, {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage,
+        statusCode: status,
+      });
+    }
+    return createImageError(normalizedMessage, {
+      kind: "account_blocked",
+      retryAction: "switch_account",
+      retryable: true,
+      stage,
+      statusCode: status,
+    });
+  }
+  if (status === 400 || status === 403 || isInputBlockedMessage(normalizedMessage)) {
+    return createImageError(normalizedMessage, {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage,
+      statusCode: status,
+    });
+  }
+  if (status >= 500) {
+    return createImageError(normalizedMessage, {
+      kind: fallbackKind,
+      retryAction: "resubmit",
+      retryable: true,
+      stage,
+      statusCode: status,
+    });
+  }
+  return createImageError(normalizedMessage, {
+    kind: fallbackKind,
+    retryAction: "resubmit",
+    retryable: fallbackKind === "submit_failed",
+    stage,
+    statusCode: status,
+  });
+}
+
+export function getImageErrorMeta(error: unknown) {
+  if (!(error instanceof ImageGenerationError)) {
+    return {};
+  }
+  return {
+    failureKind: error.kind,
+    retryAction: error.retryAction,
+    retryable: error.retryable,
+    stage: error.stage,
+    upstreamConversationId: error.upstreamConversationId,
+    upstreamResponseId: error.upstreamResponseId,
+    imageGenerationCallId: error.imageGenerationCallId,
+    sourceAccountId: error.sourceAccountId,
+    fileIds: error.fileIds,
+  };
+}
 
 type FetchOptions = RequestInit & {
   timeoutMs?: number;
@@ -28,6 +243,11 @@ type ImageGenerationOptions = {
   quality?: ImageGenerationQuality;
 };
 
+type ResponsesContinuationOptions = {
+  previousResponseId?: string;
+  imageGenerationCallId?: string;
+};
+
 type UploadedMultimodalFile = {
   fileId: string;
   fileName: string;
@@ -36,6 +256,14 @@ type UploadedMultimodalFile = {
   width?: number;
   height?: number;
   assetPointer: string;
+};
+
+type ParsedResponsesImageItem = {
+  b64_json: string;
+  revised_prompt: string | undefined;
+  gen_id: string | undefined;
+  response_id: string | undefined;
+  image_generation_call_id: string | undefined;
 };
 
 type ConversationInput = {
@@ -168,7 +396,12 @@ class CookieSession {
       const message = err instanceof Error ? err.message : String(err);
       const isAbort = err instanceof Error && err.name === "AbortError";
       const label = isAbort ? "request timed out" : `network error: ${message}`;
-      throw new ImageGenerationError(label);
+      throw createImageError(label, {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "submit",
+      });
     } finally {
       clearTimeout(timeout);
     }
@@ -202,16 +435,21 @@ function resolveFilesEndpoint(baseUrl?: string) {
   return `${resolveApiBase(baseUrl)}/files`;
 }
 
-function parseResponsesImageOutputs(payload: Record<string, unknown>) {
+function parseResponsesImageOutputs(payload: Record<string, unknown>): ParsedResponsesImageItem[] {
   const output = Array.isArray(payload.output) ? payload.output : [];
+  const responseId = cleanToken(payload.id);
   return output
     .filter((item) => item && typeof item === "object" && String((item as Record<string, unknown>).type || "") === "image_generation_call")
     .map((item) => {
       const entry = item as Record<string, unknown>;
+      const callId = cleanToken(entry.id);
       return {
         b64_json: typeof entry.result === "string" ? entry.result : "",
         revised_prompt: typeof entry.revised_prompt === "string" ? entry.revised_prompt : undefined,
-      };
+        gen_id: responseId || undefined,
+        response_id: responseId || undefined,
+        image_generation_call_id: callId || undefined,
+      } satisfies ParsedResponsesImageItem;
     })
     .filter((item) => Boolean(item.b64_json));
 }
@@ -222,7 +460,12 @@ async function uploadInputFile(
 ) {
   const apiKey = cleanToken(serviceConfig.apiKey);
   if (!apiKey) {
-    throw new ImageGenerationError("image api key is required");
+    throw createImageError("image api key is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
   }
   const endpoint = resolveFilesEndpoint(serviceConfig.baseUrl);
   const formData = new FormData();
@@ -240,15 +483,45 @@ async function uploadInputFile(
 
   if (!response.ok) {
     const bodyText = (await response.text()).slice(0, 400);
-    throw new ImageGenerationError(bodyText || `file upload failed: ${response.status}`);
+    const normalizedMessage = normalizeUpstreamErrorMessage(bodyText || `file upload failed: ${response.status}`);
+    if (response.status === 401) {
+      throw createImageError(`图像 API 上传认证失败：${normalizedMessage}`, {
+        kind: "account_blocked",
+        retryAction: "none",
+        retryable: false,
+        stage: "api_service",
+        statusCode: response.status,
+      });
+    }
+    if (response.status === 429) {
+      throw createImageError(`图像 API 上传限流：${normalizedMessage}`, {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "api_service",
+        statusCode: response.status,
+      });
+    }
+    throw buildHttpImageError(normalizedMessage, response.status, "api_service");
   }
 
   const payload = (await response.json()) as { id?: string };
   const fileId = cleanToken(payload.id);
   if (!fileId) {
-    throw new ImageGenerationError("uploaded file id is missing");
+    throw createImageError("uploaded file id is missing", {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "upload",
+    });
   }
   return fileId;
+}
+
+async function fileToDataUrl(file: File) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const mimeType = cleanToken(file.type) || "image/png";
+  return `data:${mimeType};base64,${bytes.toString("base64")}`;
 }
 
 async function registerChatGptFileUpload(
@@ -296,7 +569,12 @@ async function registerChatGptFileUpload(
     lastError = JSON.stringify(payload).slice(0, 300);
   }
 
-  throw new ImageGenerationError(lastError || "chatgpt file register failed");
+  throw createImageError(lastError || "chatgpt file register failed", {
+    kind: isAccountBlockedMessage(lastError) ? "account_blocked" : "submit_failed",
+    retryAction: isAccountBlockedMessage(lastError) ? "switch_account" : "resubmit",
+    retryable: true,
+    stage: "upload",
+  });
 }
 
 async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType: string) {
@@ -312,7 +590,7 @@ async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType
 
   if (!response.ok) {
     const bodyText = (await response.text()).slice(0, 300);
-    throw new ImageGenerationError(bodyText || `chatgpt file upload failed: ${response.status}`);
+    throw buildHttpImageError(bodyText || `chatgpt file upload failed: ${response.status}`, response.status, "upload");
   }
 }
 
@@ -374,7 +652,12 @@ async function finalizeChatGptFileUpload(
     lastError = (await response.text()).slice(0, 300);
   }
 
-  throw new ImageGenerationError(lastError || "chatgpt file finalize failed");
+  throw createImageError(lastError || "chatgpt file finalize failed", {
+    kind: isAccountBlockedMessage(lastError) ? "account_blocked" : "submit_failed",
+    retryAction: isAccountBlockedMessage(lastError) ? "switch_account" : "resubmit",
+    retryable: true,
+    stage: "upload",
+  });
 }
 
 async function uploadChatGptConversationFile(
@@ -458,10 +741,20 @@ export async function generateImageResultWithApiService(
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
   if (!apiKey) {
-    throw new ImageGenerationError("image api key is required");
+    throw createImageError("image api key is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!normalizedPrompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
 
   const endpoint = resolveImageApiEndpoint(serviceConfig.baseUrl, "generations");
@@ -502,7 +795,7 @@ export async function generateImageResultWithApiService(
         status: response.status,
         bodyPreview: bodyText,
       });
-      throw new ImageGenerationError(bodyText || `image api failed: ${response.status}`);
+      throw buildHttpImageError(bodyText || `image api failed: ${response.status}`, response.status, "api_service");
     }
 
     const payload = (await response.json()) as {
@@ -512,7 +805,12 @@ export async function generateImageResultWithApiService(
 
     const items = Array.isArray(payload.data) ? payload.data : [];
     if (items.length === 0) {
-      throw new ImageGenerationError("no image returned from api service");
+      throw createImageError("no image returned from api service", {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "api_service",
+      });
     }
 
     logger.info("openai-client", "api-service:done", {
@@ -531,7 +829,12 @@ export async function generateImageResultWithApiService(
     }
     const isAbort = error instanceof Error && error.name === "AbortError";
     const message = error instanceof Error ? error.message : String(error);
-    throw new ImageGenerationError(isAbort ? "image api request timed out" : message);
+    throw createImageError(isAbort ? "image api request timed out" : message, {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "api_service",
+    });
   } finally {
     clearTimeout(timeout);
   }
@@ -555,13 +858,28 @@ export async function editImageResultWithApiService(
   const quality = params.quality ?? "auto";
   const images = params.images.filter(Boolean);
   if (!apiKey) {
-    throw new ImageGenerationError("image api key is required");
+    throw createImageError("image api key is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!prompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (images.length === 0) {
-    throw new ImageGenerationError("edit image is required");
+    throw createImageError("edit image is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
 
   const endpoint = resolveImageApiEndpoint(serviceConfig.baseUrl, "edits");
@@ -590,6 +908,7 @@ export async function editImageResultWithApiService(
       hasMask: Boolean(params.mask),
       size,
       quality,
+      prompt,
       promptLength: prompt.length,
     });
 
@@ -610,7 +929,7 @@ export async function editImageResultWithApiService(
         status: response.status,
         bodyPreview: bodyText,
       });
-      throw new ImageGenerationError(bodyText || `image edit api failed: ${response.status}`);
+      throw buildHttpImageError(bodyText || `image edit api failed: ${response.status}`, response.status, "api_service");
     }
 
     const payload = (await response.json()) as {
@@ -619,7 +938,12 @@ export async function editImageResultWithApiService(
     };
     const items = Array.isArray(payload.data) ? payload.data : [];
     if (items.length === 0) {
-      throw new ImageGenerationError("no image returned from edit api service");
+      throw createImageError("no image returned from edit api service", {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "api_service",
+      });
     }
 
     logger.info("openai-client", "api-service:edit:done", {
@@ -637,7 +961,12 @@ export async function editImageResultWithApiService(
     }
     const isAbort = error instanceof Error && error.name === "AbortError";
     const message = error instanceof Error ? error.message : String(error);
-    throw new ImageGenerationError(isAbort ? "image edit api request timed out" : message);
+    throw createImageError(isAbort ? "image edit api request timed out" : message, {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "api_service",
+    });
   } finally {
     clearTimeout(timeout);
   }
@@ -656,15 +985,24 @@ export async function generateImageResultWithResponsesApiService(
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
   if (!apiKey) {
-    throw new ImageGenerationError("image api key is required");
+    throw createImageError("image api key is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!normalizedPrompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
 
   const endpoint = resolveResponsesEndpoint(serviceConfig.baseUrl);
-  const results: Array<Record<string, unknown>> = [];
-  for (let index = 0; index < count; index += 1) {
+  const requests = Array.from({ length: count }).map(async (_, index) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
@@ -678,54 +1016,82 @@ export async function generateImageResultWithResponsesApiService(
         promptLength: normalizedPrompt.length,
       });
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          "content-type": "application/json",
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${apiKey}`,
+            "content-type": "application/json",
         },
-        body: JSON.stringify({
-          model,
-          input: normalizedPrompt,
-          tools: [
-            {
-              type: "image_generation",
-              action: "generate",
-              ...(quality !== "auto" ? { quality } : {}),
-              ...(size !== "auto" ? { size } : {}),
-            },
-          ],
-        }),
-        signal: controller.signal,
-        cache: "no-store",
-      });
+          body: JSON.stringify({
+            model,
+            input: normalizedPrompt,
+            tools: [
+              {
+                type: "image_generation",
+                action: "generate",
+                ...(quality !== "auto" ? { quality } : {}),
+                ...(size !== "auto" ? { size } : {}),
+              },
+            ],
+            tool_choice: "required",
+          }),
+          signal: controller.signal,
+          cache: "no-store",
+        });
 
       if (!response.ok) {
         const bodyText = (await response.text()).slice(0, 400);
-        throw new ImageGenerationError(bodyText || `responses api failed: ${response.status}`);
+        throw buildHttpImageError(bodyText || `responses api failed: ${response.status}`, response.status, "api_service");
       }
 
       const payload = (await response.json()) as Record<string, unknown>;
       const items = parseResponsesImageOutputs(payload);
       if (items.length === 0) {
-        throw new ImageGenerationError("no image returned from responses api service");
+        throw createImageError("no image returned from responses api service", {
+          kind: "submit_failed",
+          retryAction: "resubmit",
+          retryable: true,
+          stage: "api_service",
+        });
       }
-      results.push(...items);
+      return items;
     } catch (error) {
       if (error instanceof ImageGenerationError) {
         throw error;
       }
       const isAbort = error instanceof Error && error.name === "AbortError";
       const message = error instanceof Error ? error.message : String(error);
-      throw new ImageGenerationError(isAbort ? "responses image request timed out" : message);
+      throw createImageError(isAbort ? "responses image request timed out" : message, {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "api_service",
+      });
     } finally {
       clearTimeout(timeout);
     }
+  });
+
+  const settled = await Promise.allSettled(requests);
+  const fulfilled = settled
+    .filter((entry): entry is PromiseFulfilledResult<ParsedResponsesImageItem[]> => entry.status === "fulfilled")
+    .flatMap((entry) => entry.value);
+  if (fulfilled.length === 0) {
+    const rejected = settled.find((entry): entry is PromiseRejectedResult => entry.status === "rejected");
+    if (rejected) {
+      throw rejected.reason;
+    }
+    throw createImageError("responses api returned no successful image requests", {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "api_service",
+    });
   }
 
   return {
     created: Math.floor(Date.now() / 1000),
-    data: results,
+    data: fulfilled,
   };
 }
 
@@ -737,36 +1103,62 @@ export async function editImageResultWithResponsesApiService(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    continuation?: ResponsesContinuationOptions | null;
   },
 ) {
   const apiKey = cleanToken(serviceConfig.apiKey);
   const prompt = cleanToken(params.prompt);
   const model = cleanToken(serviceConfig.responsesModel) || "gpt-5.5";
+  const previousResponseId = cleanToken(params.continuation?.previousResponseId);
+  const imageGenerationCallId = cleanToken(params.continuation?.imageGenerationCallId);
   const size = params.size ?? "auto";
   const quality = params.quality ?? "auto";
   const images = params.images.filter(Boolean);
   if (!apiKey) {
-    throw new ImageGenerationError("image api key is required");
+    throw createImageError("image api key is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!prompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (images.length === 0) {
-    throw new ImageGenerationError("edit image is required");
+    throw createImageError("edit image is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
 
   const endpoint = resolveResponsesEndpoint(serviceConfig.baseUrl);
-  const uploadedImageIds = await Promise.all(images.map((image) => uploadInputFile(serviceConfig, image)));
+  const useDataUrlInputs = !params.mask;
+  const uploadedImageIds = useDataUrlInputs ? [] : await Promise.all(images.map((image) => uploadInputFile(serviceConfig, image)));
   const maskFileId = params.mask ? await uploadInputFile(serviceConfig, params.mask) : null;
   const inputContent = [
     {
       type: "input_text",
       text: prompt,
     },
-    ...uploadedImageIds.map((fileId) => ({
-      type: "input_image",
-      file_id: fileId,
-    })),
+    ...(useDataUrlInputs
+      ? await Promise.all(
+        images.map(async (image) => ({
+          type: "input_image" as const,
+          image_url: await fileToDataUrl(image),
+        })),
+      )
+      : uploadedImageIds.map((fileId) => ({
+        type: "input_image",
+        file_id: fileId,
+      }))),
   ];
 
   const controller = new AbortController();
@@ -777,8 +1169,12 @@ export async function editImageResultWithResponsesApiService(
       model,
       imageCount: images.length,
       hasMask: Boolean(maskFileId),
+      inputMode: useDataUrlInputs ? "image_url" : "file_id",
+      hasPreviousResponseId: Boolean(previousResponseId),
+      hasImageGenerationCallId: Boolean(imageGenerationCallId),
       size,
       quality,
+      prompt,
       promptLength: prompt.length,
     });
 
@@ -790,20 +1186,31 @@ export async function editImageResultWithResponsesApiService(
       },
       body: JSON.stringify({
         model,
+        ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
         input: [
           {
             role: "user",
             content: inputContent,
           },
+          ...(imageGenerationCallId
+            ? [
+              {
+                type: "image_generation_call",
+                id: imageGenerationCallId,
+              },
+            ]
+            : []),
         ],
         tools: [
           {
             type: "image_generation",
+            action: "edit",
             ...(quality !== "auto" ? { quality } : {}),
             ...(size !== "auto" ? { size } : {}),
             ...(maskFileId ? { input_image_mask: { file_id: maskFileId } } : {}),
           },
         ],
+        tool_choice: "required",
       }),
       signal: controller.signal,
       cache: "no-store",
@@ -811,13 +1218,18 @@ export async function editImageResultWithResponsesApiService(
 
     if (!response.ok) {
       const bodyText = (await response.text()).slice(0, 400);
-      throw new ImageGenerationError(bodyText || `responses edit api failed: ${response.status}`);
+      throw buildHttpImageError(bodyText || `responses edit api failed: ${response.status}`, response.status, "api_service");
     }
 
     const payload = (await response.json()) as Record<string, unknown>;
     const items = parseResponsesImageOutputs(payload);
     if (items.length === 0) {
-      throw new ImageGenerationError("no image returned from responses edit api service");
+      throw createImageError("no image returned from responses edit api service", {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "api_service",
+      });
     }
 
     return {
@@ -830,7 +1242,12 @@ export async function editImageResultWithResponsesApiService(
     }
     const isAbort = error instanceof Error && error.name === "AbortError";
     const message = error instanceof Error ? error.message : String(error);
-    throw new ImageGenerationError(isAbort ? "responses edit request timed out" : message);
+    throw createImageError(isAbort ? "responses edit request timed out" : message, {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "api_service",
+    });
   } finally {
     clearTimeout(timeout);
   }
@@ -882,7 +1299,7 @@ async function getChatRequirements(session: CookieSession, accessToken: string, 
       status: response.status,
       bodyPreview: bodyText,
     });
-    throw new ImageGenerationError(bodyText || `chat-requirements failed: ${response.status}`);
+    throw buildHttpImageError(bodyText || `chat-requirements failed: ${response.status}`, response.status, "submit");
   }
 
   const payload = (await response.json()) as {
@@ -964,15 +1381,33 @@ function parseSsePayload(raw: string) {
 function buildNoImageReturnedError(textReply: string) {
   const normalized = cleanToken(textReply);
   const lower = normalized.toLowerCase();
+  if (isInputBlockedMessage(normalized)) {
+    return createImageError(normalizeUpstreamErrorMessage(normalized), {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "submit",
+    });
+  }
   if (
     lower.includes("upload") ||
     lower.includes("please upload") ||
     normalized.includes("请上传") ||
     normalized.includes("源图")
   ) {
-    return "上游未识别到上传源图，未返回图片结果";
+    return createImageError("上游未识别到上传源图，未返回图片结果", {
+      kind: "source_invalid",
+      retryAction: "resubmit",
+      retryable: false,
+      stage: "submit",
+    });
   }
-  return "上游未返回图片结果";
+  return createImageError("上游未返回图片结果", {
+    kind: "accepted_pending",
+    retryAction: "resume_polling",
+    retryable: true,
+    stage: "poll",
+  });
 }
 
 function extractImageIds(mapping: Record<string, unknown>) {
@@ -1160,7 +1595,7 @@ async function sendConversation(
       status: response.status,
       bodyPreview: bodyText,
     });
-    throw new ImageGenerationError(bodyText || `conversation failed: ${response.status}`);
+    throw buildHttpImageError(bodyText || `conversation failed: ${response.status}`, response.status, "submit");
   }
 
   logger.info("openai-client", "conversation:accepted", {
@@ -1184,14 +1619,25 @@ async function fetchDownloadUrl(
   const endpoint = isSediment
     ? `${BASE_URL}/backend-api/conversation/${conversationId}/attachment/${rawId}/download`
     : `${BASE_URL}/backend-api/files/${rawId}/download`;
-
-  const response = await session.fetch(endpoint, {
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      "oai-device-id": deviceId,
-    },
-    timeoutMs: 30000,
-  });
+  let response: Response;
+  try {
+    response = await session.fetch(endpoint, {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "oai-device-id": deviceId,
+      },
+      timeoutMs: 30000,
+    });
+  } catch (error) {
+    throw createImageError(error instanceof Error ? error.message : "failed to get download url", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+      upstreamConversationId: conversationId,
+      fileIds: [fileId],
+    });
+  }
 
   if (!response.ok) {
     logger.warn("openai-client", "download-url:failed", {
@@ -1213,13 +1659,29 @@ async function fetchDownloadUrl(
 }
 
 async function downloadAsBase64(session: CookieSession, downloadUrl: string) {
-  const response = await session.fetch(downloadUrl, { timeoutMs: 60000 });
+  let response: Response;
+  try {
+    response = await session.fetch(downloadUrl, { timeoutMs: 60000 });
+  } catch (error) {
+    throw createImageError(error instanceof Error ? error.message : "download image failed", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+    });
+  }
   if (!response.ok) {
     logger.error("openai-client", "download-image:failed", {
       status: response.status,
       downloadUrl,
     });
-    throw new ImageGenerationError("download image failed");
+    throw createImageError("download image failed", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+      statusCode: response.status,
+    });
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -1227,7 +1689,12 @@ async function downloadAsBase64(session: CookieSession, downloadUrl: string) {
     logger.error("openai-client", "download-image:empty", {
       downloadUrl,
     });
-    throw new ImageGenerationError("download image failed");
+    throw createImageError("download image failed", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+    });
   }
   logger.info("openai-client", "download-image:done", {
     downloadUrl,
@@ -1262,16 +1729,31 @@ async function collectGeneratedItems(
     });
     const textReply = parsed.text?.trim();
     if (textReply) {
-      throw new ImageGenerationError(buildNoImageReturnedError(textReply));
+      const nextError = buildNoImageReturnedError(textReply);
+      nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;
+      throw nextError;
     }
-    throw new ImageGenerationError("no image returned from upstream");
+    throw createImageError("no image returned from upstream", {
+      kind: "accepted_pending",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+      upstreamConversationId: conversationId,
+    });
   }
 
   const downloadResults = await Promise.allSettled(
     fileIds.map(async (fileId) => {
       const url = await fetchDownloadUrl(session, accessToken, deviceId, conversationId, fileId);
       if (!url) {
-        throw new ImageGenerationError(`failed to get download url for file ${fileId}`);
+        throw createImageError(`failed to get download url for file ${fileId}`, {
+          kind: "result_fetch_failed",
+          retryAction: "retry_download",
+          retryable: true,
+          stage: "download",
+          upstreamConversationId: conversationId,
+          fileIds: [fileId],
+        });
       }
       const b64 = await downloadAsBase64(session, url);
       logger.info("openai-client", "generate-image:file-downloaded", {
@@ -1280,12 +1762,17 @@ async function collectGeneratedItems(
         base64Length: b64.length,
         token: maskAccessToken(accessToken),
       });
-      return { b64_json: b64, revised_prompt: revisedPrompt };
+      return {
+        b64_json: b64,
+        revised_prompt: revisedPrompt,
+        file_id: fileId,
+        conversation_id: conversationId || undefined,
+      };
     }),
   );
 
   const successItems = downloadResults
-    .filter((r): r is PromiseFulfilledResult<{ b64_json: string; revised_prompt: string }> => r.status === "fulfilled")
+    .filter((r): r is PromiseFulfilledResult<{ b64_json: string; revised_prompt: string; file_id: string; conversation_id: string | undefined }> => r.status === "fulfilled")
     .map((r) => r.value);
 
   logger.info("openai-client", "generate-image:done", {
@@ -1296,7 +1783,101 @@ async function collectGeneratedItems(
   });
 
   if (successItems.length === 0) {
-    throw new ImageGenerationError("failed to download any images");
+    throw createImageError("failed to download any images", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+      upstreamConversationId: conversationId,
+      fileIds,
+    });
+  }
+
+  return {
+    created: Math.floor(Date.now() / 1000),
+    data: successItems,
+  };
+}
+
+async function recoverGeneratedItems(
+  session: CookieSession,
+  accessToken: string,
+  deviceId: string,
+  recovery: {
+    conversationId: string;
+    fileIds?: string[];
+    revisedPrompt?: string;
+    waitMs?: number;
+  },
+) {
+  const conversationId = cleanToken(recovery.conversationId);
+  const waitMs = Math.max(3000, recovery.waitMs ?? 60000);
+  if (!conversationId) {
+    throw createImageError("conversation id is required", {
+      kind: "input_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage: "validation",
+    });
+  }
+
+  let fileIds = (recovery.fileIds ?? []).map((item) => cleanToken(item)).filter(Boolean);
+  if (fileIds.length === 0) {
+    const started = Date.now();
+    while (Date.now() - started < waitMs) {
+      fileIds = await pollImageIds(session, accessToken, deviceId, conversationId);
+      if (fileIds.length > 0) {
+        break;
+      }
+    }
+  }
+
+  if (fileIds.length === 0) {
+    throw createImageError("上游任务仍在处理中，请稍后继续等待", {
+      kind: "accepted_pending",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+      upstreamConversationId: conversationId,
+    });
+  }
+
+  const downloadResults = await Promise.allSettled(
+    fileIds.map(async (fileId) => {
+      const url = await fetchDownloadUrl(session, accessToken, deviceId, conversationId, fileId);
+      if (!url) {
+        throw createImageError(`failed to get download url for file ${fileId}`, {
+          kind: "result_fetch_failed",
+          retryAction: "retry_download",
+          retryable: true,
+          stage: "download",
+          upstreamConversationId: conversationId,
+          fileIds: [fileId],
+        });
+      }
+      const b64 = await downloadAsBase64(session, url);
+      return {
+        b64_json: b64,
+        revised_prompt: recovery.revisedPrompt,
+        file_id: fileId,
+        conversation_id: conversationId,
+      };
+    }),
+  );
+
+  const successItems = downloadResults
+    .filter((r): r is PromiseFulfilledResult<{ b64_json: string; revised_prompt: string | undefined; file_id: string; conversation_id: string }> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  if (successItems.length === 0) {
+    throw createImageError("failed to download any images", {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: true,
+      stage: "download",
+      upstreamConversationId: conversationId,
+      fileIds,
+    });
   }
 
   return {
@@ -1381,10 +1962,20 @@ export async function generateImageResult(
   const quality = options.quality ?? "auto";
   const effectivePrompt = buildImagePromptWithOptions(normalizedPrompt, options);
   if (!normalizedPrompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!normalizedToken) {
-    throw new ImageGenerationError("token is required");
+    throw createImageError("token is required", {
+      kind: "account_blocked",
+      retryAction: "switch_account",
+      retryable: false,
+      stage: "account",
+    });
   }
 
   const fingerprint = resolveFingerprint(account);
@@ -1448,10 +2039,20 @@ export async function generateImageResultWithAttachments(
   const normalizedPrompt = cleanToken(prompt);
   const normalizedToken = cleanToken(accessToken);
   if (!normalizedPrompt) {
-    throw new ImageGenerationError("prompt is required");
+    throw createImageError("prompt is required", {
+      kind: "input_blocked",
+      retryAction: "revise_input",
+      retryable: false,
+      stage: "validation",
+    });
   }
   if (!normalizedToken) {
-    throw new ImageGenerationError("token is required");
+    throw createImageError("token is required", {
+      kind: "account_blocked",
+      retryAction: "switch_account",
+      retryable: false,
+      stage: "account",
+    });
   }
 
   const fingerprint = resolveFingerprint(account);
@@ -1512,4 +2113,57 @@ export async function generateImageResultWithAttachments(
   );
 
   return collectGeneratedItems(session, normalizedToken, deviceId, await response.text(), normalizedPrompt);
+}
+
+export async function recoverImageResult(
+  accessToken: string,
+  requestedModel: string,
+  account: AccountRecord | null,
+  recovery: {
+    conversationId: string;
+    fileIds?: string[];
+    revisedPrompt?: string;
+    waitMs?: number;
+  },
+) {
+  const normalizedToken = cleanToken(accessToken);
+  if (!normalizedToken) {
+    throw createImageError("token is required", {
+      kind: "account_blocked",
+      retryAction: "switch_account",
+      retryable: false,
+      stage: "account",
+    });
+  }
+
+  const fingerprint = resolveFingerprint(account);
+  const session = new CookieSession({
+    "user-agent": fingerprint.userAgent,
+    "accept-language": "en-US,en;q=0.9",
+    origin: BASE_URL,
+    referer: `${BASE_URL}/`,
+    accept: "*/*",
+    "sec-ch-ua": fingerprint.secChUa,
+    "sec-ch-ua-mobile": fingerprint.secChUaMobile,
+    "sec-ch-ua-platform": fingerprint.secChUaPlatform,
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "oai-device-id": fingerprint.deviceId,
+    ...(fingerprint.sessionId ? { "oai-session-id": fingerprint.sessionId } : {}),
+  });
+
+  const deviceId = await bootstrap(session, fingerprint);
+  const result = await recoverGeneratedItems(session, normalizedToken, deviceId, recovery);
+  result.data = result.data.map((item) => ({
+    ...item,
+    source_account_id: cleanToken(account?.id) || undefined,
+  }));
+  logger.info("openai-client", "recover-image:done", {
+    requestedModel,
+    conversationId: recovery.conversationId,
+    count: result.data.length,
+    sourceAccountId: cleanToken(account?.id) || null,
+  });
+  return result;
 }

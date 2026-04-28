@@ -1,4 +1,5 @@
 import { httpRequest } from "@/lib/request";
+import type { DesktopUpdaterState } from "@/lib/desktop-updater";
 
 // ─── 基础枚举 / 联合类型 ──────────────────────────────────────────────────────
 
@@ -35,6 +36,7 @@ export type Account = {
   fail: number;
   lastUsedAt: string | null;
   updatedAt?: string | null;
+  lastRefreshedAt?: string | null;
   // 新增字段
   fileName?: string;
   provider?: string;
@@ -118,14 +120,25 @@ export type ImageResponseItem = {
   revised_prompt?: string;
   file_id?: string;
   gen_id?: string;
+  response_id?: string;
+  image_generation_call_id?: string;
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id?: string;
+  failureKind?: string;
+  retryAction?: string;
+  retryable?: boolean;
+  stage?: string;
+  upstreamConversationId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
 };
 
 export type InpaintSourceReference = {
   original_file_id: string;
   original_gen_id: string;
+  previous_response_id?: string;
+  image_generation_call_id?: string;
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id: string;
@@ -147,6 +160,42 @@ export type RequestLogItem = {
   durationMs: number;
   accountEmail?: string;
   accountType?: string;
+  failureKind?: string;
+  retryAction?: string;
+  retryable?: boolean;
+  stage?: string;
+  upstreamConversationId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
+  attemptCount?: number;
+  finalStatus?: "success" | "partial" | "failed";
+  apiStyle?: string;
+  statusCode?: number;
+};
+
+export type RecoverableImageTaskItem = {
+  id: string;
+  localConversationId?: string | null;
+  localTurnId?: string | null;
+  mode: "generate" | "edit" | "upscale";
+  status: "pending" | "succeeded" | "failed";
+  failureKind?: string | null;
+  retryAction?: string | null;
+  retryable?: boolean | null;
+  stage?: string | null;
+  upstreamConversationId?: string | null;
+  upstreamResponseId?: string | null;
+  imageGenerationCallId?: string | null;
+  sourceAccountId?: string | null;
+  fileIds?: string[];
+  revisedPrompt?: string | null;
+  model?: string | null;
+  prompt?: string | null;
+  error?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // ─── 版本信息类型 ─────────────────────────────────────────────────────────────
@@ -335,6 +384,10 @@ export async function fetchVersionInfo() {
   return httpRequest<VersionInfo>("/api/version");
 }
 
+export async function fetchLatestReleaseInfo() {
+  return httpRequest<DesktopUpdaterState>("/api/version/release");
+}
+
 // ─── 图像生成 ─────────────────────────────────────────────────────────────────
 
 export async function generateImage(
@@ -405,6 +458,12 @@ export async function editImage(params: {
   if (sourceReference) {
     formData.append("original_file_id", sourceReference.original_file_id);
     formData.append("original_gen_id", sourceReference.original_gen_id);
+    if (sourceReference.previous_response_id) {
+      formData.append("previous_response_id", sourceReference.previous_response_id);
+    }
+    if (sourceReference.image_generation_call_id) {
+      formData.append("image_generation_call_id", sourceReference.image_generation_call_id);
+    }
     if (sourceReference.conversation_id) {
       formData.append("conversation_id", sourceReference.conversation_id);
     }
@@ -454,5 +513,25 @@ export async function upscaleImage(params: {
       signal,
     },
   );
+}
+
+export async function recoverImageTask(params: {
+  conversationId: string;
+  sourceAccountId?: string;
+  revisedPrompt?: string;
+  fileIds?: string[];
+  waitMs?: number;
+  model: ImageModel;
+  mode: "generate" | "edit" | "upscale";
+}) {
+  return httpRequest<{ created: number; data: ImageResponseItem[] }>("/api/image-tasks/recover", {
+    method: "POST",
+    body: params,
+  });
+}
+
+export async function fetchRecoverableImageTasks(limit = 20) {
+  const query = new URLSearchParams({ limit: String(limit) }).toString();
+  return httpRequest<{ items: RecoverableImageTaskItem[] }>(`/api/image-tasks/recover?${query}`);
 }
 

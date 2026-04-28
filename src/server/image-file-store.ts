@@ -3,6 +3,7 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { getDataDir, getDb } from "@/server/db";
+import { logger } from "@/server/logger";
 
 type ImageRole = "result" | "source" | "mask" | "upload";
 
@@ -201,6 +202,15 @@ export async function saveBase64Image(input: {
     createdAt,
   );
 
+  logger.info("image-file-store", "image-file:stored", {
+    imageId: id,
+    role,
+    mimeType,
+    sizeBytes: buffer.length,
+    filePath,
+    publicPath,
+  });
+
   return {
     id,
     role,
@@ -289,6 +299,11 @@ export async function persistImageResponseItems<T extends Record<string, unknown
   options: { keepBase64?: boolean } = {},
 ): Promise<T[]> {
   const next: T[] = [];
+  const persistedImages: Array<{
+    imageId: string;
+    filePath: string;
+    publicPath: string;
+  }> = [];
   for (const item of items) {
     const b64 = typeof item.b64_json === "string" ? item.b64_json : "";
     if (!b64) {
@@ -302,11 +317,28 @@ export async function persistImageResponseItems<T extends Record<string, unknown
       file_path: saved.file_path,
       url: saved.public_path,
     } as T;
+    persistedImages.push({
+      imageId: saved.id,
+      filePath: saved.file_path,
+      publicPath: saved.public_path,
+    });
     if (!options.keepBase64) {
       delete (patched as Record<string, unknown>).b64_json;
     }
     next.push(patched);
   }
+
+  if (persistedImages.length > 0) {
+    logger.info("image-file-store", "image-response:persisted", {
+      route: typeof metadata.route === "string" ? metadata.route : null,
+      operation: typeof metadata.operation === "string" ? metadata.operation : null,
+      model: typeof metadata.model === "string" ? metadata.model : null,
+      count: persistedImages.length,
+      imageIds: persistedImages.map((item) => item.imageId),
+      publicPaths: persistedImages.map((item) => item.publicPath),
+    });
+  }
+
   return next;
 }
 

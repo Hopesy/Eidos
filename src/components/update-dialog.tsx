@@ -5,6 +5,7 @@ import { Download, ExternalLink, LoaderCircle, RefreshCcw, X } from "lucide-reac
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { fetchLatestReleaseInfo } from "@/lib/api";
 import {
   formatDesktopVersion,
   getDesktopUpdaterApi,
@@ -66,12 +67,31 @@ function resolveUpdateStatusClassName(state: DesktopUpdaterState | null) {
   }
 }
 
+function formatLatestReleaseLabel(state: DesktopUpdaterState | null) {
+  const versionLabel = formatDesktopVersion(state?.latestVersion);
+  const releaseName = String(state?.releaseName || "").trim();
+  if (!releaseName) {
+    return versionLabel;
+  }
+
+  const normalizedVersion = String(state?.latestVersion || "")
+    .trim()
+    .replace(/^v+/i, "");
+  const normalizedReleaseName = releaseName.replace(/^v+/i, "");
+  if (normalizedVersion && normalizedReleaseName === normalizedVersion) {
+    return `v${normalizedVersion}`;
+  }
+
+  return normalizedVersion ? `${releaseName} · v${normalizedVersion}` : releaseName;
+}
+
 export type UpdateDialogProps = {
   open: boolean;
   onClose: () => void;
+  currentVersionLabel?: string;
 };
 
-export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
+export function UpdateDialog({ open, onClose, currentVersionLabel }: UpdateDialogProps) {
   const [desktopUpdaterAvailable, setDesktopUpdaterAvailable] = useState(false);
   const [updateState, setUpdateState] = useState<DesktopUpdaterState | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -81,7 +101,6 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
     const updater = getDesktopUpdaterApi();
     if (!updater) {
       setDesktopUpdaterAvailable(false);
-      setUpdateState(null);
       return;
     }
 
@@ -113,10 +132,72 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const updater = getDesktopUpdaterApi();
+    if (!updater) {
+      setDesktopUpdaterAvailable(false);
+      void checkBrowserRelease({ silent: true }).catch(() => {});
+      return;
+    }
+
+    setDesktopUpdaterAvailable(true);
+    let disposed = false;
+    void updater
+      .getState()
+      .then((state) => {
+        if (!disposed) {
+          setUpdateState(state);
+        }
+      })
+      .catch(() => {
+        if (!disposed) {
+          setUpdateState((current) => current);
+        }
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [open]);
+
+  async function checkBrowserRelease(options: { silent?: boolean } = {}) {
+    const { silent = false } = options;
+    setCheckingUpdate(true);
+    try {
+      const nextState = await fetchLatestReleaseInfo();
+      setUpdateState(nextState);
+
+      if (silent) {
+        return nextState;
+      }
+
+      if (nextState.status === "update-available") {
+        toast.success(`发现新版本 ${formatDesktopVersion(nextState.latestVersion)}`);
+      } else if (nextState.status === "up-to-date") {
+        toast.success("当前已是最新版本");
+      } else if (nextState.status === "error") {
+        toast.error(nextState.message || "检查更新失败");
+      }
+
+      return nextState;
+    } catch (error) {
+      if (!silent) {
+        toast.error(error instanceof Error ? error.message : "检查更新失败");
+      }
+      throw error;
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }
+
   async function checkDesktopUpdate() {
     const updater = getDesktopUpdaterApi();
     if (!updater) {
-      toast.info("当前是浏览器模式，自动更新仅桌面版可用");
+      await checkBrowserRelease();
       return;
     }
 
@@ -183,7 +264,7 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
 
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">检查更新</h2>
         <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-          桌面版启动后会自动检查 GitHub Release 的最新正式版
+          桌面版会自动检查 GitHub Release；浏览器模式也会展示最新 Release 信息
         </p>
 
         <div className="mt-6 space-y-4">
@@ -198,7 +279,9 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
               {resolveUpdateStatusLabel(updateState)}
             </span>
             {!desktopUpdaterAvailable ? (
-              <span className="text-xs text-stone-500 dark:text-stone-400">当前是浏览器模式</span>
+              <span className="text-xs text-stone-500 dark:text-stone-400">
+                当前是浏览器模式，仅支持查看 Release 信息
+              </span>
             ) : null}
           </div>
 
@@ -206,13 +289,13 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
             <div>
               <div className="text-xs text-stone-500 dark:text-stone-400">当前版本</div>
               <div className="mt-1 font-medium text-stone-900 dark:text-stone-100">
-                {formatDesktopVersion(updateState?.currentVersion)}
+                {formatDesktopVersion(updateState?.currentVersion || currentVersionLabel)}
               </div>
             </div>
             <div>
               <div className="text-xs text-stone-500 dark:text-stone-400">最新 Release</div>
               <div className="mt-1 font-medium text-stone-900 dark:text-stone-100">
-                {formatDesktopVersion(updateState?.latestVersion)}
+                {formatLatestReleaseLabel(updateState)}
               </div>
             </div>
             <div>
@@ -230,7 +313,8 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
           </div>
 
           <div className="rounded-xl border border-dashed border-stone-200 bg-stone-50/80 px-3 py-2 text-xs leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/70 dark:text-stone-300">
-            {updateState?.message || "桌面版可在这里检查更新并下载安装包。"}
+            {updateState?.message ||
+              "桌面版可在这里检查更新并下载安装包；浏览器模式可查看 GitHub Release 最新信息。"}
           </div>
 
           {updateState?.status === "downloading" ? (
@@ -268,7 +352,7 @@ export function UpdateDialog({ open, onClose }: UpdateDialogProps) {
             variant="outline"
             className="h-9 rounded-full border-stone-300/60 bg-white px-3 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600 dark:hover:bg-stone-700"
             onClick={() => void checkDesktopUpdate()}
-            disabled={!desktopUpdaterAvailable || checkingUpdate || installingUpdate}
+            disabled={checkingUpdate || installingUpdate}
           >
             {checkingUpdate || updateState?.status === "checking" ? (
               <LoaderCircle className="size-4 animate-spin" />

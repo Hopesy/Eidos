@@ -55,6 +55,16 @@ const modeLabelMap: Record<ImageMode, string> = {
     upscale: "放大",
 };
 
+function buildRetryButtonLabel(turn: ImageConversationTurn) {
+    if (turn.retryAction === "resume_polling") {
+        return "继续等待";
+    }
+    if (turn.retryAction === "retry_download") {
+        return "重试下载";
+    }
+    return "重试";
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export type ConversationTurnProps = {
@@ -66,6 +76,7 @@ export type ConversationTurnProps = {
     waitingDots: string;
     submitElapsedSeconds: number;
     isSubmitting: boolean;
+    retryingImageId?: string | null;
     onOpenImageInNewTab: (dataUrl: string) => void;
     onOpenSelectionEditor: (conversationId: string, turnId: string, image: StoredImage, imageName: string) => void;
     onSeedFromResult: (conversationId: string, image: StoredImage, nextMode: ImageMode) => void;
@@ -83,6 +94,7 @@ export function ConversationTurn({
     waitingDots,
     submitElapsedSeconds,
     isSubmitting,
+    retryingImageId,
     onOpenImageInNewTab,
     onOpenSelectionEditor,
     onSeedFromResult,
@@ -158,7 +170,8 @@ export function ConversationTurn({
                         {turn.images.map((image, index) => {
                             const shouldShowErrorState = image.status === "error" || (!isProcessing && turn.status === "error");
                             const errorMessage = image.error || turn.error || "未知错误";
-
+                            const isRetryingCurrentImage = retryingImageId === image.id;
+                            const retryLabel = buildRetryButtonLabel(turn);
                             return (
                             <div
                                 key={image.id}
@@ -275,8 +288,8 @@ export function ConversationTurn({
                                                 disabled={isSubmitting}
                                                 aria-label="重试"
                                             >
-                                                <RotateCcw className={cn("size-3.5", isSubmitting && "animate-spin")} />
-                                                {isSubmitting ? "处理中" : "重试"}
+                                                <RotateCcw className={cn("size-3.5", isRetryingCurrentImage && "animate-spin")} />
+                                                {isRetryingCurrentImage ? "处理中" : retryLabel}
                                             </button>
                                         </div>
                                     </div>

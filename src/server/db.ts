@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, copyFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
@@ -144,6 +144,31 @@ function initializeSchema(database: Database) {
 
     CREATE INDEX IF NOT EXISTS idx_image_conversations_created_at ON image_conversations(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_image_conversations_status ON image_conversations(status);
+
+    CREATE TABLE IF NOT EXISTS image_upstream_tasks (
+      id TEXT PRIMARY KEY,
+      data_json TEXT NOT NULL,
+      local_conversation_id TEXT,
+      local_turn_id TEXT,
+      mode TEXT NOT NULL,
+      status TEXT NOT NULL,
+      failure_kind TEXT,
+      retry_action TEXT,
+      upstream_conversation_id TEXT,
+      upstream_response_id TEXT,
+      image_generation_call_id TEXT,
+      source_account_id TEXT,
+      file_ids_json TEXT NOT NULL DEFAULT '[]',
+      revised_prompt TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_image_upstream_tasks_updated_at ON image_upstream_tasks(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_image_upstream_tasks_status ON image_upstream_tasks(status);
+    CREATE INDEX IF NOT EXISTS idx_image_upstream_tasks_local ON image_upstream_tasks(local_conversation_id, local_turn_id);
+    CREATE INDEX IF NOT EXISTS idx_image_upstream_tasks_upstream_conversation ON image_upstream_tasks(upstream_conversation_id);
+    CREATE INDEX IF NOT EXISTS idx_image_upstream_tasks_upstream_response ON image_upstream_tasks(upstream_response_id);
   `);
 }
 
@@ -157,16 +182,25 @@ function backupLegacyAccountsFile(accountsFile: string) {
   }
 }
 
+function retireLegacyAccountsFile(accountsFile: string) {
+  if (!existsSync(/*turbopackIgnore: true*/ accountsFile)) return;
+  backupLegacyAccountsFile(accountsFile);
+  writeFileSync(/*turbopackIgnore: true*/ accountsFile, "[]\n", "utf8");
+}
+
 function migrateAccountsJsonIfNeeded(database: Database) {
   if (migratedJson) return;
   migratedJson = true;
 
-  const countRow = database.prepare("SELECT COUNT(*) AS count FROM accounts").get();
-  const existingCount = Number(countRow?.count ?? 0);
-  if (existingCount > 0) return;
-
   const accountsFile = path.join(getDataDir(), "accounts.json");
   if (!existsSync(/*turbopackIgnore: true*/ accountsFile)) return;
+
+  const countRow = database.prepare("SELECT COUNT(*) AS count FROM accounts").get();
+  const existingCount = Number(countRow?.count ?? 0);
+  if (existingCount > 0) {
+    retireLegacyAccountsFile(accountsFile);
+    return;
+  }
 
   const parsed = safeParseJson<unknown>(readFileSync(/*turbopackIgnore: true*/ accountsFile, "utf8"), []);
   if (!Array.isArray(parsed) || parsed.length === 0) return;
@@ -208,7 +242,7 @@ function migrateAccountsJsonIfNeeded(database: Database) {
       );
     }
     database.exec("COMMIT");
-    backupLegacyAccountsFile(accountsFile);
+    retireLegacyAccountsFile(accountsFile);
   } catch (error) {
     database.exec("ROLLBACK");
     throw error;

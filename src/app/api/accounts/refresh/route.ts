@@ -15,10 +15,7 @@ export async function POST(request: NextRequest) {
     if (accessTokens.length === 0) {
       accessTokens = await listTokens();
     }
-    if (accessTokens.length === 0) {
-      throw new ApiError(400, "access_tokens is required");
-    }
-    return jsonOk(await refreshAccounts(accessTokens));
+    return jsonOk(await refreshAccounts(accessTokens, { markRefreshedAt: true }));
   } catch (error) {
     return jsonError(error);
   }

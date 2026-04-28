@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { getDb } from "@/server/db";
 import { cleanupOrphanedImageFiles, deleteImageFilesIfUnreferenced, getConversationImageReferences, normalizeConversationAssets } from "@/server/image-file-store";
+import { deleteImageUpstreamTasksByConversationIds, upsertImageUpstreamTask } from "@/server/image-upstream-task-store";
 
 type ImageConversationRecord = Record<string, unknown> & {
   id: string;
@@ -23,6 +24,77 @@ function parseConversation(row: Record<string, unknown>) {
     return parsed && typeof parsed === "object" ? (parsed as ImageConversationRecord) : null;
   } catch {
     return null;
+  }
+}
+
+function mapConversationStatusToTaskStatus(status: unknown) {
+  const normalized = String(status || "").trim();
+  if (normalized === "generating") return "pending" as const;
+  if (normalized === "success") return "succeeded" as const;
+  return "failed" as const;
+}
+
+function syncConversationUpstreamTasks(conversation: ImageConversationRecord) {
+  const turns = Array.isArray(conversation.turns)
+    ? conversation.turns.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+    : [
+      {
+        id: `${conversation.id}-legacy`,
+        mode: conversation.mode,
+        prompt: conversation.prompt,
+        model: conversation.model,
+        status: conversation.status,
+        error: conversation.error,
+        failureKind: conversation.failureKind,
+        retryAction: conversation.retryAction,
+        retryable: conversation.retryable,
+        stage: conversation.stage,
+        upstreamConversationId: conversation.upstreamConversationId,
+        upstreamResponseId: conversation.upstreamResponseId,
+        imageGenerationCallId: conversation.imageGenerationCallId,
+        sourceAccountId: conversation.sourceAccountId,
+        fileIds: conversation.fileIds,
+      },
+    ];
+
+  for (const turn of turns) {
+    const upstreamConversationId = String(turn.upstreamConversationId || "").trim();
+    const upstreamResponseId = String(turn.upstreamResponseId || "").trim();
+    const imageGenerationCallId = String(turn.imageGenerationCallId || "").trim();
+    const fileIds = Array.isArray(turn.fileIds) ? turn.fileIds.map((item) => String(item || "").trim()).filter(Boolean) : [];
+    const failureKind = String(turn.failureKind || "").trim();
+    const retryAction = String(turn.retryAction || "").trim();
+    const sourceAccountId = String(turn.sourceAccountId || "").trim();
+    const hasSignals =
+      Boolean(upstreamConversationId) ||
+      Boolean(upstreamResponseId) ||
+      Boolean(imageGenerationCallId) ||
+      fileIds.length > 0 ||
+      Boolean(failureKind) ||
+      Boolean(retryAction);
+    if (!hasSignals) {
+      continue;
+    }
+
+    upsertImageUpstreamTask({
+      localConversationId: conversation.id,
+      localTurnId: String(turn.id || "").trim() || `${conversation.id}-legacy`,
+      mode: (String(turn.mode || conversation.mode || "generate").trim() || "generate") as "generate" | "edit" | "upscale",
+      status: mapConversationStatusToTaskStatus(turn.status),
+      failureKind: failureKind || null,
+      retryAction: retryAction || null,
+      retryable: typeof turn.retryable === "boolean" ? turn.retryable : null,
+      stage: String(turn.stage || "").trim() || null,
+      upstreamConversationId: upstreamConversationId || null,
+      upstreamResponseId: upstreamResponseId || null,
+      imageGenerationCallId: imageGenerationCallId || null,
+      sourceAccountId: sourceAccountId || null,
+      fileIds,
+      revisedPrompt: String(turn.prompt || conversation.prompt || "").trim() || null,
+      model: String(turn.model || conversation.model || "").trim() || null,
+      prompt: String(turn.prompt || conversation.prompt || "").trim() || null,
+      error: String(turn.error || "").trim() || null,
+    });
   }
 }
 
@@ -72,6 +144,8 @@ export async function saveImageConversationRecord(input: Record<string, unknown>
     updatedAt,
   );
 
+  syncConversationUpstreamTasks(conversation);
+
   return conversation;
 }
 
@@ -79,6 +153,7 @@ export async function deleteImageConversationRecord(id: string) {
   const refs = getConversationImageReferences(id);
   const imageIds = refs.map((item) => item.imageId);
   getDb().prepare("DELETE FROM image_conversations WHERE id = ?").run(id);
+  deleteImageUpstreamTasksByConversationIds([id]);
   const cleanup = await deleteImageFilesIfUnreferenced(imageIds, [id]);
   return {
     deletedConversationId: id,
@@ -97,6 +172,7 @@ export async function clearImageConversationRecords() {
     }
   });
   getDb().prepare("DELETE FROM image_conversations").run();
+  deleteImageUpstreamTasksByConversationIds(conversations.map((conversation) => String(conversation.id || "")));
   const cleanup = await deleteImageFilesIfUnreferenced(imageIds);
   const orphanCleanup = await cleanupOrphanedImageFiles();
   return {
