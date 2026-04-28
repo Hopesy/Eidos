@@ -1,6 +1,6 @@
 {
   "name": "eidos-desktop",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "description": "Eidos desktop shell for the standalone Next.js app",
   "main": "main.cjs",
@@ -52,7 +52,7 @@
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico",
-      "artifactName": "Eidos-Setup-${version}.${ext}",
+      "artifactName": "Eidos-Setup-${version}-win-${arch}.${ext}",
       "include": "assets/installer.nsh"
     }
   }

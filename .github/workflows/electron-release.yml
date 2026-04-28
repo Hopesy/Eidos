@@ -66,11 +66,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: eidos-windows-installer
-          path: electron/dist/*
+          path: electron/dist/Eidos-Setup-*-win-x64.exe
 
       - name: Publish GitHub release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: electron/dist/*
+          files: electron/dist/Eidos-Setup-*-win-x64.exe
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           generate_release_notes: false

@@ -1,5 +1,15 @@
 # CHANFELOG
 
+## [v0.1.10] - 2026-04-28
+
+### Fixed
+- 修复旧版 Eidos 正在运行时，新安装包覆盖升级仍可能因为旧版卸载器返回失败而停留在旧版本的问题。
+
+### Changed
+- Windows Release 只上传带平台后缀的安装包资产，安装包命名改为 `Eidos-Setup-<version>-win-x64.exe`。
+- Release 不再上传 `builder-debug.yml` 与 `.blockmap` 这类构建调试/差分更新辅助文件。
+- 新安装器在旧版卸载器失败时会接管清理旧安装目录与旧卸载注册表项，再继续安装新版。
+
 ## [v0.1.9] - 2026-04-28
 
 ### Fixed
