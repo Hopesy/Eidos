@@ -47,3 +47,11 @@ data/
 
 # AI assistant workspace metadata
 .tocodex/
+.claude/
+.tmp-node-ts-test/
+
+# Local notes / scratch docs
+docs/
+
+# Local runtime logs
+logs/*.log

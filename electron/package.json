@@ -1,6 +1,6 @@
 {
   "name": "eidos-desktop",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "description": "Eidos desktop shell for the standalone Next.js app",
   "main": "main.cjs",
@@ -16,6 +16,7 @@
   "build": {
     "appId": "com.eidos.desktop",
     "productName": "Eidos",
+    "icon": "assets/icon.ico",
     "directories": {
       "output": "dist",
       "buildResources": "assets"
@@ -35,7 +36,7 @@
       }
     ],
     "win": {
-      "icon": "../src/app/favicon.ico",
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -48,6 +49,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
       "artifactName": "Eidos-Setup-${version}.${ext}"
     }
   }

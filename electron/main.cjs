@@ -1,6 +1,6 @@
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const { spawn } = require("node:child_process");
-const { createWriteStream } = require("node:fs");
+const { createWriteStream, readdirSync, statSync } = require("node:fs");
 const { mkdir, stat } = require("node:fs/promises");
 const net = require("node:net");
 const path = require("node:path");
@@ -68,6 +68,25 @@ function getStandaloneDir() {
 
 function getServerEntry() {
   return path.join(getStandaloneDir(), "server.js");
+}
+
+function buildStandaloneNodePath(standaloneDir) {
+  const pnpmDir = path.join(standaloneDir, "node_modules", ".pnpm");
+  try {
+    return readdirSync(pnpmDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(pnpmDir, entry.name, "node_modules"))
+      .filter((entry) => {
+        try {
+          return statSync(entry).isDirectory();
+        } catch {
+          return false;
+        }
+      })
+      .join(path.delimiter);
+  } catch {
+    return "";
+  }
 }
 
 function createWindow() {
@@ -456,6 +475,13 @@ async function startServer() {
   const standaloneDir = getStandaloneDir();
   const serverEntry = getServerEntry();
   const userDataDir = app.getPath("userData");
+  const standaloneNodePath = buildStandaloneNodePath(standaloneDir);
+  let serverReady = false;
+  /** @type {((reason?: unknown) => void) | null} */
+  let rejectOnEarlyExit = null;
+  const exitBeforeReady = new Promise((_, reject) => {
+    rejectOnEarlyExit = reject;
+  });
 
   serverProcess = spawn(process.execPath, [serverEntry], {
     cwd: standaloneDir,
@@ -466,6 +492,13 @@ async function startServer() {
       NODE_ENV: "production",
       HOST: "127.0.0.1",
       PORT: String(serverPort),
+      ...(standaloneNodePath
+        ? {
+            NODE_PATH: process.env.NODE_PATH
+              ? `${standaloneNodePath}${path.delimiter}${process.env.NODE_PATH}`
+              : standaloneNodePath,
+          }
+        : {}),
       EIDOS_DATA_DIR: path.join(userDataDir, "data"),
       EIDOS_LOGS_DIR: path.join(userDataDir, "logs"),
     },
@@ -479,11 +512,15 @@ async function startServer() {
     process.stderr.write(`[eidos-server] ${chunk}`);
   });
 
-  const serverLogPath = path.join(userDataDir, "logs", "server.log");
-  mkdir(path.join(userDataDir, "logs"), { recursive: true }).catch(() => {});
+  const serverLogsDir = path.join(userDataDir, "logs");
+  const serverLogPath = path.join(serverLogsDir, "server.log");
   let serverLogStream = null;
   try {
+    await mkdir(serverLogsDir, { recursive: true });
     serverLogStream = createWriteStream(serverLogPath, { flags: "a" });
+    serverLogStream.on("error", () => {
+      serverLogStream = null;
+    });
   } catch {
     // ignore — log file unavailable
   }
@@ -495,17 +532,23 @@ async function startServer() {
   });
 
   serverProcess.once("exit", (code) => {
-    if (!isQuitting) {
+    if (!serverReady && rejectOnEarlyExit) {
+      rejectOnEarlyExit(new Error(`桌面内置服务启动失败，退出码：${code ?? "unknown"}`));
+      rejectOnEarlyExit = null;
+    } else if (!isQuitting) {
       void dialog.showErrorBox(
         "Eidos 服务已退出",
         `内置服务意外退出，退出码：${code ?? "unknown"}。`,
       );
       app.quit();
     }
+    serverLogStream?.end();
     serverProcess = null;
   });
 
-  await waitForServer(serverPort);
+  await Promise.race([waitForServer(serverPort), exitBeforeReady]);
+  serverReady = true;
+  rejectOnEarlyExit = null;
 }
 
 app.on("before-quit", () => {
