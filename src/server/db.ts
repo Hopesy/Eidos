@@ -1,19 +1,25 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 type Database = import("node:sqlite").DatabaseSync;
 type DatabaseSyncConstructor = typeof import("node:sqlite").DatabaseSync;
 
-const require = createRequire(import.meta.url);
 let DatabaseSyncCtor: DatabaseSyncConstructor | null = null;
 let db: Database | null = null;
 let migratedJson = false;
 
 function getDatabaseSyncCtor(): DatabaseSyncConstructor {
   if (!DatabaseSyncCtor) {
-    DatabaseSyncCtor = (require("node:sqlite") as typeof import("node:sqlite")).DatabaseSync;
+    const getBuiltinModule = (
+      process as typeof process & { getBuiltinModule?: (specifier: string) => unknown }
+    ).getBuiltinModule;
+    const sqliteModule =
+      typeof getBuiltinModule === "function"
+        ? getBuiltinModule("node:sqlite")
+        : (Function("specifier", "return require(specifier)")("node:sqlite") as typeof import("node:sqlite"));
+
+    DatabaseSyncCtor = (sqliteModule as typeof import("node:sqlite")).DatabaseSync;
   }
   return DatabaseSyncCtor;
 }

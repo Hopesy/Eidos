@@ -1,5 +1,15 @@
 # CHANFELOG
 
+## [v0.1.9] - 2026-04-28
+
+### Fixed
+- 修复桌面版访问账号/配置等 SQLite 接口时，Next.js 打包产物把 `node:sqlite` 静态 `require` 改写成 `Unsupported external type Url for commonjs reference` 占位错误的问题。
+- 修复从桌面端启动更新安装包时旧版 Eidos 仍占用安装目录，导致旧版本卸载/覆盖安装失败的问题。
+
+### Changed
+- SQLite 内置模块改为运行时通过 `process.getBuiltinModule` / 原生 `require` 动态加载，避开 Next/Turbopack 对 `node:sqlite` 的错误外部化。
+- 安装包启动后桌面端会自动退出；安装器/卸载器会先关闭残留的 `Eidos.exe` 进程，再执行覆盖安装或卸载。
+
 ## [v0.1.8] - 2026-04-28
 
 ### Fixed

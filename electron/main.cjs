@@ -307,6 +307,25 @@ async function canReuseDownloadedInstaller(filePath) {
   }
 }
 
+async function launchInstallerAndQuit(installerPath) {
+  const openResult = await shell.openPath(installerPath);
+  if (openResult) {
+    throw new Error(openResult);
+  }
+
+  setUpdaterState({
+    status: "installer-ready",
+    progressPercent: 100,
+    downloadedFilePath: installerPath,
+    message: "安装包已启动，Eidos 将退出以便卸载旧版本",
+    error: null,
+  });
+
+  setTimeout(() => {
+    app.quit();
+  }, 500);
+}
+
 async function downloadAndInstallUpdate() {
   if (installerDownloadPromise) {
     return installerDownloadPromise;
@@ -327,14 +346,11 @@ async function downloadAndInstallUpdate() {
       }
 
       if (await canReuseDownloadedInstaller(currentState.downloadedFilePath)) {
-        const openResult = await shell.openPath(currentState.downloadedFilePath);
-        if (openResult) {
-          throw new Error(openResult);
-        }
+        await launchInstallerAndQuit(currentState.downloadedFilePath);
 
         return setUpdaterState({
           status: "installer-ready",
-          message: "已重新打开已下载的安装包",
+          message: "已重新打开已下载的安装包，Eidos 将退出以便卸载旧版本",
           error: null,
         });
       }
@@ -389,10 +405,7 @@ async function downloadAndInstallUpdate() {
 
       await pipeline(readable, createWriteStream(installerPath));
 
-      const openResult = await shell.openPath(installerPath);
-      if (openResult) {
-        throw new Error(openResult);
-      }
+      await launchInstallerAndQuit(installerPath);
 
       return setUpdaterState({
         status: "installer-ready",
@@ -400,7 +413,7 @@ async function downloadAndInstallUpdate() {
         downloadedBytes,
         totalBytes: Number.isFinite(totalBytes) ? totalBytes : downloadedBytes,
         downloadedFilePath: installerPath,
-        message: "安装包已下载并启动，请按安装向导完成更新",
+        message: "安装包已下载并启动，Eidos 将退出以便卸载旧版本",
         error: null,
       });
     } catch (error) {
