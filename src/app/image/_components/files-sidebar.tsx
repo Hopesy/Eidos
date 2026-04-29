@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileImage, LoaderCircle, RefreshCw } from "lucide-react";
+import { FileImage, FolderOpen, LoaderCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppImage as Image } from "@/components/app-image";
-import { Button } from "@/components/ui/button";
+import { getDesktopShellApi } from "@/lib/desktop-shell";
 import { cn } from "@/lib/utils";
 
 type ImageFileItem = {
@@ -25,6 +25,17 @@ async function fetchImageFiles() {
   }
   const data = await response.json() as { items: ImageFileItem[] };
   return data.items;
+}
+
+async function openDataDirInBrowserMode() {
+  const response = await fetch("/api/system/open-data-dir", {
+    method: "POST",
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { detail?: { error?: string } } | null;
+    throw new Error(payload?.detail?.error || "打开文件夹失败");
+  }
+  return response.json() as Promise<{ opened: boolean; path: string }>;
 }
 
 function formatFileSize(bytes: number) {
@@ -61,6 +72,7 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
   const [files, setFiles] = useState<ImageFileItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const desktopShell = getDesktopShellApi();
 
   const loadFiles = async (isRefresh = false) => {
     if (isRefresh) {
@@ -87,6 +99,19 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
     void loadFiles();
   }, []);
 
+  const handleOpenFolder = async () => {
+    try {
+      if (desktopShell) {
+        await desktopShell.openDataDir();
+      } else {
+        await openDataDirInBrowserMode();
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "打开文件夹失败";
+      toast.error(message);
+    }
+  };
+
   return (
     <aside className="order-3 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:h-full lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
       <div className="flex h-full min-h-0 flex-col">
@@ -99,15 +124,25 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
                 {files.length}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => void loadFiles(true)}
-              disabled={isRefreshing}
-              className="inline-flex size-6 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-stone-200/50 hover:text-stone-500 disabled:pointer-events-none disabled:opacity-40 dark:text-stone-500 dark:hover:bg-stone-700/50 dark:hover:text-stone-400"
-              title="刷新列表"
-            >
-              <RefreshCw className={cn("size-3", isRefreshing && "animate-spin")} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => void handleOpenFolder()}
+                className="inline-flex size-6 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-stone-200/50 hover:text-stone-500 dark:text-stone-500 dark:hover:bg-stone-700/50 dark:hover:text-stone-400"
+                title="打开文件夹"
+              >
+                <FolderOpen className="size-3" />
+              </button>
+              <button
+                type="button"
+                onClick={() => void loadFiles(true)}
+                disabled={isRefreshing}
+                className="inline-flex size-6 items-center justify-center rounded-lg text-stone-400 transition-all hover:bg-stone-200/50 hover:text-stone-500 disabled:pointer-events-none disabled:opacity-40 dark:text-stone-500 dark:hover:bg-stone-700/50 dark:hover:text-stone-400"
+                title="刷新列表"
+              >
+                <RefreshCw className={cn("size-3", isRefreshing && "animate-spin")} />
+              </button>
+            </div>
           </div>
         </div>
 

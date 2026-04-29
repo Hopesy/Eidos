@@ -24,3 +24,9 @@ contextBridge.exposeInMainWorld("eidosUpdater", {
     };
   },
 });
+
+contextBridge.exposeInMainWorld("eidosShell", {
+  openDataDir() {
+    return ipcRenderer.invoke("eidos-shell:open-data-dir");
+  },
+});

@@ -66,6 +66,12 @@ function getStandaloneDir() {
     : path.join(__dirname, "app", "standalone");
 }
 
+function getDesktopDataDir() {
+  return app.isPackaged
+    ? path.join(app.getPath("userData"), "data")
+    : path.join(__dirname, "..", "data");
+}
+
 function getServerEntry() {
   return path.join(getStandaloneDir(), "server.js");
 }
@@ -435,6 +441,14 @@ async function downloadAndInstallUpdate() {
 ipcMain.handle("eidos-updater:get-state", async () => cloneUpdaterState());
 ipcMain.handle("eidos-updater:check", async () => checkForUpdates());
 ipcMain.handle("eidos-updater:download", async () => downloadAndInstallUpdate());
+ipcMain.handle("eidos-shell:open-data-dir", async () => {
+  const targetDir = getDesktopDataDir();
+  const openResult = await shell.openPath(targetDir);
+  if (openResult) {
+    throw new Error(openResult);
+  }
+  return { opened: true, path: targetDir };
+});
 
 function findFreePort() {
   return new Promise((resolve, reject) => {

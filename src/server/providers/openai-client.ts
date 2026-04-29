@@ -277,12 +277,8 @@ function buildImagePromptWithOptions(prompt: string, options?: ImageGenerationOp
   const quality = options?.quality ?? "auto";
   const instructions: string[] = [];
 
-  if (size === "1024x1024") {
-    instructions.push("输出比例使用 1:1 方图构图。");
-  } else if (size === "1536x1024") {
-    instructions.push("输出比例使用 3:2 横图构图。");
-  } else if (size === "1024x1536") {
-    instructions.push("输出比例使用 2:3 竖图构图。");
+  if (size !== "auto") {
+    instructions.push(`输出分辨率使用 ${size}。`);
   }
 
   if (quality === "medium") {

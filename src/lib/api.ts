@@ -6,7 +6,23 @@ import type { DesktopUpdaterState } from "@/lib/desktop-updater";
 export type AccountType = "Free" | "Plus" | "Pro" | "Team";
 export type AccountStatus = "正常" | "限流" | "异常" | "禁用";
 export type ImageModel = "gpt-image-1" | "gpt-image-2";
-export type ImageGenerationSize = "auto" | "1024x1024" | "1536x1024" | "1024x1536";
+export type ImageGenerationSize =
+  | "auto"
+  | "1024x1024"
+  | "1536x1024"
+  | "1024x1536"
+  | "1920x1088"
+  | "2048x2048"
+  | "3072x2048"
+  | "2048x3072"
+  | "2560x1440"
+  | "3840x2160"
+  | "4096x4096"
+  | "6144x4096"
+  | "4096x6144"
+  | "1088x1920"
+  | "1440x2560"
+  | "2160x3840";
 export type ImageGenerationQuality = "auto" | "low" | "medium" | "high";
 export type ImageApiStyle = "v1" | "responses";
 export type SyncStatus =
@@ -485,16 +501,16 @@ export async function editImage(params: {
   );
 }
 
-// ─── 图像放大（Upscale） ──────────────────────────────────────────────────────
+// ─── 图像增强（Upscale） ──────────────────────────────────────────────────────
 
 export async function upscaleImage(params: {
   image: File;
   prompt?: string;
-  scale?: number;
+  quality?: ImageGenerationQuality;
   model?: ImageModel;
   signal?: AbortSignal;
 }) {
-  const { image, prompt, scale, model = "gpt-image-1", signal } = params;
+  const { image, prompt, quality, model = "gpt-image-1", signal } = params;
   const formData = new FormData();
   formData.append("image", image);
   formData.append("model", model);
@@ -502,8 +518,8 @@ export async function upscaleImage(params: {
   if (prompt !== undefined) {
     formData.append("prompt", prompt);
   }
-  if (scale !== undefined) {
-    formData.append("scale", String(scale));
+  if (quality) {
+    formData.append("quality", quality);
   }
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/upscale",
@@ -523,10 +539,13 @@ export async function recoverImageTask(params: {
   waitMs?: number;
   model: ImageModel;
   mode: "generate" | "edit" | "upscale";
+  signal?: AbortSignal;
 }) {
+  const { signal, ...body } = params;
   return httpRequest<{ created: number; data: ImageResponseItem[] }>("/api/image-tasks/recover", {
     method: "POST",
-    body: params,
+    body,
+    signal,
   });
 }
 

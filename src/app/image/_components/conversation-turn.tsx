@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
     AlertCircle,
     Brush,
@@ -11,6 +13,7 @@ import {
     Sparkles,
     Maximize2,
     Download,
+    Pencil,
 } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
@@ -52,7 +55,7 @@ function formatProcessingDuration(totalSeconds: number) {
 const modeLabelMap: Record<ImageMode, string> = {
     generate: "生成",
     edit: "编辑",
-    upscale: "放大",
+    upscale: "增强",
 };
 
 function buildRetryButtonLabel(turn: ImageConversationTurn) {
@@ -63,6 +66,45 @@ function buildRetryButtonLabel(turn: ImageConversationTurn) {
         return "重试下载";
     }
     return "重试";
+}
+
+function ImageResolutionBadge({ src }: { src: string }) {
+    const [label, setLabel] = useState("");
+
+    useEffect(() => {
+        if (!src) {
+            setLabel("");
+            return;
+        }
+
+        let disposed = false;
+        const image = new window.Image();
+        image.onload = () => {
+            if (!disposed) {
+                setLabel(`${image.naturalWidth}×${image.naturalHeight}`);
+            }
+        };
+        image.onerror = () => {
+            if (!disposed) {
+                setLabel("");
+            }
+        };
+        image.src = src;
+
+        return () => {
+            disposed = true;
+        };
+    }, [src]);
+
+    if (!label) {
+        return null;
+    }
+
+    return (
+        <span className="text-[9px] font-medium text-stone-500 dark:text-stone-400">
+            {label}
+        </span>
+    );
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -82,6 +124,9 @@ export type ConversationTurnProps = {
     onSeedFromResult: (conversationId: string, image: StoredImage, nextMode: ImageMode) => void;
     onRetryTurn: (conversationId: string, turn: ImageConversationTurn, imageId?: string) => void;
     onPreviewImage: (dataUrl: string) => void;
+    onEditTurn: (conversationId: string, turn: ImageConversationTurn) => void | Promise<void>;
+    onCopyPrompt: (prompt: string) => void;
+    onDownloadImage: (image: StoredImage, fileName: string) => void;
 };
 
 // ─── 组件 ─────────────────────────────────────────────────────────────────────
@@ -100,6 +145,9 @@ export function ConversationTurn({
     onSeedFromResult,
     onRetryTurn,
     onPreviewImage,
+    onEditTurn,
+    onCopyPrompt,
+    onDownloadImage,
 }: ConversationTurnProps) {
     return (
         <div className="space-y-4">
@@ -133,6 +181,28 @@ export function ConversationTurn({
                     ) : null}
                     <div className="max-w-full rounded-[16px] bg-[#f2f2f1] px-3 py-2.5 text-[15px] leading-7 text-stone-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:bg-stone-800 dark:text-stone-200">
                         {turn.prompt || "无额外提示词"}
+                    </div>
+                    <div className="flex items-center gap-1.5 pr-1">
+                        <button
+                            type="button"
+                            className="inline-flex size-7 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
+                            onClick={() => {
+                                void onEditTurn(conversationId, turn);
+                            }}
+                            title={isProcessing ? "取消并编辑" : "编辑提示词"}
+                            aria-label={isProcessing ? "取消并编辑" : "编辑提示词"}
+                        >
+                            <Pencil className="size-3" />
+                        </button>
+                        <button
+                            type="button"
+                            className="inline-flex size-7 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
+                            onClick={() => onCopyPrompt(turn.prompt || "")}
+                            title="复制提示词"
+                            aria-label="复制提示词"
+                        >
+                            <Copy className="size-3" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -172,6 +242,7 @@ export function ConversationTurn({
                             const errorMessage = image.error || turn.error || "未知错误";
                             const isRetryingCurrentImage = retryingImageId === image.id;
                             const retryLabel = buildRetryButtonLabel(turn);
+                            const imageDataUrl = buildImageDataUrl(image);
                             return (
                             <div
                                 key={image.id}
@@ -195,10 +266,10 @@ export function ConversationTurn({
                                             <button
                                                 type="button"
                                                 className="flex h-[360px] w-full cursor-zoom-in items-center justify-center"
-                                                onClick={() => onPreviewImage(buildImageDataUrl(image))}
+                                                onClick={() => onPreviewImage(imageDataUrl)}
                                             >
                                                 <Image
-                                                    src={buildImageDataUrl(image)}
+                                                    src={imageDataUrl}
                                                     alt={`Generated result ${index + 1}`}
                                                     className="h-full w-full object-contain"
                                                 />
@@ -217,6 +288,7 @@ export function ConversationTurn({
                                                             </>
                                                         )}
                                                     </div>
+                                                    <ImageResolutionBadge src={imageDataUrl} />
                                                 </div>
                                             </div>
                                         </div>
@@ -252,14 +324,19 @@ export function ConversationTurn({
                                                 className="inline-flex size-7 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-stone-500 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
                                                 onClick={() => onSeedFromResult(conversationId, image, "upscale")}
                                                 disabled={isSubmitting}
-                                                title="放大"
+                                                title="增强"
                                             >
                                                 <Maximize2 className="size-3.5" />
                                             </button>
                                             <button
                                                 type="button"
                                                 className="inline-flex size-7 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
-                                                onClick={() => onOpenImageInNewTab(buildImageDataUrl(image))}
+                                                onClick={() =>
+                                                    onDownloadImage(
+                                                        image,
+                                                        image.file_path?.split("/").pop() || `${turn.title || "image"}-${index + 1}.png`,
+                                                    )
+                                                }
                                                 title="下载"
                                             >
                                                 <Download className="size-3.5" />
@@ -268,14 +345,14 @@ export function ConversationTurn({
                                     </>
                                 ) : shouldShowErrorState ? (
                                     /* ── 错误态 ── */
-                                    <div className="flex min-h-[240px] min-w-[240px] flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+                                    <div className="flex min-h-[240px] w-[214px] max-w-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
                                         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
                                             <div className="flex size-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/30">
                                                 <AlertCircle className="size-5 text-rose-500 dark:text-rose-400" />
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-sm font-medium text-rose-600 dark:text-rose-400">处理失败</p>
-                                                <p className="line-clamp-3 max-w-[280px] text-xs leading-5 text-stone-500 dark:text-stone-400">
+                                                <p className="max-w-[170px] whitespace-pre-wrap break-words text-xs leading-5 text-stone-500 dark:text-stone-400">
                                                     {errorMessage}
                                                 </p>
                                             </div>

@@ -138,7 +138,7 @@ function createBaseState(currentVersion: string): ReleaseRouteState {
     downloadUrl: null,
     releasePageUrl: RELEASES_PAGE_URL,
     checkedAt: null,
-    message: "浏览器模式可查看 GitHub Release 信息，下载安装请使用桌面版。",
+    message: "",
     error: null,
     progressPercent: null,
     downloadedBytes: 0,
@@ -181,7 +181,7 @@ export async function GET() {
         ...baseState,
         ...commonState,
         status: "update-available",
-        message: `发现新版本 v${release.version}，浏览器模式请前往 GitHub Release 下载`,
+        message: `发现新版本 v${release.version}`,
       } satisfies ReleaseRouteState);
     }
 

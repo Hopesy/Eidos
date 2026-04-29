@@ -1345,24 +1345,24 @@ export async function upscaleWithPool(
   model: string,
   image: File,
   options: {
-    scale?: number;
+    imageQuality?: ImageGenerationQuality;
   } = {},
 ) {
   const operation = "upscale";
-  const scale = options.scale ?? 2;
   return runAttachmentTaskWithPool(
     prompt,
     model,
     {
       images: [image],
+      quality: options.imageQuality,
     },
     {
       endpoint: "POST /v1/images/upscale",
       operation,
       count: 1,
       route: "upscale",
-      successLogMessage: "图片放大完成",
-      successLogData: { model, scale },
+      successLogMessage: "图片增强完成",
+      successLogData: { model, quality: options.imageQuality ?? "medium" },
     },
   );
 }
@@ -1372,7 +1372,7 @@ export async function upscaleWithApiService(
   model: string,
   image: File,
   options: {
-    scale?: number;
+    imageQuality?: ImageGenerationQuality;
   } = {},
 ) {
   const imageApiService = getImageApiServiceConfig();
@@ -1389,11 +1389,13 @@ export async function upscaleWithApiService(
       ? editImageResultWithResponsesApiService(imageApiService, {
         prompt,
         images: [image],
+        quality: options.imageQuality,
       })
       : editImageResultWithApiService(imageApiService, {
         prompt,
         model,
         images: [image],
+        quality: options.imageQuality,
       }),
     {
       endpoint: "POST /v1/images/upscale",
@@ -1404,8 +1406,8 @@ export async function upscaleWithApiService(
       count: 1,
       startedAt,
       startedAtMs,
-      successLogMessage: "图像 API 图片放大完成",
-      successLogData: { model, scale: options.scale ?? 2 },
+      successLogMessage: "图像 API 图片增强完成",
+      successLogData: { model, quality: options.imageQuality ?? "medium" },
     },
   );
 }

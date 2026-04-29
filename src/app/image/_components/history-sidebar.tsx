@@ -51,7 +51,7 @@ function buildConversationPreviewSource(conversation: ImageConversation) {
 const modeLabelMap: Record<ImageMode, string> = {
   generate: "生成",
   edit: "编辑",
-  upscale: "放大",
+  upscale: "增强",
 };
 
 const modeColorMap: Record<ImageMode, string> = {

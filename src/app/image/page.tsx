@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import {
   clearImageConversations,
   deleteImageConversation,
+  getImageConversation,
   listImageConversations,
   normalizeConversation,
   saveImageConversation,
@@ -63,33 +64,127 @@ const imageModelOptions: Array<{ label: string; value: ImageModel }> = [
 const modeOptions: Array<{ label: string; value: ImageMode; description: string }> = [
   { label: "生成", value: "generate", description: "提示词生成新图，也可上传参考图辅助生成" },
   { label: "编辑", value: "edit", description: "上传图像后局部或整体改图" },
-  { label: "放大", value: "upscale", description: "提升清晰度并放大细节" },
+  { label: "增强", value: "upscale", description: "基于源图做高清增强，提升清晰度与细节" },
 ];
-
-const upscaleOptions = ["2x", "4x", "6x", "8x"];
 
 const imageSizeOptions: GenerationOption<ToolbarImageSize>[] = [
   { label: "Auto", value: "auto" },
-  { label: "1:1 方图", value: "1024x1024" },
-  { label: "3:2 横图", value: "1536x1024" },
-  { label: "2:3 竖图", value: "1024x1536" },
-  { label: "16:9 横屏", value: "1792x1024" },
-  { label: "9:16 竖屏", value: "1024x1792" },
+  { label: "1:1 方图", value: "1:1" },
+  { label: "3:2 横图", value: "3:2" },
+  { label: "2:3 竖图", value: "2:3" },
+  { label: "16:9 横屏", value: "16:9" },
+  { label: "9:16 竖屏", value: "9:16" },
 ];
 
 const imageQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
+  { label: "Auto", value: "auto" },
+  { label: "1K", value: "low" },
   { label: "2K", value: "medium" },
   { label: "4K", value: "high" },
 ];
 
-function mapToolbarImageSizeToApiSize(size: ToolbarImageSize): ImageGenerationSize {
-  if (size === "1792x1024") {
-    return "1536x1024";
+const upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
+  { label: "Auto", value: "auto" },
+  { label: "Low", value: "low" },
+  { label: "Medium", value: "medium" },
+  { label: "High", value: "high" },
+];
+
+function getUpscaleQualityLabel(quality: ImageGenerationQuality) {
+  switch (quality) {
+    case "low":
+      return "Low";
+    case "medium":
+      return "Medium";
+    case "high":
+      return "High";
+    default:
+      return "Auto";
   }
-  if (size === "1024x1792") {
-    return "1024x1536";
+}
+
+function resolveUpscaleQuality(
+  quality?: ImageGenerationQuality,
+  legacyScale?: string,
+): ImageGenerationQuality {
+  if (quality === "auto" || quality === "low" || quality === "medium" || quality === "high") {
+    return quality;
   }
-  return size;
+
+  switch ((legacyScale || "").trim().toLowerCase()) {
+    case "2x":
+      return "low";
+    case "4x":
+      return "medium";
+    case "6x":
+    case "8x":
+      return "high";
+    default:
+      return "medium";
+  }
+}
+
+function resolveImageGenerationSize(
+  ratio: ToolbarImageSize,
+  quality: ImageGenerationQuality,
+): ImageGenerationSize {
+  if (ratio === "auto" || quality === "auto") {
+    return "auto";
+  }
+
+  const key = `${ratio}:${quality}` as const;
+  const mapping: Record<string, ImageGenerationSize> = {
+    "1:1:low": "1024x1024",
+    "1:1:medium": "2048x2048",
+    "1:1:high": "4096x4096",
+    "3:2:low": "1536x1024",
+    "3:2:medium": "3072x2048",
+    "3:2:high": "6144x4096",
+    "2:3:low": "1024x1536",
+    "2:3:medium": "2048x3072",
+    "2:3:high": "4096x6144",
+    "16:9:low": "1920x1088",
+    "16:9:medium": "2560x1440",
+    "16:9:high": "3840x2160",
+    "9:16:low": "1088x1920",
+    "9:16:medium": "1440x2560",
+    "9:16:high": "2160x3840",
+  };
+  return mapping[key] ?? "auto";
+}
+
+function resolveToolbarRatioFromImageSize(size?: ImageGenerationSize): ToolbarImageSize {
+  switch (size) {
+    case "1024x1024":
+    case "2048x2048":
+    case "4096x4096":
+      return "1:1";
+    case "1536x1024":
+    case "3072x2048":
+    case "6144x4096":
+      return "3:2";
+    case "1024x1536":
+    case "2048x3072":
+    case "4096x6144":
+      return "2:3";
+    case "1920x1088":
+    case "2560x1440":
+    case "3840x2160":
+      return "16:9";
+    case "1088x1920":
+    case "1440x2560":
+    case "2160x3840":
+      return "9:16";
+    default:
+      return "auto";
+  }
+}
+
+function cloneSourceImagesForComposer(sourceImages: StoredSourceImage[] = []): StoredSourceImage[] {
+  return sourceImages.map((item) => ({
+    ...item,
+    id: makeId(),
+  }));
 }
 
 const inspirationExamples: InspirationExample[] = [
@@ -144,9 +239,15 @@ type ActiveRequestState = {
   imageId?: string;
 };
 
-function buildConversationTitle(mode: ImageMode, prompt: string, scale: string) {
+function buildConversationTitle(mode: ImageMode, prompt: string, upscaleQuality: ImageGenerationQuality = "auto") {
   const trimmed = prompt.trim();
-  const prefix = mode === "generate" ? "生成" : mode === "edit" ? "编辑" : `放大 ${scale}`;
+  const prefix = mode === "generate"
+    ? "生成"
+    : mode === "edit"
+      ? "编辑"
+      : upscaleQuality === "auto"
+        ? "增强"
+        : `增强 ${getUpscaleQualityLabel(upscaleQuality)}`;
   if (!trimmed) {
     return prefix;
   }
@@ -616,12 +717,12 @@ function buildProcessingStatus(
 
   if (elapsedSeconds < 5) {
     return {
-      title: "正在提交放大任务",
+      title: "正在提交增强任务",
       detail: `源图已上传，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
     };
   }
   return {
-    title: `正在放大图像${buildWaitingDots(elapsedSeconds)}`,
+    title: `正在增强图像${buildWaitingDots(elapsedSeconds)}`,
     detail: `系统正在增强清晰度与细节，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
   };
 }
@@ -641,7 +742,7 @@ function humanizeError(error: unknown): string {
       return "当前账号不可用、已限流或授权失效，请切换账号或稍后再试。";
     }
     if (error.failureKind === "input_blocked") {
-      return "请求被上游拒绝，请修改提示词、图片或参数后重试。";
+      return "请修改提示词后重试。";
     }
     if (error.failureKind === "submit_failed") {
       return "图片请求提交失败，请稍后重新提交。";
@@ -679,6 +780,13 @@ function humanizeError(error: unknown): string {
   return raw;
 }
 
+function isCanceledRequestError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === "CanceledError" || error.name === "AbortError" || error.message.toLowerCase().includes("canceled"))
+  );
+}
+
 function extractRequestFailureMeta(error: unknown) {
   if (!(error instanceof ApiRequestError)) {
     return {
@@ -714,6 +822,74 @@ function openImageInNewTab(dataUrl: string) {
   }
 }
 
+async function downloadImageFile(image: StoredImage, suggestedFileName: string) {
+  const href = image.url || buildImageDataUrl(image);
+  if (!href) {
+    toast.error("当前图片没有可下载的数据");
+    return;
+  }
+
+  const fileName = suggestedFileName || "image.png";
+  try {
+    const response = await fetch(href);
+    if (!response.ok) {
+      throw new Error(`下载图片失败 (${response.status})`);
+    }
+    const blob = await response.blob();
+
+    const picker = (window as Window & {
+      showSaveFilePicker?: (options?: {
+        suggestedName?: string;
+        startIn?: "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
+        types?: Array<{
+          description?: string;
+          accept: Record<string, string[]>;
+        }>;
+      }) => Promise<{
+        createWritable: () => Promise<{
+          write: (data: Blob) => Promise<void>;
+          close: () => Promise<void>;
+        }>;
+      }>;
+    }).showSaveFilePicker;
+
+    if (typeof picker === "function") {
+      const ext = fileName.includes(".") ? `.${fileName.split(".").pop()}` : ".png";
+      const handle = await picker({
+        suggestedName: fileName,
+        startIn: "desktop",
+        types: [
+          {
+            description: "图片文件",
+            accept: {
+              [blob.type || "image/png"]: [ext],
+            },
+          },
+        ],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return;
+    }
+    toast.error(error instanceof Error ? error.message : "下载图片失败");
+  }
+}
+
 export default function ImagePage() {
   const cachedWorkspaceState = getCachedImageWorkspaceState();
   const didLoadQuotaRef = useRef(false);
@@ -721,6 +897,8 @@ export default function ImagePage() {
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
   const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
   const requestAbortControllerRef = useRef<AbortController | null>(null);
+  const pendingAbortActionRef = useRef<null | { conversationId: string; turnId: string; retractTurn: boolean }>(null);
+  const activeRequestMetaRef = useRef<null | { conversationId: string; turnId: string; retractOnEdit: boolean }>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -745,7 +923,7 @@ export default function ImagePage() {
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
   const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
   const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
-  const [upscaleScale, setUpscaleScale] = useState("2x");
+  const [upscaleQuality, setUpscaleQuality] = useState<ImageGenerationQuality>("medium");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
   const [reuseLatestResultForGenerate, setReuseLatestResultForGenerate] = useState(true);
   const [conversations, setConversations] = useState<ImageConversation[]>([]);
@@ -1107,7 +1285,7 @@ export default function ImagePage() {
     setImageCount("1");
     setImageSize("auto");
     setImageQuality("medium");
-    setUpscaleScale("2x");
+    setUpscaleQuality("medium");
     setReuseLatestResultForGenerate(true);
     setSourceImages([]);
   };
@@ -1115,13 +1293,37 @@ export default function ImagePage() {
   const handleModeChange = (nextMode: ImageMode) => {
     setMode(nextMode);
     setSourceImages((prev) => {
+      const hiddenItems = prev.filter((item) => item.hiddenInConversation);
       const visibleItems = prev.filter((item) => !item.hiddenInConversation);
+      const explicitImageItems = visibleItems.filter((item) => item.role === "image");
+      const maskItems = visibleItems.filter((item) => item.role === "mask");
+      if (nextMode === "generate") {
+        return hiddenItems.filter((item) => item.role === "image");
+      }
       if (nextMode !== "edit") {
+        if (nextMode === "upscale") {
+          if (explicitImageItems.length > 0) {
+            return [explicitImageItems[0]];
+          }
+          if (!latestReusableSourceImage) {
+            return [];
+          }
+        return [
+          {
+            ...latestReusableSourceImage,
+            id: makeId(),
+            name: "upscale-source.png",
+            hiddenInConversation: false,
+          },
+        ];
+      }
         return visibleItems.filter((item) => item.role !== "mask");
       }
 
-      const hasExplicitImage = visibleItems.some((item) => item.role === "image");
-      if (hasExplicitImage || !latestReusableSourceImage) {
+      if (explicitImageItems.length > 0) {
+        return [...explicitImageItems, ...maskItems];
+      }
+      if (!latestReusableSourceImage) {
         return visibleItems;
       }
 
@@ -1130,6 +1332,7 @@ export default function ImagePage() {
           ...latestReusableSourceImage,
           id: makeId(),
           name: "inherited-source.png",
+          hiddenInConversation: false,
         },
       ];
     });
@@ -1245,7 +1448,7 @@ export default function ImagePage() {
         ? "已从剪贴板添加参考图"
         : mode === "edit"
           ? "已从剪贴板添加源图"
-          : "已从剪贴板添加放大源图",
+          : "已从剪贴板添加增强源图",
     );
   };
 
@@ -1318,7 +1521,7 @@ export default function ImagePage() {
     const selectionSourceImage = createSourceImageFromResult(editorTarget.image, editorTarget.imageName || "source.png");
     const draftTurn = createConversationTurn({
       turnId,
-      title: buildConversationTitle("edit", prompt, upscaleScale),
+      title: buildConversationTitle("edit", prompt),
       mode: "edit",
       prompt,
       model: imageModel,
@@ -1345,6 +1548,14 @@ export default function ImagePage() {
     });
 
     const startedAt = Date.now();
+    const abortController = new AbortController();
+    requestAbortControllerRef.current = abortController;
+    const signal = abortController.signal;
+    activeRequestMetaRef.current = {
+      conversationId,
+      turnId,
+      retractOnEdit: true,
+    };
     setIsSubmitting(true);
     setActiveRequest({
       conversationId,
@@ -1384,6 +1595,7 @@ export default function ImagePage() {
         mask: mask.file,
         sourceReference: buildSourceReference(selectionSourceImage),
         model: imageModel,
+        signal,
       });
       const resultItems = mergeResultImages(turnId, data.data || [], 1);
       const failedCount = countFailures(resultItems);
@@ -1419,8 +1631,43 @@ export default function ImagePage() {
         toast.success("图片已按选区编辑");
       }
     } catch (error) {
+      if (isCanceledRequestError(error)) {
+        const pendingAbortAction = pendingAbortActionRef.current;
+        if (
+          pendingAbortAction?.conversationId === conversationId &&
+          pendingAbortAction?.turnId === turnId &&
+          pendingAbortAction.retractTurn
+        ) {
+          pendingAbortActionRef.current = null;
+          await retractTurnAfterAbort(conversationId, turnId);
+          return;
+        }
+        await updateConversation(conversationId, (current) => ({
+          ...current,
+          turns: (current.turns ?? []).map((turn) =>
+            turn.id === turnId
+              ? {
+                ...turn,
+                status: "error" as const,
+                error: "已取消生成",
+                images: turn.images.map((image) => ({
+                  ...image,
+                  status: "error" as const,
+                  error: "已取消生成",
+                })),
+              }
+              : turn,
+          ),
+        }));
+        return;
+      }
       const message = humanizeError(error);
       const failureMeta = extractRequestFailureMeta(error);
+      if (failureMeta.failureKind === "input_blocked" && failureMeta.retryAction === "revise_input") {
+        const conversationStillExists = await retractTurnAfterAbort(conversationId, turnId);
+        restoreComposerFromTurn(conversationStillExists ? conversationId : null, draftTurn, "请修改提示词后重试");
+        return;
+      }
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -1456,6 +1703,9 @@ export default function ImagePage() {
       }));
       toast.error(message);
     } finally {
+      requestAbortControllerRef.current = null;
+      pendingAbortActionRef.current = null;
+      activeRequestMetaRef.current = null;
       finishImageTask(conversationId, turnId);
       setIsSubmitting(false);
       setActiveRequest(null);
@@ -1474,7 +1724,8 @@ export default function ImagePage() {
     const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];
     const turnImageSources = turnSourceImages.filter((item) => item.role === "image");
     const turnMaskSource = turnSourceImages.find((item) => item.role === "mask") ?? null;
-    const turnScale = turnMode === "upscale" ? turn.scale || "2x" : undefined;
+    const turnUpscaleQuality =
+      turnMode === "upscale" ? resolveUpscaleQuality(turn.imageQuality, turn.scale) : undefined;
     const turnImageSize = turn.imageSize || "auto";
     const turnImageQuality = turn.imageQuality || "auto";
     const failedIndexes = turn.images
@@ -1513,6 +1764,14 @@ export default function ImagePage() {
     const retryCount = turnMode === "generate" && turnImageSources.length === 0 ? retryIndexes.length : 1;
 
     const startedAt = Date.now();
+    const abortController = new AbortController();
+    requestAbortControllerRef.current = abortController;
+    const signal = abortController.signal;
+    activeRequestMetaRef.current = {
+      conversationId,
+      turnId,
+      retractOnEdit: false,
+    };
     setIsSubmitting(true);
     setActiveRequest({
       conversationId,
@@ -1569,6 +1828,7 @@ export default function ImagePage() {
           waitMs: turn.retryAction === "resume_polling" ? 60000 : 15000,
           model: turn.model,
           mode: turnMode,
+          signal,
         });
         resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       } else if (turnMode === "generate") {
@@ -1581,14 +1841,16 @@ export default function ImagePage() {
             images: files,
             sourceReference: buildSourceReference(turnImageSources[0]),
             model: turn.model,
-            size: mapToolbarImageSizeToApiSize(turnImageSize as ToolbarImageSize),
+            size: turnImageSize,
             quality: turnImageQuality,
+            signal,
           });
           resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
         } else {
           const data = await generateImage(prompt, turn.model, retryIndexes.length, {
-            size: mapToolbarImageSizeToApiSize(turnImageSize as ToolbarImageSize),
+            size: turnImageSize,
             quality: turnImageQuality,
+            signal,
           });
           resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
         }
@@ -1605,13 +1867,20 @@ export default function ImagePage() {
           mask: maskFile,
           sourceReference: buildSourceReference(turnImageSources[0]),
           model: turn.model,
+          signal,
         });
         resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       }
 
       if (turnMode === "upscale") {
         const file = await dataUrlToFile(turnImageSources[0].dataUrl, turnImageSources[0].name || "upscale.png");
-        const data = await upscaleImage({ image: file, prompt, scale: Number.parseInt(turnScale || "2", 10), model: turn.model });
+        const data = await upscaleImage({
+          image: file,
+          prompt,
+          quality: turnUpscaleQuality,
+          model: turn.model,
+          signal,
+        });
         resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
       }
 
@@ -1644,9 +1913,43 @@ export default function ImagePage() {
       if (failedCount > 0) {
         toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);
       } else {
-        toast.success(turnMode === "generate" ? "图片已生成" : turnMode === "edit" ? "图片已编辑" : "图片已放大");
+        toast.success(turnMode === "generate" ? "图片已生成" : turnMode === "edit" ? "图片已编辑" : "图片已增强");
       }
     } catch (error) {
+      if (isCanceledRequestError(error)) {
+        const pendingAbortAction = pendingAbortActionRef.current;
+        if (
+          pendingAbortAction?.conversationId === conversationId &&
+          pendingAbortAction?.turnId === turnId &&
+          pendingAbortAction.retractTurn
+        ) {
+          pendingAbortActionRef.current = null;
+          await retractTurnAfterAbort(conversationId, turnId);
+          return;
+        }
+        await updateConversation(conversationId, (current) => ({
+          ...current,
+          turns: (current.turns ?? []).map((item) =>
+            item.id === turnId
+              ? {
+                ...item,
+                status: "error" as const,
+                error: "已取消生成",
+                images: item.images.map((image, index) =>
+                  retryIndexes.includes(index)
+                    ? {
+                      ...image,
+                      status: "error" as const,
+                      error: "已取消生成",
+                    }
+                    : image,
+                ),
+              }
+              : item,
+          ),
+        }));
+        return;
+      }
       const message = humanizeError(error);
       const failureMeta = extractRequestFailureMeta(error);
       await updateConversation(conversationId, (current) => ({
@@ -1688,6 +1991,9 @@ export default function ImagePage() {
       }));
       toast.error(message);
     } finally {
+      requestAbortControllerRef.current = null;
+      pendingAbortActionRef.current = null;
+      activeRequestMetaRef.current = null;
       finishImageTask(conversationId, turnId);
       setIsSubmitting(false);
       setActiveRequest(null);
@@ -1734,7 +2040,7 @@ export default function ImagePage() {
       return;
     }
     if (mode === "upscale" && imageSources.length === 0) {
-      toast.error("放大模式需要一张源图");
+      toast.error("增强模式需要一张源图");
       return;
     }
 
@@ -1745,14 +2051,13 @@ export default function ImagePage() {
     const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
     const draftTurn = createConversationTurn({
       turnId,
-      title: buildConversationTitle(mode, prompt, upscaleScale),
+      title: buildConversationTitle(mode, prompt, upscaleQuality),
       mode,
       prompt,
       model: imageModel,
-      imageSize: mode === "generate" ? mapToolbarImageSizeToApiSize(imageSize) : "auto",
-      imageQuality: mode === "generate" ? imageQuality : "auto",
+      imageSize: mode === "generate" ? resolveImageGenerationSize(imageSize, imageQuality) : "auto",
+      imageQuality: mode === "generate" ? imageQuality : mode === "upscale" ? upscaleQuality : "auto",
       count: expectedCount,
-      scale: mode === "upscale" ? upscaleScale : undefined,
       sourceImages,
       images: createLoadingImages(expectedCount, turnId),
       createdAt: now,
@@ -1763,6 +2068,11 @@ export default function ImagePage() {
     const abortController = new AbortController();
     requestAbortControllerRef.current = abortController;
     const signal = abortController.signal;
+    activeRequestMetaRef.current = {
+      conversationId,
+      turnId,
+      retractOnEdit: true,
+    };
     setIsSubmitting(true);
     setActiveRequest({
       conversationId,
@@ -1883,14 +2193,14 @@ export default function ImagePage() {
             images: files,
             sourceReference: buildSourceReference(imageSources[0]),
             model: imageModel,
-            size: mapToolbarImageSizeToApiSize(imageSize),
+            size: resolveImageGenerationSize(imageSize, imageQuality),
             quality: imageQuality,
             signal,
           });
           resultItems = mergeResultImages(turnId, data.data || [], 1);
         } else {
           const data = await generateImage(prompt, imageModel, parsedCount, {
-            size: mapToolbarImageSizeToApiSize(imageSize),
+            size: resolveImageGenerationSize(imageSize, imageQuality),
             quality: imageQuality,
             signal,
           });
@@ -1916,7 +2226,13 @@ export default function ImagePage() {
 
       if (mode === "upscale") {
         const file = await dataUrlToFile(imageSources[0].dataUrl, imageSources[0].name || "upscale.png");
-        const data = await upscaleImage({ image: file, prompt, scale: Number.parseInt(upscaleScale, 10), model: imageModel, signal });
+        const data = await upscaleImage({
+          image: file,
+          prompt,
+          quality: upscaleQuality,
+          model: imageModel,
+          signal,
+        });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
       }
 
@@ -1957,11 +2273,21 @@ export default function ImagePage() {
               : "图片已生成"
             : mode === "edit"
               ? "图片已编辑"
-              : "图片已放大",
+              : "图片已增强",
         );
       }
     } catch (error) {
       if (error instanceof Error && (error.name === "CanceledError" || error.name === "AbortError" || error.message.includes("canceled"))) {
+        const pendingAbortAction = pendingAbortActionRef.current;
+        if (
+          pendingAbortAction?.conversationId === conversationId &&
+          pendingAbortAction?.turnId === turnId &&
+          pendingAbortAction.retractTurn
+        ) {
+          pendingAbortActionRef.current = null;
+          await retractTurnAfterAbort(conversationId, turnId);
+          return;
+        }
         // 用户主动取消，不写入错误状态，只清除 loading 状态
         await updateConversation(conversationId, (current) => ({
           ...current,
@@ -1984,6 +2310,11 @@ export default function ImagePage() {
       }
       const failureMeta = extractRequestFailureMeta(error);
       const message = humanizeError(error);
+      if (failureMeta.failureKind === "input_blocked" && failureMeta.retryAction === "revise_input") {
+        const conversationStillExists = await retractTurnAfterAbort(conversationId, turnId);
+        restoreComposerFromTurn(conversationStillExists ? conversationId : null, draftTurn, "请修改提示词后重试");
+        return;
+      }
       await updateConversation(conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((turn) =>
@@ -2020,6 +2351,8 @@ export default function ImagePage() {
       toast.error(message);
     } finally {
       requestAbortControllerRef.current = null;
+      pendingAbortActionRef.current = null;
+      activeRequestMetaRef.current = null;
       finishImageTask(conversationId, turnId);
       setIsSubmitting(false);
       setActiveRequest(null);
@@ -2029,6 +2362,184 @@ export default function ImagePage() {
 
   const handleCancel = () => {
     requestAbortControllerRef.current?.abort();
+  };
+
+  const retractTurnAfterAbort = async (conversationId: string, turnId: string) => {
+    const conversation = await getImageConversation(conversationId);
+    if (!conversation) {
+      return false;
+    }
+
+    const remainingTurns = (conversation.turns ?? []).filter((turn) => turn.id !== turnId);
+    if (remainingTurns.length === 0) {
+      await deleteImageConversation(conversationId);
+      if (!mountedRef.current) {
+        return;
+      }
+      setConversations((prev) => prev.filter((item) => item.id !== conversationId));
+      setSelectedConversationId((current) => {
+        if (current !== conversationId) {
+          return current;
+        }
+        draftSelectionRef.current = true;
+        setCachedImageWorkspaceState({
+          selectedConversationId: null,
+          isDraftSelection: true,
+        });
+        return null;
+      });
+      return false;
+    }
+
+    const latestTurn = remainingTurns[remainingTurns.length - 1];
+    await updateConversation(conversationId, (current) => ({
+      ...current,
+      title: latestTurn.title,
+      mode: latestTurn.mode,
+      prompt: latestTurn.prompt,
+      model: latestTurn.model,
+      imageSize: latestTurn.imageSize,
+      imageQuality: latestTurn.imageQuality,
+      count: latestTurn.count,
+      scale: latestTurn.scale,
+      sourceImages: latestTurn.sourceImages ?? [],
+      images: latestTurn.images,
+      createdAt: latestTurn.createdAt,
+      status: latestTurn.status,
+      error: latestTurn.error,
+      turns: remainingTurns,
+    }));
+    return true;
+  };
+
+  const handleCopyTurnPrompt = async (prompt: string) => {
+    if (!prompt.trim()) {
+      toast.error("当前记录没有可复制的提示词");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success("提示词已复制");
+    } catch {
+      toast.error("复制失败，请检查剪贴板权限");
+    }
+  };
+
+  const restoreComposerFromTurn = (conversationId: string | null, turn: ImageConversationTurn, successMessage?: string) => {
+    const isActiveTurn = Boolean(
+      isSubmitting &&
+      activeRequest &&
+      conversationId &&
+      activeRequest.conversationId === conversationId &&
+      activeRequest.turnId === turn.id,
+    );
+
+    if (isSubmitting && !isActiveTurn) {
+      toast.error("当前还有其他任务在处理中，暂时不能切换编辑");
+      return;
+    }
+
+    if (conversationId) {
+      focusConversation(conversationId);
+    } else {
+      openDraftConversation();
+    }
+    setMode(turn.mode);
+    setImageModel(turn.model);
+    setImageCount(String(Math.max(1, Number(turn.count) || 1)));
+    if (turn.mode === "generate") {
+      setImageSize(resolveToolbarRatioFromImageSize(turn.imageSize));
+      setImageQuality(turn.imageQuality ?? "medium");
+    }
+    if (turn.mode === "upscale") {
+      setUpscaleQuality(resolveUpscaleQuality(turn.imageQuality, turn.scale));
+    }
+    setReuseLatestResultForGenerate(false);
+    setSourceImages(cloneSourceImagesForComposer(turn.sourceImages ?? []));
+    setImagePrompt(turn.prompt || "");
+    setEditorTarget(null);
+
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      const length = turn.prompt?.length ?? 0;
+      if (textareaRef.current) {
+        textareaRef.current.selectionStart = length;
+        textareaRef.current.selectionEnd = length;
+      }
+    });
+
+    if (successMessage) {
+      toast.success(successMessage);
+    }
+  };
+
+  const handleEditTurn = async (conversationId: string, turn: ImageConversationTurn) => {
+    const isActiveTurn = Boolean(
+      isSubmitting &&
+      activeRequest &&
+      activeRequest.conversationId === conversationId &&
+      activeRequest.turnId === turn.id,
+    );
+
+    if (isSubmitting && !isActiveTurn) {
+      toast.error("当前还有其他任务在处理中，暂时不能切换编辑");
+      return;
+    }
+
+    if (isActiveTurn) {
+      pendingAbortActionRef.current = {
+        conversationId,
+        turnId: turn.id,
+        retractTurn:
+          activeRequestMetaRef.current?.conversationId === conversationId &&
+          activeRequestMetaRef.current?.turnId === turn.id &&
+          activeRequestMetaRef.current?.retractOnEdit === true,
+      };
+      requestAbortControllerRef.current?.abort();
+    }
+
+    if (!isActiveTurn && turn.status === "error") {
+      const conversationStillExists = await retractTurnAfterAbort(conversationId, turn.id);
+      restoreComposerFromTurn(
+        conversationStillExists ? conversationId : null,
+        turn,
+        "已撤回失败请求，可修改提示词后重新发送",
+      );
+      return;
+    }
+
+    restoreComposerFromTurn(
+      conversationId,
+      turn,
+      isActiveTurn ? "已中断当前任务，可修改提示词后重新发送" : "已将本轮输入回填到编辑器",
+    );
+  };
+
+  const handleCancelAndEditActiveRequest = () => {
+    if (!activeRequest) {
+      toast.error("当前没有可编辑的进行中任务");
+      return;
+    }
+
+    const conversation = conversations.find((item) => item.id === activeRequest.conversationId);
+    const turn = conversation?.turns?.find((item) => item.id === activeRequest.turnId);
+    if (!conversation || !turn) {
+      toast.error("未找到当前进行中的输入记录");
+      return;
+    }
+
+    void handleEditTurn(conversation.id, turn);
+  };
+
+  const composerCancelMode = activeRequestMetaRef.current?.retractOnEdit ? "cancel-and-edit" : "cancel";
+  const composerCancelLabel = "取消";
+  const composerCancelTitle = "取消当前任务";
+  const handleComposerCancelAction = () => {
+    if (composerCancelMode === "cancel-and-edit") {
+      handleCancelAndEditActiveRequest();
+      return;
+    }
+    handleCancel();
   };
 
   return (
@@ -2129,6 +2640,11 @@ export default function ImagePage() {
                     void handleRetryTurn(conversationId, currentTurn, imageId);
                   }}
                   onPreviewImage={(dataUrl) => setPreviewImage(dataUrl)}
+                  onEditTurn={handleEditTurn}
+                  onCopyPrompt={(prompt) => {
+                    void handleCopyTurnPrompt(prompt);
+                  }}
+                  onDownloadImage={downloadImageFile}
                 />
               ))}
             </div>
@@ -2152,9 +2668,9 @@ export default function ImagePage() {
             imageQuality={imageQuality}
             imageQualityOptions={imageQualityOptions}
             onImageQualityChange={setImageQuality}
-            upscaleScale={upscaleScale}
-            upscaleOptions={upscaleOptions}
-            onUpscaleScaleChange={setUpscaleScale}
+            upscaleQuality={upscaleQuality}
+            upscaleQualityOptions={upscaleQualityOptions}
+            onUpscaleQualityChange={setUpscaleQuality}
             availableQuota={availableQuota}
             sourceImages={visibleSourceImages}
             onRemoveSourceImage={removeSourceImage}
@@ -2169,7 +2685,9 @@ export default function ImagePage() {
             onSubmit={() => {
               void handleSubmit();
             }}
-            onCancel={handleCancel}
+            onCancel={handleComposerCancelAction}
+            cancelButtonLabel={composerCancelLabel}
+            cancelButtonTitle={composerCancelTitle}
             isSubmitting={isSubmitting}
             uploadInputRef={uploadInputRef}
             maskInputRef={maskInputRef}

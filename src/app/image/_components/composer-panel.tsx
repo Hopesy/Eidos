@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClipboardEvent, RefObject } from "react";
-import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, Maximize2, Square, RectangleHorizontal, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
+import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
 import type { ImageMode, StoredSourceImage } from "@/store/image-conversations";
 
 export type ModeOption = { label: string; value: ImageMode; description: string };
 export type ImageModelOption = { label: string; value: ImageModel };
 export type GenerationOption<T extends string> = { label: string; value: T };
-export type ToolbarImageSize = ImageGenerationSize | "1792x1024" | "1024x1792";
+export type ToolbarImageSize = "auto" | "1:1" | "3:2" | "2:3" | "16:9" | "9:16";
 
 export type ComposerPanelProps = {
     imageModel: ImageModel;
@@ -39,9 +39,9 @@ export type ComposerPanelProps = {
     imageQuality: ImageGenerationQuality;
     imageQualityOptions: GenerationOption<ImageGenerationQuality>[];
     onImageQualityChange: (value: ImageGenerationQuality) => void;
-    upscaleScale: string;
-    upscaleOptions: string[];
-    onUpscaleScaleChange: (value: string) => void;
+    upscaleQuality: ImageGenerationQuality;
+    upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[];
+    onUpscaleQualityChange: (value: ImageGenerationQuality) => void;
     availableQuota: string;
     sourceImages: StoredSourceImage[];
     onRemoveSourceImage: (id: string) => void;
@@ -55,11 +55,25 @@ export type ComposerPanelProps = {
     onPromptPaste: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
     onSubmit: () => void;
     onCancel: () => void;
+    cancelButtonLabel: string;
+    cancelButtonTitle: string;
     isSubmitting: boolean;
     uploadInputRef: RefObject<HTMLInputElement | null>;
     maskInputRef: RefObject<HTMLInputElement | null>;
     onUploadFiles: (files: FileList | null, role: "image" | "mask") => void;
 };
+
+function renderQualityOption(value: ImageGenerationQuality, label: string) {
+    return (
+        <div className="flex items-center gap-2">
+            {value === "auto" && <Sparkles className="size-3.5" />}
+            {value === "low" && <Smartphone className="size-3.5" />}
+            {value === "medium" && <Monitor className="size-3.5" />}
+            {value === "high" && <Tv className="size-3.5" />}
+            <span>{label}</span>
+        </div>
+    );
+}
 
 export function ComposerPanel({
     imageModel,
@@ -77,9 +91,9 @@ export function ComposerPanel({
     imageQuality,
     imageQualityOptions,
     onImageQualityChange,
-    upscaleScale,
-    upscaleOptions,
-    onUpscaleScaleChange,
+    upscaleQuality,
+    upscaleQualityOptions,
+    onUpscaleQualityChange,
     availableQuota,
     sourceImages,
     onRemoveSourceImage,
@@ -93,6 +107,8 @@ export function ComposerPanel({
     onPromptPaste,
     onSubmit,
     onCancel,
+    cancelButtonLabel,
+    cancelButtonTitle,
     isSubmitting,
     uploadInputRef,
     maskInputRef,
@@ -166,11 +182,11 @@ export function ComposerPanel({
                                             <SelectItem key={item.value} value={item.value}>
                                                 <div className="flex items-center gap-2">
                                                     {item.value === "auto" && <Ratio className="size-3.5" />}
-                                                    {item.value === "1024x1024" && <Square className="size-3.5" />}
-                                                    {item.value === "1536x1024" && <RectangleHorizontal className="size-3.5" />}
-                                                    {item.value === "1024x1536" && <RectangleVertical className="size-3.5" />}
-                                                    {item.value === "1792x1024" && <Monitor className="size-3.5" />}
-                                                    {item.value === "1024x1792" && <Smartphone className="size-3.5" />}
+                                                    {item.value === "1:1" && <Square className="size-3.5" />}
+                                                    {item.value === "3:2" && <Monitor className="size-3.5" />}
+                                                    {item.value === "2:3" && <RectangleVertical className="size-3.5" />}
+                                                    {item.value === "16:9" && <Monitor className="size-3.5" />}
+                                                    {item.value === "9:16" && <Smartphone className="size-3.5" />}
                                                     <span>{item.label}</span>
                                                 </div>
                                             </SelectItem>
@@ -180,16 +196,15 @@ export function ComposerPanel({
 
                                 <Select value={imageQuality} onValueChange={(value) => onImageQualityChange(value as ImageGenerationQuality)}>
                                     <SelectTrigger className="h-8 w-[70px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
-                                        <SelectValue />
+                                        {renderQualityOption(
+                                            imageQuality,
+                                            imageQualityOptions.find((item) => item.value === imageQuality)?.label ?? "Auto",
+                                        )}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {imageQualityOptions.map((item) => (
                                             <SelectItem key={item.value} value={item.value}>
-                                                <div className="flex items-center gap-2">
-                                                    {item.value === "medium" && <Monitor className="size-3.5" />}
-                                                    {item.value === "high" && <Tv className="size-3.5" />}
-                                                    <span>{item.label}</span>
-                                                </div>
+                                                {renderQualityOption(item.value, item.label)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -198,14 +213,17 @@ export function ComposerPanel({
                         ) : null}
 
                         {mode === "upscale" ? (
-                            <Select value={upscaleScale} onValueChange={onUpscaleScaleChange}>
-                                <SelectTrigger className="h-8 w-[96px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
-                                    <SelectValue />
+                            <Select value={upscaleQuality} onValueChange={(value) => onUpscaleQualityChange(value as ImageGenerationQuality)}>
+                                <SelectTrigger className="h-8 w-[78px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    {renderQualityOption(
+                                        upscaleQuality,
+                                        upscaleQualityOptions.find((item) => item.value === upscaleQuality)?.label ?? "Auto",
+                                    )}
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {upscaleOptions.map((item) => (
-                                        <SelectItem key={item} value={item}>
-                                            {item}
+                                    {upscaleQualityOptions.map((item) => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {renderQualityOption(item.value, item.label)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -345,15 +363,16 @@ export function ComposerPanel({
                             </div>
 
                             {isSubmitting ? (
-                                <button
+                                <Button
                                     type="button"
+                                    size="sm"
                                     onClick={onCancel}
-                                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-rose-700 dark:hover:bg-rose-900/30 dark:hover:text-rose-400"
-                                    aria-label="取消生成"
-                                    title="取消生成"
+                                    title={cancelButtonTitle}
+                                    className="h-9 shrink-0 rounded-full bg-stone-950 px-3 text-xs font-medium text-white shadow-none transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                                 >
-                                    <LoaderCircle className="size-4 animate-spin" />
-                                </button>
+                                    <LoaderCircle className="size-3.5 animate-spin" />
+                                    {cancelButtonLabel}
+                                </Button>
                             ) : (
                                 <button
                                     type="button"

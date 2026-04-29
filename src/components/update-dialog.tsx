@@ -222,7 +222,7 @@ export function UpdateDialog({ open, onClose, currentVersionLabel }: UpdateDialo
   async function downloadAndInstallUpdate() {
     const updater = getDesktopUpdaterApi();
     if (!updater) {
-      toast.info("当前是浏览器模式，自动更新仅桌面版可用");
+      toast.info("当前环境不支持下载安装包");
       return;
     }
 
@@ -263,10 +263,6 @@ export function UpdateDialog({ open, onClose, currentVersionLabel }: UpdateDialo
         </button>
 
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">检查更新</h2>
-        <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-          桌面版会自动检查 GitHub Release；浏览器模式也会展示最新 Release 信息
-        </p>
-
         <div className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-stone-800 dark:text-stone-100">更新状态</span>
@@ -278,11 +274,6 @@ export function UpdateDialog({ open, onClose, currentVersionLabel }: UpdateDialo
             >
               {resolveUpdateStatusLabel(updateState)}
             </span>
-            {!desktopUpdaterAvailable ? (
-              <span className="text-xs text-stone-500 dark:text-stone-400">
-                当前是浏览器模式，仅支持查看 Release 信息
-              </span>
-            ) : null}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -312,10 +303,11 @@ export function UpdateDialog({ open, onClose, currentVersionLabel }: UpdateDialo
             </div>
           </div>
 
-          <div className="rounded-xl border border-dashed border-stone-200 bg-stone-50/80 px-3 py-2 text-xs leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/70 dark:text-stone-300">
-            {updateState?.message ||
-              "桌面版可在这里检查更新并下载安装包；浏览器模式可查看 GitHub Release 最新信息。"}
-          </div>
+          {updateState?.message ? (
+            <div className="rounded-xl border border-dashed border-stone-200 bg-stone-50/80 px-3 py-2 text-xs leading-6 text-stone-600 dark:border-stone-700 dark:bg-stone-800/70 dark:text-stone-300">
+              {updateState.message}
+            </div>
+          ) : null}
 
           {updateState?.status === "downloading" ? (
             <div className="space-y-2">
