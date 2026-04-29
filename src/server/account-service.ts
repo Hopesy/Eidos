@@ -1,8 +1,7 @@
 import { createHash } from "node:crypto";
 import { addRequestLog } from "@/server/request-log-store";
 
-import { getSavedConfig } from "@/server/config-store";
-import type { ImageApiStyle, ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 import {
   editImageResultWithApiService,
   editImageResultWithResponsesApiService,
@@ -20,9 +19,11 @@ import { logger } from "@/server/logger";
 import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
 import type { AccountRecord, AccountRefreshError, AccountStatus, AccountType, PublicAccount } from "@/server/types";
-import { getDefaultConfigPayload } from "@/shared/app-config";
+import { createAccountSelector } from "@/server/account-selection-service";
+import { getImageApiServiceConfig } from "@/server/image-api-service-config";
 
-let nextIndex = 0;
+export { getImageApiServiceConfig } from "@/server/image-api-service-config";
+
 const API_MAX_ATTEMPTS = 3;
 const API_RETRY_BASE_DELAY_MS = 1500;
 
@@ -56,36 +57,6 @@ function normalizeAccountType(value: unknown): AccountType | null {
     enterprise: "Team",
   };
   return mapping[normalized] ?? null;
-}
-
-export function getImageApiServiceConfig() {
-  const defaultChatgptConfig = getDefaultConfigPayload().chatgpt;
-  const savedConfig = getSavedConfig() as
-    | {
-      chatgpt?: {
-        enabled?: boolean;
-        baseUrl?: string;
-        apiKey?: string;
-        apiStyle?: ImageApiStyle;
-        responsesModel?: string;
-      };
-    }
-    | null;
-  const enabled = Boolean(savedConfig?.chatgpt?.enabled);
-  const baseUrl = cleanToken(savedConfig?.chatgpt?.baseUrl) || cleanToken(defaultChatgptConfig?.baseUrl) || "https://api.openai.com/v1";
-  const apiKey = cleanToken(savedConfig?.chatgpt?.apiKey);
-  const apiStyle = (cleanToken(savedConfig?.chatgpt?.apiStyle) || cleanToken(defaultChatgptConfig?.apiStyle) || "v1") as ImageApiStyle;
-  const responsesModel =
-    cleanToken(savedConfig?.chatgpt?.responsesModel) || cleanToken(defaultChatgptConfig?.responsesModel) || "gpt-5.5";
-  if (!enabled) {
-    return null;
-  }
-  return {
-    baseUrl,
-    apiKey,
-    apiStyle,
-    responsesModel,
-  };
 }
 
 function searchAccountType(value: unknown): AccountType | null {
@@ -203,10 +174,6 @@ function extractQuotaAndRestoreAt(limitsProgress: Array<Record<string, unknown>>
     quota: Math.max(0, Number(imageGen?.remaining ?? 0) || 0),
     restoreAt: cleanToken(imageGen?.reset_after) || null,
   };
-}
-
-function isImageAccountAvailable(account: AccountRecord | null) {
-  return Boolean(account && account.status !== "禁用" && account.quota > 0);
 }
 
 function isRetryableImageError(error: unknown) {
@@ -618,6 +585,11 @@ async function getAccountById(accountId: string) {
   return (await listRecords()).find((item) => cleanToken(item.id) === normalized) ?? null;
 }
 
+const accountSelector = createAccountSelector({
+  listRecords,
+  refreshAccountState,
+});
+
 export async function listAccounts() {
   return (await listRecords()).map(publicAccount);
 }
@@ -676,11 +648,7 @@ export async function deleteAccounts(tokens: string[]) {
 
   const before = await listRecords();
   const nextAccounts = await saveTransformed((accounts) => accounts.filter((item) => !target.has(item.access_token)));
-  if (nextAccounts.length > 0) {
-    nextIndex %= nextAccounts.length;
-  } else {
-    nextIndex = 0;
-  }
+  accountSelector.reset(nextAccounts.length);
 
   return {
     removed: before.length - nextAccounts.length,
@@ -826,32 +794,7 @@ export async function refreshAccounts(accessTokens: string[], options?: { markRe
 }
 
 export async function getAvailableAccessToken(excludedTokens?: Set<string>) {
-  const accounts = await listRecords();
-  // 过滤：未被禁用 + 未在排除集合中（quota=0 的新导入账号也允许参与，刷新后再判断实际余量）
-  const candidates = accounts.filter(
-    (item) => item.status !== "禁用" && !excludedTokens?.has(item.access_token),
-  );
-  if (candidates.length === 0) {
-    throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
-  }
-
-  // 优先使用已有 quota 的账号（避免对每个新账号都发起远端请求拖慢速度）
-  const withQuota = candidates.filter((item) => item.quota > 0);
-  const available = withQuota.length > 0 ? withQuota : candidates;
-
-  while (available.length > 0) {
-    const account = available[nextIndex % available.length];
-    nextIndex += 1;
-    const refreshed = await refreshAccountState(account.access_token);
-    if (refreshed && refreshed.status !== "禁用" && refreshed.quota > 0) {
-      return refreshed.access_token;
-    }
-    excludedTokens?.add(account.access_token);
-    const nextAccounts = available.filter((item) => item.access_token !== account.access_token);
-    available.splice(0, available.length, ...nextAccounts);
-  }
-
-  throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
+  return accountSelector.getAvailableAccessToken(excludedTokens);
 }
 
 export async function generateWithPool(
