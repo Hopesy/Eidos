@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ClipboardEvent as ReactClipboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
@@ -10,7 +10,6 @@ import {
   type GenerationOption,
   type ImageModelOption,
   type ModeOption,
-  type ToolbarImageSize,
 } from "./_components/composer-panel";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { ConversationTurn } from "./_components/conversation-turn";
@@ -18,27 +17,58 @@ import { EmptyState, type InspirationExample } from "./_components/empty-state";
 import { HistorySidebar } from "./_components/history-sidebar";
 import { FilesSidebar } from "./_components/files-sidebar";
 import {
-  editImage,
+  applyPromptExample as applyWorkbenchPromptExample,
+  appendFiles as appendWorkbenchFiles,
+  handleCreateDraft as handleWorkbenchCreateDraft,
+  handleModeChange as handleWorkbenchModeChange,
+  handlePromptPaste as handleWorkbenchPromptPaste,
+  handleToggleLatestResultReference as toggleWorkbenchLatestResultReference,
+  openImagePickerForMode as openWorkbenchImagePickerForMode,
+  openSelectionEditor as openWorkbenchSelectionEditor,
+  removeSourceImage as removeWorkbenchSourceImage,
+  resetComposer as resetWorkbenchComposer,
+  seedFromResult as seedWorkbenchFromResult,
+} from "@/features/image-workbench/composer";
+import {
+  handleCancelAndEditActiveRequest as handleActiveRequestCancelAndEdit,
+  handleEditTurn as handleConversationTurnEdit,
+  restoreComposerFromTurn as restoreWorkbenchComposerFromTurn,
+  retractTurnAfterAbort as retractConversationTurnAfterAbort,
+} from "@/features/image-workbench/conversation-editing";
+import {
+  clearHistory as clearWorkbenchHistory,
+  deleteConversation as deleteWorkbenchConversation,
+  persistConversation as persistWorkbenchConversation,
+  refreshHistory as refreshWorkbenchHistory,
+  syncRuntimeTaskState as syncWorkbenchRuntimeTaskState,
+  updateConversation as updateWorkbenchConversation,
+} from "@/features/image-workbench/workspace";
+import {
+  type ActiveRequestState,
+  createSourceImageFromResult,
+  formatAvailableQuota,
+  getLatestSuccessfulImage,
+  makeId,
+} from "@/features/image-workbench/utils";
+import { downloadImageFile, openImageInNewTab } from "@/features/image-workbench/browser-actions";
+import { buildProcessingStatus, buildWaitingDots } from "@/features/image-workbench/processing-status";
+import { findRecoverableTaskCandidate, findRecoverableTurn } from "@/features/image-workbench/recovery-candidates";
+import {
+  runRetryTurn,
+  runSelectionEditSubmit,
+  runSubmit,
+  type ActiveRequestMeta,
+  type EditorTarget,
+  type PendingAbortAction,
+} from "@/features/image-workbench/submission";
+import {
   fetchAccounts,
-  fetchRecoverableImageTasks,
-  generateImage,
-  recoverImageTask,
-  upscaleImage,
-  type Account,
   type ImageGenerationQuality,
-  type ImageGenerationSize,
   type ImageModel,
   type RecoverableImageTaskItem,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
-  clearImageConversations,
-  deleteImageConversation,
-  getImageConversation,
-  listImageConversations,
-  normalizeConversation,
-  saveImageConversation,
-  updateImageConversation,
   type ImageConversation,
   type ImageConversationTurn,
   type ImageMode,
@@ -46,15 +76,13 @@ import {
   type StoredSourceImage,
 } from "@/store/image-conversations";
 import {
-  finishImageTask,
-  isImageTaskActive,
-  listActiveImageTasks,
-  startImageTask,
   subscribeImageTasks,
 } from "@/store/image-active-tasks";
 import { getCachedImageWorkspaceState, setCachedImageWorkspaceState } from "@/store/image-workspace-cache";
-import { ApiRequestError } from "@/lib/request";
 import { APP_CREDENTIALS_REFRESHED_EVENT } from "@/lib/app-startup-refresh";
+import {
+  type ImageRatioOption as ToolbarImageSize,
+} from "@/shared/image-generation";
 
 const imageModelOptions: Array<{ label: string; value: ImageModel }> = [
   { label: "gpt-image-2", value: "gpt-image-2" },
@@ -90,102 +118,6 @@ const upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
   { label: "High", value: "high" },
 ];
 
-function getUpscaleQualityLabel(quality: ImageGenerationQuality) {
-  switch (quality) {
-    case "low":
-      return "Low";
-    case "medium":
-      return "Medium";
-    case "high":
-      return "High";
-    default:
-      return "Auto";
-  }
-}
-
-function resolveUpscaleQuality(
-  quality?: ImageGenerationQuality,
-  legacyScale?: string,
-): ImageGenerationQuality {
-  if (quality === "auto" || quality === "low" || quality === "medium" || quality === "high") {
-    return quality;
-  }
-
-  switch ((legacyScale || "").trim().toLowerCase()) {
-    case "2x":
-      return "low";
-    case "4x":
-      return "medium";
-    case "6x":
-    case "8x":
-      return "high";
-    default:
-      return "medium";
-  }
-}
-
-function resolveImageGenerationSize(
-  ratio: ToolbarImageSize,
-  quality: ImageGenerationQuality,
-): ImageGenerationSize {
-  if (ratio === "auto" || quality === "auto") {
-    return "auto";
-  }
-
-  const key = `${ratio}:${quality}` as const;
-  const mapping: Record<string, ImageGenerationSize> = {
-    "1:1:low": "1024x1024",
-    "1:1:medium": "2048x2048",
-    "1:1:high": "4096x4096",
-    "3:2:low": "1536x1024",
-    "3:2:medium": "3072x2048",
-    "3:2:high": "6144x4096",
-    "2:3:low": "1024x1536",
-    "2:3:medium": "2048x3072",
-    "2:3:high": "4096x6144",
-    "16:9:low": "1920x1088",
-    "16:9:medium": "2560x1440",
-    "16:9:high": "3840x2160",
-    "9:16:low": "1088x1920",
-    "9:16:medium": "1440x2560",
-    "9:16:high": "2160x3840",
-  };
-  return mapping[key] ?? "auto";
-}
-
-function resolveToolbarRatioFromImageSize(size?: ImageGenerationSize): ToolbarImageSize {
-  switch (size) {
-    case "1024x1024":
-    case "2048x2048":
-    case "4096x4096":
-      return "1:1";
-    case "1536x1024":
-    case "3072x2048":
-    case "6144x4096":
-      return "3:2";
-    case "1024x1536":
-    case "2048x3072":
-    case "4096x6144":
-      return "2:3";
-    case "1920x1088":
-    case "2560x1440":
-    case "3840x2160":
-      return "16:9";
-    case "1088x1920":
-    case "1440x2560":
-    case "2160x3840":
-      return "9:16";
-    default:
-      return "auto";
-  }
-}
-
-function cloneSourceImagesForComposer(sourceImages: StoredSourceImage[] = []): StoredSourceImage[] {
-  return sourceImages.map((item) => ({
-    ...item,
-    id: makeId(),
-  }));
-}
 
 const inspirationExamples: InspirationExample[] = [
   {
@@ -230,665 +162,6 @@ const inspirationExamples: InspirationExample[] = [
   },
 ];
 
-type ActiveRequestState = {
-  conversationId: string;
-  turnId: string;
-  mode: import("@/store/image-conversations").ImageMode;
-  count: number;
-  variant: "standard" | "selection-edit";
-  imageId?: string;
-};
-
-function buildConversationTitle(mode: ImageMode, prompt: string, upscaleQuality: ImageGenerationQuality = "auto") {
-  const trimmed = prompt.trim();
-  const prefix = mode === "generate"
-    ? "生成"
-    : mode === "edit"
-      ? "编辑"
-      : upscaleQuality === "auto"
-        ? "增强"
-        : `增强 ${getUpscaleQualityLabel(upscaleQuality)}`;
-  if (!trimmed) {
-    return prefix;
-  }
-  if (trimmed.length <= 8) {
-    return `${prefix} · ${trimmed}`;
-  }
-  return `${prefix} · ${trimmed.slice(0, 8)}...`;
-}
-
-function formatAvailableQuota(accounts: Account[]) {
-  const availableAccounts = accounts.filter((account) => account.status !== "禁用" && account.status !== "异常");
-  return String(availableAccounts.reduce((sum, account) => sum + Math.max(0, account.quota), 0));
-}
-
-async function normalizeConversationHistory(items: ImageConversation[]) {
-  const normalized = items.map((item) => {
-    let changed = false;
-    const turns = (item.turns ?? []).map((turn) => {
-      if (turn.status !== "generating" || isImageTaskActive(item.id, turn.id)) {
-        return turn;
-      }
-
-      changed = true;
-      const errorMessage = turn.images.some((image) => image.status === "success")
-        ? turn.error || "任务已中断"
-        : "页面已刷新，任务已中断";
-
-      return {
-        ...turn,
-        status: "error" as const,
-        error: errorMessage,
-        images: turn.images.map((image) =>
-          image.status === "loading"
-            ? {
-              ...image,
-              status: "error" as const,
-              error: "页面已刷新，任务已中断",
-            }
-            : image,
-        ),
-      };
-    });
-
-    const conversation = normalizeConversation(
-      changed
-        ? {
-          ...item,
-          turns,
-        }
-        : item,
-    );
-
-    return { conversation, changed };
-  });
-
-  await Promise.all(
-    normalized
-      .filter((item) => item.changed)
-      .map((item) => saveImageConversation(item.conversation)),
-  );
-
-  return normalized.map((item) => item.conversation);
-}
-
-function makeId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function buildImageDataUrl(image: StoredImage) {
-  if (image.url) {
-    return image.url;
-  }
-  if (!image.b64_json) {
-    return "";
-  }
-  return `data:image/png;base64,${image.b64_json}`;
-}
-
-function getLatestSuccessfulImage(turns: ImageConversationTurn[]) {
-  for (let turnIndex = turns.length - 1; turnIndex >= 0; turnIndex -= 1) {
-    const turn = turns[turnIndex];
-    const images = Array.isArray(turn.images) ? turn.images : [];
-    for (let imageIndex = images.length - 1; imageIndex >= 0; imageIndex -= 1) {
-      const image = images[imageIndex];
-      if (image.status === "success" && (image.url || image.b64_json)) {
-        return image;
-      }
-    }
-  }
-  return null;
-}
-
-function createLoadingImages(count: number, conversationId: string) {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `${conversationId}-${index}`,
-    status: "loading" as const,
-  }));
-}
-
-function createConversationTurn(payload: {
-  turnId: string;
-  title: string;
-  mode: ImageMode;
-  prompt: string;
-  model: ImageModel;
-  imageSize?: ImageGenerationSize;
-  imageQuality?: ImageGenerationQuality;
-  count: number;
-  scale?: string;
-  sourceImages?: StoredSourceImage[];
-  images: StoredImage[];
-  createdAt: string;
-  status: "generating" | "success" | "error";
-  error?: string;
-}): ImageConversationTurn {
-  return {
-    id: payload.turnId,
-    title: payload.title,
-    mode: payload.mode,
-    prompt: payload.prompt,
-    model: payload.model,
-    imageSize: payload.imageSize,
-    imageQuality: payload.imageQuality,
-    count: payload.count,
-    scale: payload.scale,
-    sourceImages: payload.sourceImages ?? [],
-    images: payload.images,
-    createdAt: payload.createdAt,
-    status: payload.status,
-    error: payload.error,
-  };
-}
-
-async function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error(`读取 ${file.name} 失败`));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function dataUrlToFile(dataUrl: string, fileName: string) {
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
-  return new File([blob], fileName, { type: blob.type || "image/png" });
-}
-
-function createSourceImageFromResult(image: StoredImage, name: string, hiddenInConversation = false): StoredSourceImage | null {
-  const dataUrl = buildImageDataUrl(image);
-  if (!dataUrl) {
-    return null;
-  }
-  return {
-    id: makeId(),
-    role: "image",
-    name,
-    dataUrl,
-    hiddenInConversation,
-    image_id: image.image_id,
-    file_path: image.file_path,
-    file_id: image.file_id,
-    gen_id: image.gen_id,
-    response_id: image.response_id,
-    image_generation_call_id: image.image_generation_call_id,
-    conversation_id: image.conversation_id,
-    parent_message_id: image.parent_message_id,
-    source_account_id: image.source_account_id,
-  };
-}
-
-function buildSourceReference(source: StoredSourceImage | null | undefined) {
-  if (!source) {
-    return null;
-  }
-  const originalFileId = String(source.file_id || "").trim();
-  const originalGenId = String(source.gen_id || source.response_id || "").trim();
-  const sourceAccountId = String(source.source_account_id || "").trim();
-  if (!originalFileId || !sourceAccountId || !originalGenId) {
-    return null;
-  }
-  return {
-    original_file_id: originalFileId,
-    original_gen_id: originalGenId,
-    previous_response_id: String(source.response_id || "").trim() || undefined,
-    image_generation_call_id: String(source.image_generation_call_id || "").trim() || undefined,
-    conversation_id: String(source.conversation_id || "").trim() || undefined,
-    parent_message_id: String(source.parent_message_id || "").trim() || undefined,
-    source_account_id: sourceAccountId,
-  };
-}
-
-function mergeResultImages(
-  conversationId: string,
-  items: Array<{
-    b64_json?: string;
-    url?: string;
-    image_id?: string;
-    file_path?: string;
-    revised_prompt?: string;
-    text?: string;
-    file_id?: string;
-    gen_id?: string;
-    response_id?: string;
-    image_generation_call_id?: string;
-    conversation_id?: string;
-    parent_message_id?: string;
-    source_account_id?: string;
-  }>,
-  expected: number,
-) {
-  const results: StoredImage[] = items.map((item, index) => createResultImage(`${conversationId}-${index}`, item));
-
-  if (expected > results.length) {
-    for (let index = results.length; index < expected; index += 1) {
-      results.push({
-        id: `${conversationId}-${index}`,
-        status: "error",
-        error: "未返回足够数量的图片",
-      });
-    }
-  }
-
-  return results;
-}
-
-function createResultImage(
-  id: string,
-  item: {
-    b64_json?: string;
-    url?: string;
-    image_id?: string;
-    file_path?: string;
-    revised_prompt?: string;
-    text?: string;
-    file_id?: string;
-    gen_id?: string;
-    response_id?: string;
-    image_generation_call_id?: string;
-    conversation_id?: string;
-    parent_message_id?: string;
-    source_account_id?: string;
-  } | null | undefined,
-): StoredImage {
-  if (item?.url || item?.b64_json) {
-    return {
-      id,
-      status: "success",
-      ...(item.url ? { url: item.url } : { b64_json: item.b64_json }),
-      image_id: item.image_id,
-      file_path: item.file_path,
-      revised_prompt: item.revised_prompt,
-      file_id: item.file_id,
-      gen_id: item.gen_id,
-      response_id: item.response_id,
-      image_generation_call_id: item.image_generation_call_id,
-      conversation_id: item.conversation_id,
-      parent_message_id: item.parent_message_id,
-      source_account_id: item.source_account_id,
-      failureKind: undefined,
-      retryAction: undefined,
-      retryable: undefined,
-      stage: undefined,
-      upstreamConversationId: undefined,
-    };
-  }
-
-  if (item?.text) {
-    return {
-      id,
-      status: "success",
-      text: item.text,
-    };
-  }
-
-  return {
-    id,
-    status: "error",
-    error: "接口没有返回图片数据",
-  };
-}
-
-function patchRetriedImages(
-  existingImages: StoredImage[],
-  retryIndexes: number[],
-  items: Array<{
-    b64_json?: string;
-    url?: string;
-    image_id?: string;
-    file_path?: string;
-    revised_prompt?: string;
-    text?: string;
-    file_id?: string;
-    gen_id?: string;
-    response_id?: string;
-    image_generation_call_id?: string;
-    conversation_id?: string;
-    parent_message_id?: string;
-    source_account_id?: string;
-  }>,
-) {
-  const nextImages = existingImages.map((image) => ({ ...image }));
-  retryIndexes.forEach((slotIndex, resultIndex) => {
-    const current = nextImages[slotIndex];
-    if (!current) {
-      return;
-    }
-    nextImages[slotIndex] = createResultImage(current.id, items[resultIndex]);
-  });
-
-  if (items.length < retryIndexes.length) {
-    for (let index = items.length; index < retryIndexes.length; index += 1) {
-      const slotIndex = retryIndexes[index];
-      const current = nextImages[slotIndex];
-      if (!current) {
-        continue;
-      }
-      nextImages[slotIndex] = {
-        ...current,
-        status: "error",
-        error: "未返回足够数量的图片",
-      };
-    }
-  }
-
-  return nextImages;
-}
-
-function countFailures(images: StoredImage[]) {
-  return images.filter((image) => image.status === "error").length;
-}
-
-function findRecoverableTurn(conversations: ImageConversation[]) {
-  return conversations
-    .flatMap((conversation) =>
-      (conversation.turns ?? []).map((turn) => ({
-        conversationId: conversation.id,
-        turn,
-      })),
-    )
-    .filter(({ turn }) =>
-      turn.status === "error" &&
-      Boolean(turn.retryable) &&
-      Boolean(turn.upstreamConversationId) &&
-      (turn.retryAction === "resume_polling" || turn.retryAction === "retry_download"),
-    )
-    .sort((a, b) => b.turn.createdAt.localeCompare(a.turn.createdAt))[0] ?? null;
-}
-
-function findRecoverableTaskCandidate(
-  tasks: RecoverableImageTaskItem[],
-  conversations: ImageConversation[],
-) {
-  const byConversation = new Map(conversations.map((conversation) => [conversation.id, conversation]));
-  const sortedTasks = [...tasks].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
-
-  for (const task of sortedTasks) {
-    const conversationId = String(task.localConversationId || "").trim();
-    const turnId = String(task.localTurnId || "").trim();
-    if (!conversationId || !turnId) {
-      continue;
-    }
-    const conversation = byConversation.get(conversationId);
-    if (!conversation) {
-      continue;
-    }
-    const turn = (conversation.turns ?? []).find((item) => item.id === turnId);
-    if (!turn || turn.status !== "error") {
-      continue;
-    }
-    const mergedTurn: ImageConversationTurn = {
-      ...turn,
-      mode: task.mode || turn.mode,
-      prompt: String(task.prompt || task.revisedPrompt || turn.prompt || ""),
-      model: (String(task.model || turn.model || "gpt-image-1") || "gpt-image-1") as ImageModel,
-      failureKind: String(task.failureKind || turn.failureKind || "").trim() || turn.failureKind,
-      retryAction: String(task.retryAction || turn.retryAction || "").trim() || turn.retryAction,
-      retryable: typeof task.retryable === "boolean" ? task.retryable : turn.retryable,
-      stage: String(task.stage || turn.stage || "").trim() || turn.stage,
-      upstreamConversationId:
-        String(task.upstreamConversationId || turn.upstreamConversationId || "").trim() || turn.upstreamConversationId,
-      upstreamResponseId:
-        String(task.upstreamResponseId || turn.upstreamResponseId || "").trim() || turn.upstreamResponseId,
-      imageGenerationCallId:
-        String(task.imageGenerationCallId || turn.imageGenerationCallId || "").trim() || turn.imageGenerationCallId,
-      sourceAccountId:
-        String(task.sourceAccountId || turn.sourceAccountId || "").trim() || turn.sourceAccountId,
-      fileIds: Array.isArray(task.fileIds) && task.fileIds.length > 0 ? task.fileIds : turn.fileIds,
-      error: String(task.error || turn.error || "").trim() || turn.error,
-    };
-    return {
-      task,
-      conversationId,
-      turn: mergedTurn,
-    };
-  }
-
-  return null;
-}
-
-function formatProcessingDuration(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes <= 0) {
-    return `${seconds}s`;
-  }
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
-}
-
-function buildWaitingDots(totalSeconds: number) {
-  return ".".repeat((totalSeconds % 3) + 1);
-}
-
-function buildProcessingStatus(
-  mode: ImageMode,
-  elapsedSeconds: number,
-  count: number,
-  variant: ActiveRequestState["variant"],
-) {
-  if (mode === "generate") {
-    if (elapsedSeconds < 4) {
-      return {
-        title: "正在提交生成请求",
-        detail: `已进入图像生成队列，本次目标 ${count} 张`,
-      };
-    }
-    if (elapsedSeconds < 12) {
-      return {
-        title: `正在生成图像${buildWaitingDots(elapsedSeconds)}`,
-        detail: `模型正在组织画面内容，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-      };
-    }
-    return {
-      title: `正在生成图像${buildWaitingDots(elapsedSeconds)}`,
-      detail: `复杂提示词会耗时更久，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-    };
-  }
-
-  if (mode === "edit") {
-    if (variant === "selection-edit") {
-      if (elapsedSeconds < 6) {
-        return {
-          title: "正在提交选区编辑",
-          detail: `遮罩与源图已上传，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-        };
-      }
-      return {
-        title: `正在执行选区编辑${buildWaitingDots(elapsedSeconds)}`,
-        detail: `系统正在根据遮罩重绘区域，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-      };
-    }
-
-    if (elapsedSeconds < 6) {
-      return {
-        title: "正在提交编辑请求",
-        detail: `源图已就绪，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-      };
-    }
-    return {
-      title: `正在编辑图像${buildWaitingDots(elapsedSeconds)}`,
-      detail: `系统正在重绘并融合结果，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-    };
-  }
-
-  if (elapsedSeconds < 5) {
-    return {
-      title: "正在提交增强任务",
-      detail: `源图已上传，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-    };
-  }
-  return {
-    title: `正在增强图像${buildWaitingDots(elapsedSeconds)}`,
-    detail: `系统正在增强清晰度与细节，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
-  };
-}
-
-function humanizeError(error: unknown): string {
-  if (error instanceof ApiRequestError) {
-    if (error.failureKind === "accepted_pending") {
-      return "任务已提交到上游，当前仍在处理中。建议稍后继续等待，而不是立即重新提交。";
-    }
-    if (error.failureKind === "result_fetch_failed") {
-      return "图片结果已就绪，但下载失败。建议优先重试下载，而不是重新生成。";
-    }
-    if (error.failureKind === "source_invalid") {
-      return "上游未识别到源图，请重新上传源图后重试。";
-    }
-    if (error.failureKind === "account_blocked") {
-      return "当前账号不可用、已限流或授权失效，请切换账号或稍后再试。";
-    }
-    if (error.failureKind === "input_blocked") {
-      return "请修改提示词后重试。";
-    }
-    if (error.failureKind === "submit_failed") {
-      return "图片请求提交失败，请稍后重新提交。";
-    }
-  }
-  const raw = error instanceof Error ? error.message : String(error ?? "处理图片失败");
-  const lower = raw.toLowerCase();
-  if (lower.includes("fetch failed") || lower.includes("failed to fetch") || lower.includes("network") || lower.includes("econnrefused")) {
-    return "网络连接失败，请检查网络或服务是否正常运行";
-  }
-  if (lower.includes("暂无可用账号")) {
-    return raw; // 已经是友好文案，直接返回
-  }
-  if (lower.includes("no available tokens") || lower.includes("accounts.json")) {
-    return "暂无可用账号，请先在账号管理页面添加并启用账号";
-  }
-  if (lower.includes("timeout") || lower.includes("timed out") || lower.includes("超时")) {
-    return "请求超时，图像生成耗时较长，请稍后重试";
-  }
-  if (lower.includes("rate limit") || lower.includes("429")) {
-    return "请求过于频繁，请稍后再试";
-  }
-  if (lower.includes("unauthorized") || lower.includes("401") || lower.includes("token") && lower.includes("invalid")) {
-    return "账号授权已失效，请在账号管理页面刷新账号状态";
-  }
-  if (lower.includes("403") || lower.includes("forbidden")) {
-    return "无访问权限，账号可能被限制使用";
-  }
-  if (lower.includes("500") || lower.includes("502") || lower.includes("503") || lower.includes("service unavailable")) {
-    return "上游服务暂时不可用，请稍后重试";
-  }
-  if (lower.includes("content policy") || lower.includes("safety") || lower.includes("违规")) {
-    return "提示词可能违反内容政策，请修改后重试";
-  }
-  return raw;
-}
-
-function isCanceledRequestError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    (error.name === "CanceledError" || error.name === "AbortError" || error.message.toLowerCase().includes("canceled"))
-  );
-}
-
-function extractRequestFailureMeta(error: unknown) {
-  if (!(error instanceof ApiRequestError)) {
-    return {
-      failureKind: undefined,
-      retryAction: undefined,
-      retryable: undefined,
-      stage: undefined,
-      upstreamConversationId: undefined,
-      upstreamResponseId: undefined,
-      imageGenerationCallId: undefined,
-      sourceAccountId: undefined,
-      fileIds: undefined,
-    };
-  }
-  return {
-    failureKind: error.failureKind,
-    retryAction: error.retryAction,
-    retryable: error.retryable,
-    stage: error.stage,
-    upstreamConversationId: error.upstreamConversationId,
-    upstreamResponseId: error.upstreamResponseId,
-    imageGenerationCallId: error.imageGenerationCallId,
-    sourceAccountId: error.sourceAccountId,
-    fileIds: error.fileIds,
-  };
-}
-
-function openImageInNewTab(dataUrl: string) {
-  const w = window.open("", "_blank");
-  if (w) {
-    w.document.write(`<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUrl}" style="max-width:100%;max-height:100vh;object-fit:contain" /></body></html>`);
-    w.document.close();
-  }
-}
-
-async function downloadImageFile(image: StoredImage, suggestedFileName: string) {
-  const href = image.url || buildImageDataUrl(image);
-  if (!href) {
-    toast.error("当前图片没有可下载的数据");
-    return;
-  }
-
-  const fileName = suggestedFileName || "image.png";
-  try {
-    const response = await fetch(href);
-    if (!response.ok) {
-      throw new Error(`下载图片失败 (${response.status})`);
-    }
-    const blob = await response.blob();
-
-    const picker = (window as Window & {
-      showSaveFilePicker?: (options?: {
-        suggestedName?: string;
-        startIn?: "desktop" | "documents" | "downloads" | "music" | "pictures" | "videos";
-        types?: Array<{
-          description?: string;
-          accept: Record<string, string[]>;
-        }>;
-      }) => Promise<{
-        createWritable: () => Promise<{
-          write: (data: Blob) => Promise<void>;
-          close: () => Promise<void>;
-        }>;
-      }>;
-    }).showSaveFilePicker;
-
-    if (typeof picker === "function") {
-      const ext = fileName.includes(".") ? `.${fileName.split(".").pop()}` : ".png";
-      const handle = await picker({
-        suggestedName: fileName,
-        startIn: "desktop",
-        types: [
-          {
-            description: "图片文件",
-            accept: {
-              [blob.type || "image/png"]: [ext],
-            },
-          },
-        ],
-      });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = objectUrl;
-    anchor.download = fileName;
-    anchor.rel = "noopener";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(objectUrl);
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      return;
-    }
-    toast.error(error instanceof Error ? error.message : "下载图片失败");
-  }
-}
 
 export default function ImagePage() {
   const cachedWorkspaceState = getCachedImageWorkspaceState();
@@ -897,8 +170,8 @@ export default function ImagePage() {
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
   const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
   const requestAbortControllerRef = useRef<AbortController | null>(null);
-  const pendingAbortActionRef = useRef<null | { conversationId: string; turnId: string; retractTurn: boolean }>(null);
-  const activeRequestMetaRef = useRef<null | { conversationId: string; turnId: string; retractOnEdit: boolean }>(null);
+  const pendingAbortActionRef = useRef<PendingAbortAction | null>(null);
+  const activeRequestMetaRef = useRef<ActiveRequestMeta | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -938,13 +211,7 @@ export default function ImagePage() {
   const [submitStartedAt, setSubmitStartedAt] = useState<number | null>(null);
   const [submitElapsedSeconds, setSubmitElapsedSeconds] = useState(0);
   const [pendingPickerMode, setPendingPickerMode] = useState<ImageMode | null>(null);
-  const [editorTarget, setEditorTarget] = useState<{
-    conversationId: string;
-    turnId: string;
-    image: StoredImage;
-    imageName: string;
-    sourceDataUrl: string;
-  } | null>(null);
+  const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const selectedConversation = useMemo(
@@ -1014,76 +281,29 @@ export default function ImagePage() {
     setSelectedConversationId(null);
   };
 
-  const syncRuntimeTaskState = (preferredConversationId?: string | null) => {
-    const tasks = listActiveImageTasks();
-    const nextTask =
-      tasks.find((task) => preferredConversationId && task.conversationId === preferredConversationId) ?? tasks[0] ?? null;
+  const runtimeTaskContext = {
+    setIsSubmitting,
+    setActiveRequest,
+    setSubmitStartedAt,
+    setSubmitElapsedSeconds,
+  };
 
-    setIsSubmitting(tasks.length > 0);
-    setActiveRequest(
-      nextTask
-        ? {
-          conversationId: nextTask.conversationId,
-          turnId: nextTask.turnId,
-          mode: nextTask.mode,
-          count: nextTask.count,
-          variant: nextTask.variant,
-        }
-        : null,
-    );
-    setSubmitStartedAt(nextTask?.startedAt ?? null);
-    if (!nextTask) {
-      setSubmitElapsedSeconds(0);
-    }
+  const syncRuntimeTaskState = (preferredConversationId?: string | null) => {
+    syncWorkbenchRuntimeTaskState(runtimeTaskContext, preferredConversationId);
+  };
+
+  const historyContext = {
+    mountedRef,
+    draftSelectionRef,
+    setConversations,
+    setRecoverableTasks,
+    setSelectedConversationId,
+    setIsLoadingHistory,
+    setCachedWorkspaceState: setCachedImageWorkspaceState,
   };
 
   const refreshHistory = async (options: { normalize?: boolean; silent?: boolean; withLoading?: boolean } = {}) => {
-    const { normalize = false, silent = false, withLoading = false } = options;
-
-    try {
-      if (withLoading && mountedRef.current) {
-        setIsLoadingHistory(true);
-      }
-      const [items, recoverableResponse] = await Promise.all([
-        listImageConversations(),
-        fetchRecoverableImageTasks(30).catch(() => ({ items: [] as RecoverableImageTaskItem[] })),
-      ]);
-      const nextItems = normalize ? await normalizeConversationHistory(items) : items;
-      if (!mountedRef.current) {
-        return;
-      }
-      setConversations(nextItems);
-      setRecoverableTasks(Array.isArray(recoverableResponse.items) ? recoverableResponse.items : []);
-      setSelectedConversationId((current) => {
-        let nextSelectedConversationId: string | null = current;
-        if (current && nextItems.some((item) => item.id === current)) {
-          nextSelectedConversationId = current;
-        } else if (draftSelectionRef.current) {
-          nextSelectedConversationId = null;
-        } else {
-          const activeTaskConversationId = listActiveImageTasks()[0]?.conversationId;
-          if (activeTaskConversationId && nextItems.some((item) => item.id === activeTaskConversationId)) {
-            nextSelectedConversationId = activeTaskConversationId;
-          } else {
-            nextSelectedConversationId = nextItems[0]?.id ?? null;
-          }
-        }
-        setCachedImageWorkspaceState({
-          selectedConversationId: nextSelectedConversationId,
-          isDraftSelection: draftSelectionRef.current && nextSelectedConversationId === null,
-        });
-        return nextSelectedConversationId;
-      });
-    } catch (error) {
-      if (!silent) {
-        const message = error instanceof Error ? error.message : "读取会话记录失败";
-        toast.error(message);
-      }
-    } finally {
-      if (withLoading && mountedRef.current) {
-        setIsLoadingHistory(false);
-      }
-    }
+    await refreshWorkbenchHistory(historyContext, options);
   };
 
   useEffect(() => {
@@ -1256,249 +476,87 @@ export default function ImagePage() {
   }, [isLatestResultReferenceEnabled, latestReusableSourceImage]);
 
   const persistConversation = async (conversation: ImageConversation) => {
-    const normalizedConversation = normalizeConversation(conversation);
-    await saveImageConversation(normalizedConversation);
-    if (mountedRef.current) {
-      setConversations((prev) => {
-        const next = [normalizedConversation, ...prev.filter((item) => item.id !== normalizedConversation.id)];
-        return next.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      });
-    }
+    await persistWorkbenchConversation({ mountedRef, setConversations }, conversation);
   };
 
   const updateConversation = async (
     conversationId: string,
     updater: (current: ImageConversation) => ImageConversation,
   ) => {
-    const nextConversation = await updateImageConversation(conversationId, updater);
-    if (mountedRef.current) {
-      setConversations((prev) => {
-        const next = [nextConversation, ...prev.filter((item) => item.id !== conversationId)];
-        return next.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      });
-    }
+    await updateWorkbenchConversation({ mountedRef, setConversations }, conversationId, updater);
+  };
+
+  const composerContext = {
+    mode,
+    isSubmitting,
+    latestReusableSourceImage,
+    latestReusableImageDataUrl,
+    textareaRef,
+    setPendingPickerMode,
+    setMode,
+    setImagePrompt,
+    setImageCount,
+    setImageModel,
+    setImageSize,
+    setImageQuality,
+    setUpscaleQuality,
+    setReuseLatestResultForGenerate,
+    setSourceImages,
+    setEditorTarget,
+    focusConversation,
+    openDraftConversation,
   };
 
   const resetComposer = (nextMode = mode) => {
-    setMode(nextMode);
-    setImagePrompt("");
-    setImageCount("1");
-    setImageSize("auto");
-    setImageQuality("medium");
-    setUpscaleQuality("medium");
-    setReuseLatestResultForGenerate(true);
-    setSourceImages([]);
+    resetWorkbenchComposer(composerContext, nextMode);
   };
 
   const handleModeChange = (nextMode: ImageMode) => {
-    setMode(nextMode);
-    setSourceImages((prev) => {
-      const hiddenItems = prev.filter((item) => item.hiddenInConversation);
-      const visibleItems = prev.filter((item) => !item.hiddenInConversation);
-      const explicitImageItems = visibleItems.filter((item) => item.role === "image");
-      const maskItems = visibleItems.filter((item) => item.role === "mask");
-      if (nextMode === "generate") {
-        return hiddenItems.filter((item) => item.role === "image");
-      }
-      if (nextMode !== "edit") {
-        if (nextMode === "upscale") {
-          if (explicitImageItems.length > 0) {
-            return [explicitImageItems[0]];
-          }
-          if (!latestReusableSourceImage) {
-            return [];
-          }
-        return [
-          {
-            ...latestReusableSourceImage,
-            id: makeId(),
-            name: "upscale-source.png",
-            hiddenInConversation: false,
-          },
-        ];
-      }
-        return visibleItems.filter((item) => item.role !== "mask");
-      }
-
-      if (explicitImageItems.length > 0) {
-        return [...explicitImageItems, ...maskItems];
-      }
-      if (!latestReusableSourceImage) {
-        return visibleItems;
-      }
-
-      return [
-        {
-          ...latestReusableSourceImage,
-          id: makeId(),
-          name: "inherited-source.png",
-          hiddenInConversation: false,
-        },
-      ];
-    });
+    handleWorkbenchModeChange(composerContext, nextMode);
   };
 
   const openImagePickerForMode = (nextMode: ImageMode) => {
-    if (isSubmitting) {
-      return;
-    }
-    setPendingPickerMode(nextMode);
-    handleModeChange(nextMode);
+    openWorkbenchImagePickerForMode(composerContext, nextMode);
   };
 
-  const applyPromptExample = (example: (typeof inspirationExamples)[number]) => {
-    handleModeChange("generate");
-    setImageModel(example.model);
-    setImageCount(String(example.count));
-    setImageSize("auto");
-    setImageQuality("high");
-    setImagePrompt(example.prompt);
-    openDraftConversation();
-    setSourceImages([]);
-    textareaRef.current?.focus();
+  const applyPromptExample = (example: InspirationExample) => {
+    applyWorkbenchPromptExample(composerContext, example);
   };
 
   const handleCreateDraft = () => {
-    openDraftConversation();
-    resetComposer("generate");
-    textareaRef.current?.focus();
+    handleWorkbenchCreateDraft(composerContext);
   };
 
   const handleDeleteConversation = async (id: string) => {
-    const nextConversations = conversations.filter((item) => item.id !== id);
-    setConversations(nextConversations);
-    setSelectedConversationId((prev) => {
-      if (prev !== id) {
-        return prev;
-      }
-      draftSelectionRef.current = false;
-      return nextConversations[0]?.id ?? null;
-    });
-
-    try {
-      await deleteImageConversation(id);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "删除会话失败";
-      toast.error(message);
-      const items = await listImageConversations();
-      setConversations(items);
-    }
+    await deleteWorkbenchConversation({ draftSelectionRef, setConversations, setSelectedConversationId }, conversations, id);
   };
 
   const handleClearHistory = async () => {
-    try {
-      await clearImageConversations();
-      draftSelectionRef.current = true;
-      setConversations([]);
-      setSelectedConversationId(null);
-      toast.success("已清空历史记录");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "清空历史记录失败";
-      toast.error(message);
-    }
+    await clearWorkbenchHistory({ draftSelectionRef, setConversations, setSelectedConversationId });
   };
 
   const appendFiles = async (files: File[] | FileList | null, role: "image" | "mask") => {
-    const normalizedFiles = files ? Array.from(files) : [];
-    if (normalizedFiles.length === 0) {
-      return;
-    }
-    const nextItems = await Promise.all(
-      normalizedFiles.map(async (file) => ({
-        id: makeId(),
-        role,
-        name: file.name,
-        dataUrl: await fileToDataUrl(file),
-      })),
-    );
-    setSourceImages((prev) => {
-      if (role === "mask") {
-        return [...prev.filter((item) => item.role !== "mask"), nextItems[0]];
-      }
-      if (mode === "upscale") {
-        return [
-          ...prev.filter((item) => item.role === "mask"),
-          {
-            ...nextItems[0],
-            name: nextItems[0]?.name || "upscale.png",
-          },
-        ];
-      }
-      return [...prev.filter((item) => item.role !== "mask"), ...prev.filter((item) => item.role === "mask"), ...nextItems];
-    });
+    await appendWorkbenchFiles(composerContext, files, role);
   };
 
-  const handlePromptPaste = (event: ReactClipboardEvent<HTMLTextAreaElement>) => {
-    if (isSubmitting) {
-      return;
-    }
-    const clipboardImages = Array.from(event.clipboardData.items)
-      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
-      .map((item) => item.getAsFile())
-      .filter((file): file is File => Boolean(file));
-
-    if (clipboardImages.length === 0) {
-      return;
-    }
-
-    event.preventDefault();
-    void appendFiles(clipboardImages, "image");
-    toast.success(
-      mode === "generate"
-        ? "已从剪贴板添加参考图"
-        : mode === "edit"
-          ? "已从剪贴板添加源图"
-          : "已从剪贴板添加增强源图",
-    );
+  const handlePromptPaste = (event: Parameters<typeof handleWorkbenchPromptPaste>[1]) => {
+    handleWorkbenchPromptPaste(composerContext, event);
   };
 
   const removeSourceImage = (id: string) => {
-    setSourceImages((prev) => prev.filter((item) => item.id !== id));
+    removeWorkbenchSourceImage(setSourceImages, id);
   };
 
   const handleToggleLatestResultReference = () => {
-    if (!latestReusableImageDataUrl) {
-      toast.error("当前会话还没有可沿用的生成结果");
-      return;
-    }
-    setReuseLatestResultForGenerate((prev) => !prev);
-    textareaRef.current?.focus();
+    toggleWorkbenchLatestResultReference(composerContext);
   };
 
   const seedFromResult = (conversationId: string, image: StoredImage, nextMode: ImageMode) => {
-    if (isSubmitting) {
-      return;
-    }
-    const sourceImage = createSourceImageFromResult(image, "source.png");
-    if (!sourceImage) {
-      toast.error("当前图片没有可复用的数据");
-      return;
-    }
-    focusConversation(conversationId);
-    handleModeChange(nextMode);
-    setSourceImages([sourceImage]);
-    if (nextMode === "upscale") {
-      setImagePrompt("");
-    }
-    textareaRef.current?.focus();
+    seedWorkbenchFromResult(composerContext, conversationId, image, nextMode);
   };
 
   const openSelectionEditor = (conversationId: string, turnId: string, image: StoredImage, imageName: string) => {
-    if (isSubmitting) {
-      return;
-    }
-    const dataUrl = buildImageDataUrl(image);
-    if (!dataUrl) {
-      toast.error("当前图片没有可复用的数据");
-      return;
-    }
-    setEditorTarget({
-      conversationId,
-      turnId,
-      image,
-      imageName,
-      sourceDataUrl: dataUrl,
-    });
+    openWorkbenchSelectionEditor(composerContext, conversationId, turnId, image, imageName);
   };
 
   const handleSelectionEditSubmit = async ({
@@ -1511,495 +569,57 @@ export default function ImagePage() {
       previewDataUrl: string;
     };
   }) => {
-    if (!editorTarget) {
-      return;
-    }
-
-    const conversationId = editorTarget.conversationId;
-    const turnId = makeId();
-    const now = new Date().toISOString();
-    const selectionSourceImage = createSourceImageFromResult(editorTarget.image, editorTarget.imageName || "source.png");
-    const draftTurn = createConversationTurn({
-      turnId,
-      title: buildConversationTitle("edit", prompt),
-      mode: "edit",
+    await runSelectionEditSubmit({
+      mountedRef,
+      requestAbortControllerRef,
+      pendingAbortActionRef,
+      activeRequestMetaRef,
+      setIsSubmitting,
+      setActiveRequest,
+      setSubmitElapsedSeconds,
+      setSubmitStartedAt,
+      setConversations,
+      setImagePrompt,
+      setSourceImages,
+      setEditorTarget,
+      focusConversation,
+      updateConversation,
+      persistConversation,
+      resetComposer,
+      retractTurnAfterAbort,
+      restoreComposerFromTurn,
+      editorTarget,
+      imageModel,
+    }, {
       prompt,
-      model: imageModel,
-      imageSize: "auto",
-      imageQuality: "auto",
-      count: 1,
-      sourceImages: [
-        selectionSourceImage ?? {
-          id: makeId(),
-          role: "image",
-          name: editorTarget.imageName,
-          dataUrl: editorTarget.sourceDataUrl,
-        },
-        {
-          id: makeId(),
-          role: "mask",
-          name: "mask.png",
-          dataUrl: mask.previewDataUrl,
-        },
-      ],
-      images: createLoadingImages(1, turnId),
-      createdAt: now,
-      status: "generating",
+      mask,
     });
-
-    const startedAt = Date.now();
-    const abortController = new AbortController();
-    requestAbortControllerRef.current = abortController;
-    const signal = abortController.signal;
-    activeRequestMetaRef.current = {
-      conversationId,
-      turnId,
-      retractOnEdit: true,
-    };
-    setIsSubmitting(true);
-    setActiveRequest({
-      conversationId,
-      turnId,
-      mode: "edit",
-      count: 1,
-      variant: "selection-edit",
-    });
-    setSubmitElapsedSeconds(0);
-    setSubmitStartedAt(startedAt);
-    focusConversation(conversationId);
-    setImagePrompt("");
-    setSourceImages([]);
-    setEditorTarget(null);
-    startImageTask({
-      conversationId,
-      turnId,
-      mode: "edit",
-      count: 1,
-      variant: "selection-edit",
-      startedAt,
-    });
-
-    try {
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: [...(current.turns ?? []), draftTurn],
-      }));
-
-      const sourceImageFile = await dataUrlToFile(
-        editorTarget.sourceDataUrl,
-        editorTarget.imageName || "source.png",
-      );
-      const data = await editImage({
-        prompt,
-        images: [sourceImageFile],
-        mask: mask.file,
-        sourceReference: buildSourceReference(selectionSourceImage),
-        model: imageModel,
-        signal,
-      });
-      const resultItems = mergeResultImages(turnId, data.data || [], 1);
-      const failedCount = countFailures(resultItems);
-      const durationMs = Date.now() - startedAt;
-
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((turn) =>
-          turn.id === turnId
-            ? {
-              ...turn,
-              images: resultItems,
-              status: failedCount > 0 ? "error" : "success",
-              error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
-              durationMs,
-              failureKind: undefined,
-              retryAction: undefined,
-              retryable: undefined,
-              stage: undefined,
-              upstreamConversationId: undefined,
-              upstreamResponseId: undefined,
-              imageGenerationCallId: undefined,
-              sourceAccountId: undefined,
-              fileIds: undefined,
-            }
-            : turn,
-        ),
-      }));
-
-      if (failedCount > 0) {
-        toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);
-      } else {
-        toast.success("图片已按选区编辑");
-      }
-    } catch (error) {
-      if (isCanceledRequestError(error)) {
-        const pendingAbortAction = pendingAbortActionRef.current;
-        if (
-          pendingAbortAction?.conversationId === conversationId &&
-          pendingAbortAction?.turnId === turnId &&
-          pendingAbortAction.retractTurn
-        ) {
-          pendingAbortActionRef.current = null;
-          await retractTurnAfterAbort(conversationId, turnId);
-          return;
-        }
-        await updateConversation(conversationId, (current) => ({
-          ...current,
-          turns: (current.turns ?? []).map((turn) =>
-            turn.id === turnId
-              ? {
-                ...turn,
-                status: "error" as const,
-                error: "已取消生成",
-                images: turn.images.map((image) => ({
-                  ...image,
-                  status: "error" as const,
-                  error: "已取消生成",
-                })),
-              }
-              : turn,
-          ),
-        }));
-        return;
-      }
-      const message = humanizeError(error);
-      const failureMeta = extractRequestFailureMeta(error);
-      if (failureMeta.failureKind === "input_blocked" && failureMeta.retryAction === "revise_input") {
-        const conversationStillExists = await retractTurnAfterAbort(conversationId, turnId);
-        restoreComposerFromTurn(conversationStillExists ? conversationId : null, draftTurn, "请修改提示词后重试");
-        return;
-      }
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((turn) =>
-          turn.id === turnId
-            ? {
-              ...turn,
-              status: "error",
-              error: message,
-              failureKind: failureMeta.failureKind,
-              retryAction: failureMeta.retryAction,
-              retryable: failureMeta.retryable,
-              stage: failureMeta.stage,
-              upstreamConversationId: failureMeta.upstreamConversationId,
-              upstreamResponseId: failureMeta.upstreamResponseId,
-              imageGenerationCallId: failureMeta.imageGenerationCallId,
-              sourceAccountId: failureMeta.sourceAccountId,
-              fileIds: failureMeta.fileIds,
-              images: turn.images.map((image) => ({
-                ...image,
-                status: "error" as const,
-                error: message,
-                failureKind: failureMeta.failureKind,
-                retryAction: failureMeta.retryAction,
-                retryable: failureMeta.retryable,
-                stage: failureMeta.stage,
-                upstreamConversationId: failureMeta.upstreamConversationId,
-                upstreamResponseId: failureMeta.upstreamResponseId,
-                imageGenerationCallId: failureMeta.imageGenerationCallId,
-              })),
-            }
-            : turn,
-        ),
-      }));
-      toast.error(message);
-    } finally {
-      requestAbortControllerRef.current = null;
-      pendingAbortActionRef.current = null;
-      activeRequestMetaRef.current = null;
-      finishImageTask(conversationId, turnId);
-      setIsSubmitting(false);
-      setActiveRequest(null);
-      setSubmitStartedAt(null);
-    }
   };
 
   const handleRetryTurn = async (conversationId: string, turn: ImageConversationTurn, imageId?: string) => {
-    if (isSubmitting) {
-      toast.error("正在处理中，请稍后再试");
-      return;
-    }
-
-    const prompt = turn.prompt?.trim() ?? "";
-    const turnMode = turn.mode || "generate";
-    const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];
-    const turnImageSources = turnSourceImages.filter((item) => item.role === "image");
-    const turnMaskSource = turnSourceImages.find((item) => item.role === "mask") ?? null;
-    const turnUpscaleQuality =
-      turnMode === "upscale" ? resolveUpscaleQuality(turn.imageQuality, turn.scale) : undefined;
-    const turnImageSize = turn.imageSize || "auto";
-    const turnImageQuality = turn.imageQuality || "auto";
-    const failedIndexes = turn.images
-      .map((image, index) => (image.status === "error" ? index : -1))
-      .filter((index) => index >= 0);
-    const retryIndexes =
-      imageId != null
-        ? turn.images
-          .map((image, index) => (image.id === imageId ? index : -1))
-          .filter((index) => index >= 0)
-        : failedIndexes;
-
-    if (turnMode === "generate" && !prompt) {
-      toast.error("该记录缺少提示词，无法重试");
-      return;
-    }
-    if ((turnMode === "edit" || turnMode === "upscale") && turnImageSources.length === 0) {
-      toast.error("该记录缺少源图，无法重试");
-      return;
-    }
-    if (retryIndexes.length === 0) {
-      toast.error("没有可重试的失败图片");
-      return;
-    }
-
-    // ── 重试时复用原有 turn id，仅重置失败槽位为 loading 状态 ──
-    const turnId = turn.id;
-    const loadingImages = turn.images.map((image, index) =>
-      retryIndexes.includes(index)
-        ? {
-          id: image.id,
-          status: "loading" as const,
-        }
-        : image,
-    );
-    const retryCount = turnMode === "generate" && turnImageSources.length === 0 ? retryIndexes.length : 1;
-
-    const startedAt = Date.now();
-    const abortController = new AbortController();
-    requestAbortControllerRef.current = abortController;
-    const signal = abortController.signal;
-    activeRequestMetaRef.current = {
-      conversationId,
-      turnId,
-      retractOnEdit: false,
-    };
-    setIsSubmitting(true);
-    setActiveRequest({
-      conversationId,
-      turnId,
-      mode: turnMode,
-      count: retryCount,
-      variant: "standard",
-      imageId,
-    });
-    setSubmitElapsedSeconds(0);
-    setSubmitStartedAt(startedAt);
-    focusConversation(conversationId);
-    startImageTask({
-      conversationId,
-      turnId,
-      mode: turnMode,
-      count: retryCount,
-      variant: "standard",
-      startedAt,
-    });
-
-    try {
-      // 把旧 turn 原地重置为 generating/loading
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((item) =>
-          item.id === turnId
-            ? {
-              ...item,
-              status: "generating" as const,
-              error: undefined,
-              failureKind: undefined,
-              retryAction: undefined,
-              retryable: undefined,
-              stage: undefined,
-              upstreamConversationId: undefined,
-              upstreamResponseId: undefined,
-              imageGenerationCallId: undefined,
-              sourceAccountId: undefined,
-              fileIds: undefined,
-              images: loadingImages,
-            }
-            : item,
-        ),
-      }));
-
-      let resultItems: StoredImage[] = [];
-      if ((turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") && turn.upstreamConversationId) {
-        const data = await recoverImageTask({
-          conversationId: turn.upstreamConversationId,
-          sourceAccountId: turn.sourceAccountId,
-          revisedPrompt: prompt,
-          fileIds: turn.fileIds,
-          waitMs: turn.retryAction === "resume_polling" ? 60000 : 15000,
-          model: turn.model,
-          mode: turnMode,
-          signal,
-        });
-        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
-      } else if (turnMode === "generate") {
-        if (turnImageSources.length > 0) {
-          const files = await Promise.all(
-            turnImageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`)),
-          );
-          const data = await editImage({
-            prompt,
-            images: files,
-            sourceReference: buildSourceReference(turnImageSources[0]),
-            model: turn.model,
-            size: turnImageSize,
-            quality: turnImageQuality,
-            signal,
-          });
-          resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
-        } else {
-          const data = await generateImage(prompt, turn.model, retryIndexes.length, {
-            size: turnImageSize,
-            quality: turnImageQuality,
-            signal,
-          });
-          resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
-        }
-      }
-
-      if (turnMode === "edit") {
-        const files = await Promise.all(
-          turnImageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `image-${index + 1}.png`)),
-        );
-        const maskFile = turnMaskSource ? await dataUrlToFile(turnMaskSource.dataUrl, turnMaskSource.name || "mask.png") : null;
-        const data = await editImage({
-          prompt,
-          images: files,
-          mask: maskFile,
-          sourceReference: buildSourceReference(turnImageSources[0]),
-          model: turn.model,
-          signal,
-        });
-        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
-      }
-
-      if (turnMode === "upscale") {
-        const file = await dataUrlToFile(turnImageSources[0].dataUrl, turnImageSources[0].name || "upscale.png");
-        const data = await upscaleImage({
-          image: file,
-          prompt,
-          quality: turnUpscaleQuality,
-          model: turn.model,
-          signal,
-        });
-        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
-      }
-
-      const failedCount = countFailures(resultItems);
-      const durationMs = Date.now() - startedAt;
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((item) =>
-          item.id === turnId
-            ? {
-              ...item,
-              images: resultItems,
-              status: failedCount > 0 ? "error" : "success",
-              error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
-              durationMs,
-              failureKind: undefined,
-              retryAction: undefined,
-              retryable: undefined,
-              stage: undefined,
-              upstreamConversationId: undefined,
-              upstreamResponseId: undefined,
-              imageGenerationCallId: undefined,
-              sourceAccountId: undefined,
-              fileIds: undefined,
-            }
-            : item,
-        ),
-      }));
-
-      if (failedCount > 0) {
-        toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);
-      } else {
-        toast.success(turnMode === "generate" ? "图片已生成" : turnMode === "edit" ? "图片已编辑" : "图片已增强");
-      }
-    } catch (error) {
-      if (isCanceledRequestError(error)) {
-        const pendingAbortAction = pendingAbortActionRef.current;
-        if (
-          pendingAbortAction?.conversationId === conversationId &&
-          pendingAbortAction?.turnId === turnId &&
-          pendingAbortAction.retractTurn
-        ) {
-          pendingAbortActionRef.current = null;
-          await retractTurnAfterAbort(conversationId, turnId);
-          return;
-        }
-        await updateConversation(conversationId, (current) => ({
-          ...current,
-          turns: (current.turns ?? []).map((item) =>
-            item.id === turnId
-              ? {
-                ...item,
-                status: "error" as const,
-                error: "已取消生成",
-                images: item.images.map((image, index) =>
-                  retryIndexes.includes(index)
-                    ? {
-                      ...image,
-                      status: "error" as const,
-                      error: "已取消生成",
-                    }
-                    : image,
-                ),
-              }
-              : item,
-          ),
-        }));
-        return;
-      }
-      const message = humanizeError(error);
-      const failureMeta = extractRequestFailureMeta(error);
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((item) =>
-          item.id === turnId
-            ? {
-              ...item,
-              status: "error",
-              error: message,
-              failureKind: failureMeta.failureKind,
-              retryAction: failureMeta.retryAction,
-              retryable: failureMeta.retryable,
-              stage: failureMeta.stage,
-              upstreamConversationId: failureMeta.upstreamConversationId,
-              upstreamResponseId: failureMeta.upstreamResponseId,
-              imageGenerationCallId: failureMeta.imageGenerationCallId,
-              sourceAccountId: failureMeta.sourceAccountId,
-              fileIds: failureMeta.fileIds,
-              images: item.images.map((image, index) =>
-                retryIndexes.includes(index)
-                  ? {
-                    ...image,
-                    status: "error" as const,
-                    error: message,
-                    failureKind: failureMeta.failureKind,
-                    retryAction: failureMeta.retryAction,
-                    retryable: failureMeta.retryable,
-                    stage: failureMeta.stage,
-                    upstreamConversationId: failureMeta.upstreamConversationId,
-                    upstreamResponseId: failureMeta.upstreamResponseId,
-                    imageGenerationCallId: failureMeta.imageGenerationCallId,
-                  }
-                  : image,
-              ),
-            }
-            : item,
-        ),
-      }));
-      toast.error(message);
-    } finally {
-      requestAbortControllerRef.current = null;
-      pendingAbortActionRef.current = null;
-      activeRequestMetaRef.current = null;
-      finishImageTask(conversationId, turnId);
-      setIsSubmitting(false);
-      setActiveRequest(null);
-      setSubmitStartedAt(null);
-    }
+    await runRetryTurn({
+      mountedRef,
+      requestAbortControllerRef,
+      pendingAbortActionRef,
+      activeRequestMetaRef,
+      setIsSubmitting,
+      setActiveRequest,
+      setSubmitElapsedSeconds,
+      setSubmitStartedAt,
+      setConversations,
+      setImagePrompt,
+      setSourceImages,
+      setEditorTarget,
+      focusConversation,
+      updateConversation,
+      persistConversation,
+      resetComposer,
+      retractTurnAfterAbort,
+      restoreComposerFromTurn,
+      isSubmitting,
+    }, conversationId, turn, imageId);
   };
+
 
   useEffect(() => {
     if (isSubmitting || conversations.length === 0) {
@@ -2026,390 +646,73 @@ export default function ImagePage() {
   }, [conversations, isSubmitting, recoverableTasks]);
 
   const handleSubmit = async () => {
-    const prompt = imagePrompt.trim();
-    if (mode === "generate" && !prompt) {
-      toast.error("请输入提示词");
-      return;
-    }
-    if (mode === "edit" && imageSources.length === 0) {
-      toast.error("编辑模式至少需要一张源图");
-      return;
-    }
-    if (mode === "edit" && !prompt) {
-      toast.error("编辑模式需要提示词");
-      return;
-    }
-    if (mode === "upscale" && imageSources.length === 0) {
-      toast.error("增强模式需要一张源图");
-      return;
-    }
-
-    const conversationId = selectedConversationId ?? makeId();
-    const turnId = makeId();
-    const now = new Date().toISOString();
-
-    const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
-    const draftTurn = createConversationTurn({
-      turnId,
-      title: buildConversationTitle(mode, prompt, upscaleQuality),
+    await runSubmit({
+      mountedRef,
+      requestAbortControllerRef,
+      pendingAbortActionRef,
+      activeRequestMetaRef,
+      setIsSubmitting,
+      setActiveRequest,
+      setSubmitElapsedSeconds,
+      setSubmitStartedAt,
+      setConversations,
+      setImagePrompt,
+      setSourceImages,
+      setEditorTarget,
+      focusConversation,
+      updateConversation,
+      persistConversation,
+      resetComposer,
+      retractTurnAfterAbort,
+      restoreComposerFromTurn,
+      selectedConversationId,
       mode,
-      prompt,
-      model: imageModel,
-      imageSize: mode === "generate" ? resolveImageGenerationSize(imageSize, imageQuality) : "auto",
-      imageQuality: mode === "generate" ? imageQuality : mode === "upscale" ? upscaleQuality : "auto",
-      count: expectedCount,
+      imagePrompt,
+      imageSources,
+      maskSource,
+      parsedCount,
+      imageModel,
+      imageSize,
+      imageQuality,
+      upscaleQuality,
       sourceImages,
-      images: createLoadingImages(expectedCount, turnId),
-      createdAt: now,
-      status: "generating",
     });
-
-    const startedAt = Date.now();
-    const abortController = new AbortController();
-    requestAbortControllerRef.current = abortController;
-    const signal = abortController.signal;
-    activeRequestMetaRef.current = {
-      conversationId,
-      turnId,
-      retractOnEdit: true,
-    };
-    setIsSubmitting(true);
-    setActiveRequest({
-      conversationId,
-      turnId,
-      mode,
-      count: expectedCount,
-      variant: "standard",
-    });
-    setSubmitElapsedSeconds(0);
-    setSubmitStartedAt(startedAt);
-    focusConversation(conversationId);
-    setImagePrompt("");
-    setSourceImages([]);
-    startImageTask({
-      conversationId,
-      turnId,
-      mode,
-      count: expectedCount,
-      variant: "standard",
-      startedAt,
-    });
-
-    try {
-      // 先同步更新本地列表，让历史栏和主区域立刻出现占位消息
-      if (mountedRef.current) {
-        setConversations((prev) => {
-          const existing = prev.find((item) => item.id === conversationId) ?? null;
-          const nextConversation = normalizeConversation(
-            existing
-              ? {
-                ...existing,
-                title: draftTurn.title,
-                mode: draftTurn.mode,
-                prompt: draftTurn.prompt,
-                model: draftTurn.model,
-                imageSize: draftTurn.imageSize,
-                imageQuality: draftTurn.imageQuality,
-                count: draftTurn.count,
-                scale: draftTurn.scale,
-                sourceImages: draftTurn.sourceImages,
-                images: draftTurn.images,
-                createdAt: draftTurn.createdAt,
-                status: draftTurn.status,
-                error: draftTurn.error,
-                turns: [...(existing.turns ?? []), draftTurn],
-              }
-              : {
-                id: conversationId,
-                title: draftTurn.title,
-                mode: draftTurn.mode,
-                prompt: draftTurn.prompt,
-                model: draftTurn.model,
-                imageSize: draftTurn.imageSize,
-                imageQuality: draftTurn.imageQuality,
-                count: draftTurn.count,
-                scale: draftTurn.scale,
-                sourceImages: draftTurn.sourceImages,
-                images: draftTurn.images,
-                createdAt: draftTurn.createdAt,
-                status: draftTurn.status,
-                error: draftTurn.error,
-                turns: [draftTurn],
-              },
-          );
-          const next = [nextConversation, ...prev.filter((item) => item.id !== conversationId)];
-          return next.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        });
-      }
-
-      if (selectedConversationId) {
-        await updateConversation(conversationId, (current) => ({
-          ...current,
-          title: draftTurn.title,
-          mode: draftTurn.mode,
-          prompt: draftTurn.prompt,
-          model: draftTurn.model,
-          imageSize: draftTurn.imageSize,
-          imageQuality: draftTurn.imageQuality,
-          count: draftTurn.count,
-          scale: draftTurn.scale,
-          sourceImages: draftTurn.sourceImages,
-          images: draftTurn.images,
-          createdAt: draftTurn.createdAt,
-          status: draftTurn.status,
-          error: draftTurn.error,
-          turns: [...(current.turns ?? []), draftTurn],
-        }));
-      } else {
-        await persistConversation({
-          id: conversationId,
-          title: draftTurn.title,
-          mode: draftTurn.mode,
-          prompt: draftTurn.prompt,
-          model: draftTurn.model,
-          imageSize: draftTurn.imageSize,
-          imageQuality: draftTurn.imageQuality,
-          count: draftTurn.count,
-          scale: draftTurn.scale,
-          sourceImages: draftTurn.sourceImages,
-          images: draftTurn.images,
-          createdAt: draftTurn.createdAt,
-          status: draftTurn.status,
-          error: draftTurn.error,
-          turns: [draftTurn],
-        });
-      }
-
-      let resultItems: StoredImage[] = [];
-      if (mode === "generate") {
-        if (imageSources.length > 0) {
-          const files = await Promise.all(
-            imageSources.map((item, index) =>
-              dataUrlToFile(item.dataUrl, item.name || `reference-${index + 1}.png`),
-            ),
-          );
-          const data = await editImage({
-            prompt,
-            images: files,
-            sourceReference: buildSourceReference(imageSources[0]),
-            model: imageModel,
-            size: resolveImageGenerationSize(imageSize, imageQuality),
-            quality: imageQuality,
-            signal,
-          });
-          resultItems = mergeResultImages(turnId, data.data || [], 1);
-        } else {
-          const data = await generateImage(prompt, imageModel, parsedCount, {
-            size: resolveImageGenerationSize(imageSize, imageQuality),
-            quality: imageQuality,
-            signal,
-          });
-          resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
-        }
-      }
-
-      if (mode === "edit") {
-        const files = await Promise.all(
-          imageSources.map((item, index) => dataUrlToFile(item.dataUrl, item.name || `image-${index + 1}.png`)),
-        );
-        const maskFile = maskSource ? await dataUrlToFile(maskSource.dataUrl, maskSource.name || "mask.png") : null;
-        const data = await editImage({
-          prompt,
-          images: files,
-          mask: maskFile,
-          sourceReference: buildSourceReference(imageSources[0]),
-          model: imageModel,
-          signal,
-        });
-        resultItems = mergeResultImages(turnId, data.data || [], 1);
-      }
-
-      if (mode === "upscale") {
-        const file = await dataUrlToFile(imageSources[0].dataUrl, imageSources[0].name || "upscale.png");
-        const data = await upscaleImage({
-          image: file,
-          prompt,
-          quality: upscaleQuality,
-          model: imageModel,
-          signal,
-        });
-        resultItems = mergeResultImages(turnId, data.data || [], 1);
-      }
-
-      const failedCount = countFailures(resultItems);
-      const durationMs = Date.now() - startedAt;
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((turn) =>
-          turn.id === turnId
-            ? {
-              ...turn,
-              images: resultItems,
-              status: failedCount > 0 ? "error" : "success",
-              error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
-              durationMs,
-              failureKind: undefined,
-              retryAction: undefined,
-              retryable: undefined,
-              stage: undefined,
-              upstreamConversationId: undefined,
-              upstreamResponseId: undefined,
-              imageGenerationCallId: undefined,
-              sourceAccountId: undefined,
-              fileIds: undefined,
-            }
-            : turn,
-        ),
-      }));
-
-      resetComposer(mode === "generate" ? "generate" : mode);
-      if (failedCount > 0) {
-        toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);
-      } else {
-        toast.success(
-          mode === "generate"
-            ? imageSources.length > 0
-              ? "参考图生成已完成"
-              : "图片已生成"
-            : mode === "edit"
-              ? "图片已编辑"
-              : "图片已增强",
-        );
-      }
-    } catch (error) {
-      if (error instanceof Error && (error.name === "CanceledError" || error.name === "AbortError" || error.message.includes("canceled"))) {
-        const pendingAbortAction = pendingAbortActionRef.current;
-        if (
-          pendingAbortAction?.conversationId === conversationId &&
-          pendingAbortAction?.turnId === turnId &&
-          pendingAbortAction.retractTurn
-        ) {
-          pendingAbortActionRef.current = null;
-          await retractTurnAfterAbort(conversationId, turnId);
-          return;
-        }
-        // 用户主动取消，不写入错误状态，只清除 loading 状态
-        await updateConversation(conversationId, (current) => ({
-          ...current,
-          turns: (current.turns ?? []).map((turn) =>
-            turn.id === turnId
-              ? {
-                ...turn,
-                status: "error" as const,
-                error: "已取消生成",
-                images: turn.images.map((image) => ({
-                  ...image,
-                  status: "error" as const,
-                  error: "已取消生成",
-                })),
-              }
-              : turn,
-          ),
-        }));
-        return;
-      }
-      const failureMeta = extractRequestFailureMeta(error);
-      const message = humanizeError(error);
-      if (failureMeta.failureKind === "input_blocked" && failureMeta.retryAction === "revise_input") {
-        const conversationStillExists = await retractTurnAfterAbort(conversationId, turnId);
-        restoreComposerFromTurn(conversationStillExists ? conversationId : null, draftTurn, "请修改提示词后重试");
-        return;
-      }
-      await updateConversation(conversationId, (current) => ({
-        ...current,
-        turns: (current.turns ?? []).map((turn) =>
-          turn.id === turnId
-            ? {
-              ...turn,
-              status: "error",
-              error: message,
-              failureKind: failureMeta.failureKind,
-              retryAction: failureMeta.retryAction,
-              retryable: failureMeta.retryable,
-              stage: failureMeta.stage,
-              upstreamConversationId: failureMeta.upstreamConversationId,
-              upstreamResponseId: failureMeta.upstreamResponseId,
-              imageGenerationCallId: failureMeta.imageGenerationCallId,
-              sourceAccountId: failureMeta.sourceAccountId,
-              fileIds: failureMeta.fileIds,
-              images: turn.images.map((image) => ({
-                ...image,
-                status: "error" as const,
-                error: message,
-                failureKind: failureMeta.failureKind,
-                retryAction: failureMeta.retryAction,
-                retryable: failureMeta.retryable,
-                stage: failureMeta.stage,
-                upstreamConversationId: failureMeta.upstreamConversationId,
-                upstreamResponseId: failureMeta.upstreamResponseId,
-                imageGenerationCallId: failureMeta.imageGenerationCallId,
-              })),
-            }
-            : turn,
-        ),
-      }));
-      toast.error(message);
-    } finally {
-      requestAbortControllerRef.current = null;
-      pendingAbortActionRef.current = null;
-      activeRequestMetaRef.current = null;
-      finishImageTask(conversationId, turnId);
-      setIsSubmitting(false);
-      setActiveRequest(null);
-      setSubmitStartedAt(null);
-    }
   };
+
 
   const handleCancel = () => {
     requestAbortControllerRef.current?.abort();
   };
 
+  const conversationEditingContext = {
+    mountedRef,
+    draftSelectionRef,
+    requestAbortControllerRef,
+    pendingAbortActionRef,
+    activeRequestMetaRef,
+    textareaRef,
+    isSubmitting,
+    activeRequest,
+    setConversations,
+    setSelectedConversationId,
+    setMode,
+    setImageModel,
+    setImageCount,
+    setImageSize,
+    setImageQuality,
+    setUpscaleQuality,
+    setReuseLatestResultForGenerate,
+    setSourceImages,
+    setImagePrompt,
+    setEditorTarget,
+    setCachedWorkspaceState: setCachedImageWorkspaceState,
+    focusConversation,
+    openDraftConversation,
+    updateConversation,
+  };
+
   const retractTurnAfterAbort = async (conversationId: string, turnId: string) => {
-    const conversation = await getImageConversation(conversationId);
-    if (!conversation) {
-      return false;
-    }
-
-    const remainingTurns = (conversation.turns ?? []).filter((turn) => turn.id !== turnId);
-    if (remainingTurns.length === 0) {
-      await deleteImageConversation(conversationId);
-      if (!mountedRef.current) {
-        return;
-      }
-      setConversations((prev) => prev.filter((item) => item.id !== conversationId));
-      setSelectedConversationId((current) => {
-        if (current !== conversationId) {
-          return current;
-        }
-        draftSelectionRef.current = true;
-        setCachedImageWorkspaceState({
-          selectedConversationId: null,
-          isDraftSelection: true,
-        });
-        return null;
-      });
-      return false;
-    }
-
-    const latestTurn = remainingTurns[remainingTurns.length - 1];
-    await updateConversation(conversationId, (current) => ({
-      ...current,
-      title: latestTurn.title,
-      mode: latestTurn.mode,
-      prompt: latestTurn.prompt,
-      model: latestTurn.model,
-      imageSize: latestTurn.imageSize,
-      imageQuality: latestTurn.imageQuality,
-      count: latestTurn.count,
-      scale: latestTurn.scale,
-      sourceImages: latestTurn.sourceImages ?? [],
-      images: latestTurn.images,
-      createdAt: latestTurn.createdAt,
-      status: latestTurn.status,
-      error: latestTurn.error,
-      turns: remainingTurns,
-    }));
-    return true;
+    return retractConversationTurnAfterAbort(conversationEditingContext, conversationId, turnId);
   };
 
   const handleCopyTurnPrompt = async (prompt: string) => {
@@ -2426,109 +729,15 @@ export default function ImagePage() {
   };
 
   const restoreComposerFromTurn = (conversationId: string | null, turn: ImageConversationTurn, successMessage?: string) => {
-    const isActiveTurn = Boolean(
-      isSubmitting &&
-      activeRequest &&
-      conversationId &&
-      activeRequest.conversationId === conversationId &&
-      activeRequest.turnId === turn.id,
-    );
-
-    if (isSubmitting && !isActiveTurn) {
-      toast.error("当前还有其他任务在处理中，暂时不能切换编辑");
-      return;
-    }
-
-    if (conversationId) {
-      focusConversation(conversationId);
-    } else {
-      openDraftConversation();
-    }
-    setMode(turn.mode);
-    setImageModel(turn.model);
-    setImageCount(String(Math.max(1, Number(turn.count) || 1)));
-    if (turn.mode === "generate") {
-      setImageSize(resolveToolbarRatioFromImageSize(turn.imageSize));
-      setImageQuality(turn.imageQuality ?? "medium");
-    }
-    if (turn.mode === "upscale") {
-      setUpscaleQuality(resolveUpscaleQuality(turn.imageQuality, turn.scale));
-    }
-    setReuseLatestResultForGenerate(false);
-    setSourceImages(cloneSourceImagesForComposer(turn.sourceImages ?? []));
-    setImagePrompt(turn.prompt || "");
-    setEditorTarget(null);
-
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      const length = turn.prompt?.length ?? 0;
-      if (textareaRef.current) {
-        textareaRef.current.selectionStart = length;
-        textareaRef.current.selectionEnd = length;
-      }
-    });
-
-    if (successMessage) {
-      toast.success(successMessage);
-    }
+    restoreWorkbenchComposerFromTurn(conversationEditingContext, conversationId, turn, successMessage);
   };
 
   const handleEditTurn = async (conversationId: string, turn: ImageConversationTurn) => {
-    const isActiveTurn = Boolean(
-      isSubmitting &&
-      activeRequest &&
-      activeRequest.conversationId === conversationId &&
-      activeRequest.turnId === turn.id,
-    );
-
-    if (isSubmitting && !isActiveTurn) {
-      toast.error("当前还有其他任务在处理中，暂时不能切换编辑");
-      return;
-    }
-
-    if (isActiveTurn) {
-      pendingAbortActionRef.current = {
-        conversationId,
-        turnId: turn.id,
-        retractTurn:
-          activeRequestMetaRef.current?.conversationId === conversationId &&
-          activeRequestMetaRef.current?.turnId === turn.id &&
-          activeRequestMetaRef.current?.retractOnEdit === true,
-      };
-      requestAbortControllerRef.current?.abort();
-    }
-
-    if (!isActiveTurn && turn.status === "error") {
-      const conversationStillExists = await retractTurnAfterAbort(conversationId, turn.id);
-      restoreComposerFromTurn(
-        conversationStillExists ? conversationId : null,
-        turn,
-        "已撤回失败请求，可修改提示词后重新发送",
-      );
-      return;
-    }
-
-    restoreComposerFromTurn(
-      conversationId,
-      turn,
-      isActiveTurn ? "已中断当前任务，可修改提示词后重新发送" : "已将本轮输入回填到编辑器",
-    );
+    await handleConversationTurnEdit(conversationEditingContext, conversationId, turn);
   };
 
   const handleCancelAndEditActiveRequest = () => {
-    if (!activeRequest) {
-      toast.error("当前没有可编辑的进行中任务");
-      return;
-    }
-
-    const conversation = conversations.find((item) => item.id === activeRequest.conversationId);
-    const turn = conversation?.turns?.find((item) => item.id === activeRequest.turnId);
-    if (!conversation || !turn) {
-      toast.error("未找到当前进行中的输入记录");
-      return;
-    }
-
-    void handleEditTurn(conversation.id, turn);
+    handleActiveRequestCancelAndEdit(conversationEditingContext, conversations);
   };
 
   const composerCancelMode = activeRequestMetaRef.current?.retractOnEdit ? "cancel-and-edit" : "cancel";

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
+import { createImageApiError } from "@/server/image-error-response";
 import { logger } from "@/server/logger";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {
@@ -10,19 +11,6 @@ import {
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 
 export const runtime = "nodejs";
-
-function resolveImageErrorStatus(error: ImageGenerationError) {
-    if (error.statusCode === 401) {
-        return 401;
-    }
-    if (error.statusCode === 429) {
-        return 429;
-    }
-    if (error.kind === "input_blocked") {
-        return 400;
-    }
-    return 502;
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -130,10 +118,7 @@ export async function POST(request: NextRequest) {
             ...getImageErrorMeta(error),
         });
         if (error instanceof ImageGenerationError) {
-            return jsonError(new ApiError(resolveImageErrorStatus(error), error.message, {
-                error: error.message,
-                ...getImageErrorMeta(error),
-            }));
+            return jsonError(createImageApiError(error));
         }
         return jsonError(error);
     }

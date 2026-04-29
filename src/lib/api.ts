@@ -1,5 +1,7 @@
 import { httpRequest } from "@/lib/request";
 import type { DesktopUpdaterState } from "@/lib/desktop-updater";
+import type { ConfigPayload } from "@/shared/app-config";
+export type { ConfigPayload } from "@/shared/app-config";
 
 // ─── 基础枚举 / 联合类型 ──────────────────────────────────────────────────────
 
@@ -223,43 +225,6 @@ export type VersionInfo = {
 };
 
 // ─── 配置 Payload 类型 ───────────────────────────────────────────────────────
-
-export type ConfigPayload = {
-  chatgpt?: {
-    enabled?: boolean;
-    baseUrl?: string;
-    apiKey?: string;
-    apiStyle?: ImageApiStyle;
-    responsesModel?: string;
-    [key: string]: unknown;
-  };
-  accounts?: {
-    defaultQuota?: number;
-    autoRefresh?: boolean;
-    refreshInterval?: number;
-    [key: string]: unknown;
-  };
-  sync?: {
-    enabled?: boolean;
-    provider?: string;
-    interval?: number;
-    direction?: "pull" | "push" | "both";
-    [key: string]: unknown;
-  };
-  proxy?: {
-    enabled?: boolean;
-    url?: string;
-    [key: string]: unknown;
-  };
-  cpa?: {
-    enabled?: boolean;
-    baseUrl?: string;
-    managementKey?: string;
-    providerType?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-};
 
 // ─── 内部响应类型（非 export） ────────────────────────────────────────────────
 

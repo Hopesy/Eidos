@@ -20,6 +20,7 @@ import { logger } from "@/server/logger";
 import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
 import type { AccountRecord, AccountRefreshError, AccountStatus, AccountType, PublicAccount } from "@/server/types";
+import { getDefaultConfigPayload } from "@/shared/app-config";
 
 let nextIndex = 0;
 const API_MAX_ATTEMPTS = 3;
@@ -58,6 +59,7 @@ function normalizeAccountType(value: unknown): AccountType | null {
 }
 
 export function getImageApiServiceConfig() {
+  const defaultChatgptConfig = getDefaultConfigPayload().chatgpt;
   const savedConfig = getSavedConfig() as
     | {
       chatgpt?: {
@@ -70,10 +72,11 @@ export function getImageApiServiceConfig() {
     }
     | null;
   const enabled = Boolean(savedConfig?.chatgpt?.enabled);
-  const baseUrl = cleanToken(savedConfig?.chatgpt?.baseUrl) || "https://api.openai.com/v1";
+  const baseUrl = cleanToken(savedConfig?.chatgpt?.baseUrl) || cleanToken(defaultChatgptConfig?.baseUrl) || "https://api.openai.com/v1";
   const apiKey = cleanToken(savedConfig?.chatgpt?.apiKey);
-  const apiStyle = (cleanToken(savedConfig?.chatgpt?.apiStyle) || "v1") as ImageApiStyle;
-  const responsesModel = cleanToken(savedConfig?.chatgpt?.responsesModel) || "gpt-5.5";
+  const apiStyle = (cleanToken(savedConfig?.chatgpt?.apiStyle) || cleanToken(defaultChatgptConfig?.apiStyle) || "v1") as ImageApiStyle;
+  const responsesModel =
+    cleanToken(savedConfig?.chatgpt?.responsesModel) || cleanToken(defaultChatgptConfig?.responsesModel) || "gpt-5.5";
   if (!enabled) {
     return null;
   }

@@ -14,6 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { ImageRatioOption } from "@/shared/image-generation";
 import { cn } from "@/lib/utils";
 import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
 import type { ImageMode, StoredSourceImage } from "@/store/image-conversations";
@@ -21,7 +22,7 @@ import type { ImageMode, StoredSourceImage } from "@/store/image-conversations";
 export type ModeOption = { label: string; value: ImageMode; description: string };
 export type ImageModelOption = { label: string; value: ImageModel };
 export type GenerationOption<T extends string> = { label: string; value: T };
-export type ToolbarImageSize = "auto" | "1:1" | "3:2" | "2:3" | "16:9" | "9:16";
+export type ToolbarImageSize = ImageRatioOption;
 
 export type ComposerPanelProps = {
     imageModel: ImageModel;

@@ -20,41 +20,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { fetchConfig, fetchDefaultConfig, updateConfig, type ConfigPayload, type ImageApiStyle } from "@/lib/api";
+import { fetchConfig, fetchDefaultConfig, updateConfig, type ImageApiStyle } from "@/lib/api";
+import { getDefaultConfigPayload, type ConfigPayload } from "@/shared/app-config";
 import { clearCachedSyncStatus } from "@/store/sync-status-cache";
-
-function defaultConfigPayload(): ConfigPayload {
-    return {
-        chatgpt: {
-            enabled: false,
-            baseUrl: "https://api.openai.com/v1",
-            apiKey: "",
-            apiStyle: "v1",
-            responsesModel: "gpt-5.5",
-        },
-        cpa: {
-            enabled: false,
-            baseUrl: "",
-            managementKey: "",
-            providerType: "codex",
-        },
-        proxy: {
-            enabled: false,
-            url: "",
-        },
-        accounts: {
-            defaultQuota: 5,
-            autoRefresh: false,
-            refreshInterval: 30,
-        },
-        sync: {
-            enabled: false,
-            provider: "",
-            direction: "both",
-            interval: 300,
-        },
-    } as ConfigPayload;
-}
 
 function HintTooltip({ text }: { text: string }) {
     return (
@@ -157,8 +125,8 @@ function ToggleField({
 }
 
 export default function SettingsPage() {
-    const [config, setConfig] = useState<ConfigPayload>(defaultConfigPayload());
-    const [savedConfig, setSavedConfig] = useState<ConfigPayload>(defaultConfigPayload());
+    const [config, setConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
+    const [savedConfig, setSavedConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
     const [defaultConfig, setDefaultConfig] = useState<ConfigPayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
