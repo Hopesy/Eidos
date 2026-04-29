@@ -373,6 +373,38 @@ src/features/image-workbench/utils.ts
 
 已执行多轮 `pnpm build`，最近一次构建通过。
 
+#### Phase 3：OpenAI Provider 适配层拆分（首轮已完成）
+
+`src/server/providers/openai-client.ts` 已从约 2165 行拆到 616 行，当前不再继续承载所有上游协议细节，而是作为兼容 facade 保留既有导出入口，避免一次性扩散修改调用方。
+
+当前已拆出的边界：
+
+```text
+src/server/providers/openai-client.ts
+  对外兼容入口 / ChatGPT conversation 主流程 / CookieSession / proof token 等尚未拆出的运行时能力
+
+src/server/providers/openai-image-errors.ts
+  图片生成错误类型、失败分类、retryAction、HTTP status meta、上游错误归一化
+
+src/server/providers/openai-api-service-adapter.ts
+  OpenAI-compatible Images API 与 Responses API 适配、文件上传、结果解析
+
+src/server/providers/chatgpt-file-upload-adapter.ts
+  ChatGPT Web conversation 文件注册、上传、finalize 与图片尺寸探测
+
+src/server/providers/chatgpt-result-adapter.ts
+  ChatGPT Web SSE 结果收集、图片 ID 轮询、下载 URL 获取、base64 下载与 recover
+```
+
+这一步的取舍：
+
+- 先按**上游协议阶段**拆，而不是先引入复杂抽象框架；
+- 旧调用方继续从 `@/server/providers/openai-client` 导入，降低变更面；
+- 当前暂不动 `account-service.ts` 的账号池/调度逻辑，避免两个 God file 同时大幅改写；
+- 下一步可以继续把 `openai-client.ts` 中剩余的 conversation submission / session bootstrap / proof token 拆出，或转向 `account-service.ts`。
+
+已执行 `pnpm build`，构建通过。
+
 ---
 
 ## 6. 分阶段改造计划
@@ -468,11 +500,12 @@ src/features/image-workbench/utils.ts
 #### 从 `openai-client.ts` 拆出
 
 - `chatgpt-session-bootstrap-adapter`
-- `chatgpt-file-upload-adapter`
+- `chatgpt-file-upload-adapter`（已完成首轮）
 - `chatgpt-conversation-adapter`
-- `chatgpt-result-download-adapter`
-- `upstream-error-classifier`
+- `chatgpt-result-download-adapter`（已完成首轮）
+- `upstream-error-classifier`（已完成首轮，落在 `openai-image-errors.ts`）
 - `proof-token-provider`
+- `openai-api-service-adapter`（已完成首轮）
 
 原则：
 
@@ -623,10 +656,13 @@ src/
 
 1. **Phase 1 首轮已完成**：配置默认值、图片参数映射、release/version、图片错误响应已经收口到共享模块。
 2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成 feature modules，并保持外部行为不变。
-3. **下一优先级：Phase 3 服务端 God file**：开始拆 `src/server/account-service.ts` 与 `src/server/providers/openai-client.ts`。
-4. **并行补 Phase 6 最小护栏**：优先给已抽出的纯规则补测试，例如 image-generation、release-shared、turn-patches、error mapping。
-5. **随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
-6. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
+3. **Phase 3 OpenAI Provider 首轮已完成**：`openai-client.ts` 已收窄为兼容 facade + 尚未拆出的 ChatGPT conversation/session 能力。
+4. **下一优先级：继续拆服务端 God file**：
+   - 优先把 `openai-client.ts` 剩余的 conversation submission / session bootstrap / proof token 拆成独立 adapter；
+   - 或开始拆 `account-service.ts` 的账号选择、图片生成/编辑/恢复用例。
+5. **并行补 Phase 6 最小护栏**：优先给已抽出的纯规则补测试，例如 image-generation、release-shared、turn-patches、error mapping。
+6. **随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
+7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。
 
