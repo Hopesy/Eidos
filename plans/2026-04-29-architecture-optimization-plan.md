@@ -150,7 +150,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 当前仓库里最值得警惕的热点文件包括：
 
 - `src/app/image/page.tsx`：2730 行（初始基线；Phase 2 已拆到约 856 行）
-- `src/server/providers/openai-client.ts`：2165 行
+- `src/server/providers/openai-client.ts`：2165 行（初始基线；Phase 3 已收窄为 30 行兼容 facade）
 - `src/server/account-service.ts`：1509 行
 - `src/app/accounts/page.tsx`：1097 行
 - `src/app/settings/page.tsx`：466 行
@@ -373,15 +373,15 @@ src/features/image-workbench/utils.ts
 
 已执行多轮 `pnpm build`，最近一次构建通过。
 
-#### Phase 3：OpenAI Provider 适配层拆分（首轮已完成）
+#### Phase 3：OpenAI Provider 适配层拆分（主体已完成）
 
-`src/server/providers/openai-client.ts` 已从约 2165 行拆到 616 行，当前不再继续承载所有上游协议细节，而是作为兼容 facade 保留既有导出入口，避免一次性扩散修改调用方。
+`src/server/providers/openai-client.ts` 已从约 2165 行拆到 30 行，当前不再承载上游协议实现，而是作为兼容 facade 保留既有导出入口，避免一次性扩散修改调用方。
 
 当前已拆出的边界：
 
 ```text
 src/server/providers/openai-client.ts
-  对外兼容入口 / ChatGPT conversation 主流程 / CookieSession / proof token 等尚未拆出的运行时能力
+  对外兼容入口 / 旧导入路径 re-export
 
 src/server/providers/openai-image-errors.ts
   图片生成错误类型、失败分类、retryAction、HTTP status meta、上游错误归一化
@@ -394,6 +394,12 @@ src/server/providers/chatgpt-file-upload-adapter.ts
 
 src/server/providers/chatgpt-result-adapter.ts
   ChatGPT Web SSE 结果收集、图片 ID 轮询、下载 URL 获取、base64 下载与 recover
+
+src/server/providers/chatgpt-session-adapter.ts
+  ChatGPT Web CookieSession、fingerprint、bootstrap、chat-requirements、账号远端信息探测
+
+src/server/providers/chatgpt-conversation-adapter.ts
+  ChatGPT Web 图片生成/带附件生成/recover 用例编排、conversation message 构造与提交
 ```
 
 这一步的取舍：
@@ -401,7 +407,7 @@ src/server/providers/chatgpt-result-adapter.ts
 - 先按**上游协议阶段**拆，而不是先引入复杂抽象框架；
 - 旧调用方继续从 `@/server/providers/openai-client` 导入，降低变更面；
 - 当前暂不动 `account-service.ts` 的账号池/调度逻辑，避免两个 God file 同时大幅改写；
-- 下一步可以继续把 `openai-client.ts` 中剩余的 conversation submission / session bootstrap / proof token 拆出，或转向 `account-service.ts`。
+- 下一步应转向 `account-service.ts`，把账号选择、API service 切换、图片生成/编辑/恢复用例继续拆出。
 
 已执行 `pnpm build`，构建通过。
 
@@ -499,12 +505,12 @@ src/server/providers/chatgpt-result-adapter.ts
 
 #### 从 `openai-client.ts` 拆出
 
-- `chatgpt-session-bootstrap-adapter`
+- `chatgpt-session-bootstrap-adapter`（已完成，落在 `chatgpt-session-adapter.ts`）
 - `chatgpt-file-upload-adapter`（已完成首轮）
-- `chatgpt-conversation-adapter`
+- `chatgpt-conversation-adapter`（已完成）
 - `chatgpt-result-download-adapter`（已完成首轮）
 - `upstream-error-classifier`（已完成首轮，落在 `openai-image-errors.ts`）
-- `proof-token-provider`
+- `proof-token-provider`（仍复用现有 `openai-proof.ts`，由 session/conversation adapter 调用）
 - `openai-api-service-adapter`（已完成首轮）
 
 原则：
@@ -656,10 +662,10 @@ src/
 
 1. **Phase 1 首轮已完成**：配置默认值、图片参数映射、release/version、图片错误响应已经收口到共享模块。
 2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成 feature modules，并保持外部行为不变。
-3. **Phase 3 OpenAI Provider 首轮已完成**：`openai-client.ts` 已收窄为兼容 facade + 尚未拆出的 ChatGPT conversation/session 能力。
+3. **Phase 3 OpenAI Provider 主体已完成**：`openai-client.ts` 已收窄为 30 行兼容 facade，ChatGPT session/conversation/upload/result 与 API service adapter 已拆出。
 4. **下一优先级：继续拆服务端 God file**：
-   - 优先把 `openai-client.ts` 剩余的 conversation submission / session bootstrap / proof token 拆成独立 adapter；
-   - 或开始拆 `account-service.ts` 的账号选择、图片生成/编辑/恢复用例。
+   - 开始拆 `account-service.ts` 的账号选择、图片生成/编辑/恢复用例；
+   - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **并行补 Phase 6 最小护栏**：优先给已抽出的纯规则补测试，例如 image-generation、release-shared、turn-patches、error mapping。
 6. **随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
