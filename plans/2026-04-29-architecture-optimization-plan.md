@@ -152,7 +152,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 - `src/app/image/page.tsx`：2730 行（初始基线；Phase 2 已拆到约 277 行）
 - `src/server/providers/openai-client.ts`：2165 行（初始基线；Phase 3 已收窄为 30 行兼容 facade）
 - `src/server/account-service.ts`：1509 行（初始基线；Phase 3 已开始拆分，当前约 229 行）
-- `src/app/accounts/page.tsx`：1097 行
+- `src/app/accounts/page.tsx`：1097 行（初始基线；Phase 2 已拆到约 139 行页面壳 + 4 个页面私有展示组件）
 - `src/app/settings/page.tsx`：466 行
 
 这说明问题已经不是局部重复，而是**关键能力集中在少数巨型文件里**。
@@ -398,11 +398,26 @@ src/features/image-edit/use-image-edit-modal.ts
 - 只立起“展示组件 + feature hook”这一层边界；
 - 下一步如果继续处理 image-edit，优先抽顶部工具区或底部提交区，而不是继续细拆 hook 内部实现。
 
-#### Phase 2：Accounts 页面拆分（已完成前两刀）
+#### Phase 2：Accounts 页面拆分（主体已完成）
 
-`src/app/accounts/page.tsx` 已从约 1017 行收窄到约 625 行。当前已先后完成两步：
+`src/app/accounts/page.tsx` 已从千行级页面收窄到约 139 行。当前边界：
 
 ```text
+src/app/accounts/page.tsx
+  页面壳、标题、隐藏导入 input、feature hook 绑定与组件拼装
+
+src/app/accounts/_components/account-edit-dialog.tsx
+  编辑账户弹窗展示、状态/类型/额度字段绑定、保存/取消按钮
+
+src/app/accounts/_components/account-sync-panel.tsx
+  CPA 同步卡片、账号统计、同步摘要、最近同步结果与待处理文件
+
+src/app/accounts/_components/accounts-toolbar.tsx
+  账户列表标题、搜索、类型/状态筛选与导入认证文件按钮
+
+src/app/accounts/_components/accounts-table.tsx
+  账户表格、批量操作、行级复制/编辑/刷新/删除、加载与空状态
+
 src/features/accounts/account-view-model.ts
   账号筛选/排序、统计摘要、token mask、额度与时间格式化、
   import summary、选中项修剪、sync status 归一化等纯逻辑
@@ -414,9 +429,10 @@ src/features/accounts/use-accounts-page.ts
 
 这一步的取舍：
 
-- 页面现在保留 JSX 结构、图标/Badge 元数据和少量交互绑定；
-- 纯规则和请求/状态编排已经离开页面，后续再拆组件时不会再碰业务流程；
-- 下一步如继续处理 Accounts，优先抽表格行或顶部控制区，而不是继续细碎地拆 hook。
+- 没有继续拆 `use-accounts-page.ts`，避免把同一页面工作流切成过细的 action 文件；
+- 只按真实 UI 区块拆成 dialog / sync panel / toolbar / table 四块；
+- 保留 `src/app/accounts/_components/*` 私有目录，不把页面专属组件上提到全局 `components`；
+- 页面现在只负责拼装，业务请求、缓存、筛选排序和同步语义仍分别留在 feature hook / view-model。
 
 #### Phase 2：Settings 与 Requests 页面拆分（已完成首轮）
 
@@ -877,10 +893,10 @@ src/
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
 6. **Phase 2 次级页面首轮已完成**：Settings / Requests 已按页面壳 + feature hook / view-model 收口，后续不再优先机械拆它们的 JSX。
-7. **下一优先级：继续 Accounts 页面组件拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 的纯逻辑和状态编排已移出，剩余主要是 UI 结构体量。
-8. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
+7. **Phase 2 Accounts 主体已完成**：账号页已经按页面壳 + feature hook / view-model + 页面私有展示组件收口，后续不再为了行数继续机械拆分。
+8. **下一优先级：转向 repository 护栏与 Electron IPC 安全边界精修**，只在具体需求驱动时继续拆账号页表格行等细节。
 
-原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到 Accounts 剩余 UI 体量、服务端边界和持久化护栏。
+原则：已经拆稳的 Image Workbench 和 Accounts 不继续为了行数而拆；下一步要把主要收益转到持久化护栏、Electron IPC 安全边界和具体需求驱动的服务端精修。
 
 ---
 

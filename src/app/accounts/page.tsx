@@ -1,80 +1,10 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import {
-  Ban,
-  CheckCircle2,
-  CircleAlert,
-  CircleOff,
-  Copy,
-  FileUp,
-  LoaderCircle,
-  Pencil,
-  RefreshCcw,
-  RefreshCw,
-  Search,
-  Trash2,
-} from "lucide-react";
-import { toast } from "sonner";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { type AccountStatus, type AccountType, type SyncStatus } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import {
-  accountStatusOptions,
-  accountTypeOptions,
-  extractImageGenLimit,
-  formatQuota,
-  formatRelativeTime,
-  formatTableTime,
-  maskToken,
-} from "@/features/accounts/account-view-model";
+import { AccountEditDialog } from "./_components/account-edit-dialog";
+import { AccountSyncPanel } from "./_components/account-sync-panel";
+import { AccountsTable } from "./_components/accounts-table";
+import { AccountsToolbar } from "./_components/accounts-toolbar";
 import { useAccountsPage } from "@/features/accounts/use-accounts-page";
-
-const statusMeta: Record<
-  AccountStatus,
-  {
-    icon: typeof CheckCircle2;
-    badge: ComponentProps<typeof Badge>["variant"];
-  }
-> = {
-  正常: { icon: CheckCircle2, badge: "success" },
-  限流: { icon: CircleAlert, badge: "warning" },
-  异常: { icon: CircleOff, badge: "danger" },
-  禁用: { icon: Ban, badge: "secondary" },
-};
-
-const syncMeta: Record<
-  SyncStatus,
-  {
-    label: string;
-    badge: ComponentProps<typeof Badge>["variant"];
-  }
-> = {
-  synced: { label: "已同步", badge: "success" },
-  pending_upload: { label: "待上传", badge: "warning" },
-  remote_only: { label: "远端独有", badge: "info" },
-  remote_deleted: { label: "远端已删", badge: "danger" },
-};
 
 export default function AccountsPage() {
   const {
@@ -146,507 +76,63 @@ export default function AccountsPage() {
         }}
       />
 
-      <Dialog open={Boolean(editingAccount)} onOpenChange={(open) => (!open ? closeEditDialog() : null)}>
-        <DialogContent showCloseButton={false} className="rounded-2xl p-6">
-          <DialogHeader className="gap-2">
-            <DialogTitle>编辑账户</DialogTitle>
-            <DialogDescription className="text-sm leading-6">手动修改账号状态、类型和额度。</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">状态</label>
-              <Select value={editStatus} onValueChange={(value) => setEditStatus(value as AccountStatus)}>
-                <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountStatusOptions
-                    .filter((option) => option.value !== "all")
-                    .map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">类型</label>
-              <Select value={editType} onValueChange={(value) => setEditType(value as AccountType)}>
-                <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountTypeOptions
-                    .filter((option) => option.value !== "all")
-                    .map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-stone-700">额度</label>
-              <Input
-                value={editQuota}
-                onChange={(event) => setEditQuota(event.target.value)}
-                className="h-11 rounded-xl border-stone-200 bg-white"
-              />
-            </div>
-          </div>
-          <DialogFooter className="pt-2">
-            <Button
-              variant="secondary"
-              className="h-10 rounded-xl bg-stone-100 px-5 text-stone-700 hover:bg-stone-200"
-              onClick={closeEditDialog}
-              disabled={isUpdating}
-            >
-              取消
-            </Button>
-            <Button
-              className="h-10 rounded-xl bg-stone-950 px-5 text-white hover:bg-stone-800"
-              onClick={() => void handleUpdateAccount()}
-              disabled={isUpdating}
-            >
-              {isUpdating ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              保存修改
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AccountEditDialog
+        open={Boolean(editingAccount)}
+        editStatus={editStatus}
+        onEditStatusChange={setEditStatus}
+        editType={editType}
+        onEditTypeChange={setEditType}
+        editQuota={editQuota}
+        onEditQuotaChange={setEditQuota}
+        isUpdating={isUpdating}
+        onClose={closeEditDialog}
+        onSave={handleUpdateAccount}
+      />
 
-      <section className="space-y-1.5">
-        <Card className="rounded-2xl border-white/80 bg-white/90 shadow-sm">
-          <CardContent className="space-y-3 p-4">
-            {/* 账号统计 + 标题 + 操作按钮 */}
-            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:gap-4">
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold tracking-tight">CPA 同步</h2>
-                  <p className="text-sm text-stone-500">查看本地账号与 CPA 远端状态，并执行双向同步。</p>
-                </div>
-                <div className="flex flex-wrap items-stretch gap-2">
-                  {([
-                    { label: "账户总数", value: summary.total, color: "text-stone-900", ring: "border-stone-200" },
-                    { label: "正常", value: summary.active, color: "text-emerald-600", ring: "border-emerald-100" },
-                    { label: "限流", value: summary.limited, color: "text-amber-500", ring: "border-amber-100" },
-                    { label: "异常", value: summary.abnormal, color: "text-red-400", ring: "border-red-100/60" },
-                    { label: "禁用", value: summary.disabled, color: "text-stone-400", ring: "border-stone-200" },
-                  ] as const).map(({ label, value, color, ring }) => (
-                    <div
-                      key={label}
-                      className={cn(
-                        "min-w-[88px] rounded-2xl border bg-stone-50/80 px-3 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.04)]",
-                        ring,
-                      )}
-                    >
-                      <div className="text-[11px] font-medium leading-none text-stone-400">{label}</div>
-                      <div className={cn("mt-2 text-lg font-semibold tabular-nums leading-none", color)}>{value}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700"
-                  onClick={() => void handleRefreshAllLocalCredentials()}
-                  disabled={accounts.length === 0 || isAnyRefreshRunning || syncRunningDirection !== null}
-                >
-                  <RefreshCw className={cn("size-4", refreshingAction === "all" ? "animate-spin" : "")} />
-                  刷新本地凭证
-                </Button>
-                <Button
-                  className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
-                  onClick={() => void handleRunSync("both")}
-                  disabled={isSyncLoading || syncRunningDirection !== null}
-                >
-                  {syncRunningDirection !== null ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <RefreshCcw className="size-4" />
-                  )}
-                  {syncRunningDirection !== null ? "同步中..." : "同步 CPA"}
-                </Button>
-              </div>
-            </div>
-
-            {isSyncLoading ? null : !syncView.configured ? null : (
-              <>
-                <div className="grid gap-3 md:grid-cols-5">
-                  {([
-                    ["本地", syncView.local],
-                    ["远端", syncView.remote],
-                    ["待上传", syncView.summary.pending_upload],
-                    ["远端独有", syncView.summary.remote_only],
-                    ["远端已删", syncView.summary.remote_deleted],
-                  ] as const).map(([label, value]) => (
-                    <div key={label} className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-4">
-                      <div className="text-xs font-medium text-stone-400">{label}</div>
-                      <div className="mt-2 text-2xl font-semibold tracking-tight text-stone-900">{value}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {syncView.disabledMismatch > 0 ? (
-                    <Badge variant="warning" className="rounded-lg px-3 py-1">
-                      状态不一致 {syncView.disabledMismatch}
-                    </Badge>
-                  ) : null}
-                  {syncView.lastRun ? (
-                    <Badge variant={syncView.lastRun.ok ? "success" : "danger"} className="rounded-lg px-3 py-1">
-                      最近一次同步：{new Date(syncView.lastRun.finished_at).toLocaleString("zh-CN")} · {syncView.lastRun.direction || "both"}
-                    </Badge>
-                  ) : null}
-                </div>
-
-                {syncView.lastRun ? (
-                  <div className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-4">
-                    <div className="mb-2 text-sm font-medium text-stone-700">最近一次同步结果</div>
-                    <div className="grid gap-3 md:grid-cols-4">
-                      {[
-                        ["拉取", syncView.lastRun.downloaded],
-                        ["推送", syncView.lastRun.uploaded],
-                        ["状态对齐", syncView.lastRun.disabled_aligned],
-                        ["失败", (syncView.lastRun.download_failed || 0) + (syncView.lastRun.upload_failed || 0) + (syncView.lastRun.disabled_align_failed || 0)],
-                      ].map(([label, value]) => (
-                        <div key={label} className="rounded-2xl border border-stone-100 bg-white px-4 py-3">
-                          <div className="text-xs font-medium text-stone-400">{label}</div>
-                          <div className="mt-2 text-lg font-semibold tracking-tight text-stone-900">{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                    {syncView.lastRun.error ? (
-                      <div className="mt-3 text-sm text-rose-600">{syncView.lastRun.error}</div>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {syncView.accounts.length > 0 ? (
-                  <div className="rounded-2xl border border-stone-100 bg-stone-50 px-4 py-4">
-                    <div className="mb-3 text-sm font-medium text-stone-700">待处理文件</div>
-                    <div className="flex flex-wrap gap-2">
-                      {syncView.accounts
-                        .filter((item) => item.status !== "synced")
-                        .slice(0, 18)
-                        .map((item) => (
-                          <Badge key={item.name} variant={syncMeta[item.status].badge} className="rounded-lg px-3 py-1">
-                            {syncMeta[item.status].label} · {item.name}
-                          </Badge>
-                        ))}
-                      {syncView.accounts.filter((item) => item.status !== "synced").length === 0 ? (
-                        <Badge variant="success" className="rounded-lg px-3 py-1">
-                          当前没有待同步文件
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      <AccountSyncPanel
+        accountsCount={accounts.length}
+        summary={summary}
+        syncView={syncView}
+        isSyncLoading={isSyncLoading}
+        syncRunningDirection={syncRunningDirection}
+        refreshingAction={refreshingAction}
+        isAnyRefreshRunning={isAnyRefreshRunning}
+        onRefreshAllLocalCredentials={handleRefreshAllLocalCredentials}
+        onRunSync={handleRunSync}
+      />
 
       <section className="mt-3.5 space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold tracking-tight">账户列表</h2>
-            <Badge variant="secondary" className="rounded-lg bg-stone-200 px-2 py-0.5 text-stone-700">
-              {filteredAccounts.length}
-            </Badge>
-          </div>
+        <AccountsToolbar
+          filteredCount={filteredAccounts.length}
+          query={query}
+          onQueryChange={setQuery}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          importInputRef={importInputRef}
+          isImporting={isImporting}
+        />
 
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-            <div className="relative min-w-[260px]">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-400" />
-              <Input
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                }}
-                placeholder="搜索邮箱 / 文件名 / 备注"
-                className="h-10 rounded-xl border-stone-200 bg-white/85 pl-10"
-              />
-            </div>
-            <Select
-              value={typeFilter}
-              onValueChange={(value) => {
-                setTypeFilter(value as typeof typeFilter);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {accountTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                setStatusFilter(value as typeof statusFilter);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {accountStatusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
-              onClick={() => importInputRef.current?.click()}
-              disabled={isImporting}
-            >
-              {isImporting ? <LoaderCircle className="size-4 animate-spin" /> : <FileUp className="size-4" />}
-              导入认证文件
-            </Button>
-          </div>
-        </div>
-
-        {isLoading && accounts.length === 0 ? (
-          <Card className="rounded-2xl border-white/80 bg-white/90 shadow-sm">
-            <CardContent className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
-              <div className="rounded-xl bg-stone-100 p-3 text-stone-500">
-                <LoaderCircle className="size-5 animate-spin" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-stone-700">正在加载账户</p>
-                <p className="text-sm text-stone-500">从后端读取本地 auth 文件和运行状态。</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <Card
-          className={cn(
-            "overflow-hidden rounded-2xl border-white/80 bg-white/90 shadow-sm",
-            isLoading && accounts.length === 0 ? "hidden" : "",
-          )}
-        >
-          <CardContent className="space-y-0 p-0">
-            <div className="flex flex-col gap-3 border-b border-stone-100 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-stone-500">
-                <Button
-                  variant="ghost"
-                  className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100"
-                  onClick={() => void handleRefreshSelectedAccounts(selectedTokens, "selected")}
-                  disabled={selectedTokens.length === 0 || isAnyRefreshRunning}
-                >
-                  {refreshingAction === "selected" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                  刷新选中账号信息
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
-                  onClick={() => void handleDeleteTokens(abnormalTokens)}
-                  disabled={abnormalTokens.length === 0 || isDeleting}
-                >
-                  {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  移除异常账号
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-8 rounded-lg px-3 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
-                  onClick={() => void handleDeleteTokens(selectedTokens)}
-                  disabled={selectedTokens.length === 0 || isDeleting}
-                >
-                  {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-                  删除本地所选
-                </Button>
-                {selectedIds.length > 0 ? (
-                  <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
-                    已选择 {selectedIds.length} 项
-                  </span>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-375px)]">
-              <table className="w-full min-w-[1240px] text-left">
-                <thead className="border-b border-stone-100/80 bg-stone-50/60">
-                  <tr>
-                    <th className="w-10 px-3 py-2 text-center">
-                      <Checkbox checked={allCurrentSelected} onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))} />
-                    </th>
-                    <th className="w-72 px-3 py-2 text-left text-[11px] font-medium text-stone-400 whitespace-nowrap">账号 / Token</th>
-                    <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">状态</th>
-                    <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">类型</th>
-                    <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片额度</th>
-                    <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">刷新时间</th>
-                    <th className="w-40 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">图片重置</th>
-                    <th className="w-28 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRows.map((account) => {
-                    const status = statusMeta[account.status];
-                    const StatusIcon = status.icon;
-                    const imageGenLimit = extractImageGenLimit(account);
-                    const imageGenRemaining = imageGenLimit.remaining;
-                    const imageGenRestore = formatRelativeTime(imageGenLimit.resetAfter);
-
-                    return (
-                      <tr
-                        key={account.id}
-                        className="group border-b border-stone-100/80 text-sm transition-colors hover:bg-stone-50/60"
-                      >
-                        {/* 复选框 */}
-                        <td className="px-3 py-1.5 text-center">
-                          <Checkbox
-                            checked={selectedIds.includes(account.id)}
-                            onCheckedChange={(checked) => {
-                              toggleSelectedId(account.id, Boolean(checked));
-                            }}
-                          />
-                        </td>
-
-                        {/* Token + Email */}
-                        <td className="px-3 py-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-[13px] font-semibold tracking-tight text-stone-800">
-                              {maskToken(account.access_token)}
-                            </span>
-                            <button
-                              type="button"
-                              className="shrink-0 rounded p-0.5 text-stone-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-stone-100 hover:text-stone-600"
-                              onClick={() => {
-                                void navigator.clipboard.writeText(account.access_token);
-                                toast.success("token 已复制");
-                              }}
-                            >
-                              <Copy className="size-3.5" />
-                            </button>
-                          </div>
-                          <div className="mt-0.5 flex flex-col gap-px">
-                            {account.email ? (
-                              <span className="truncate text-[11px] leading-4 text-stone-500" title={account.email}>
-                                {account.email}
-                              </span>
-                            ) : null}
-                            {account.note ? (
-                              <span className="truncate text-[11px] leading-4 text-stone-400" title={account.note}>
-                                {account.note}
-                              </span>
-                            ) : null}
-                          </div>
-                        </td>
-
-                        {/* 状态 */}
-                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                              account.status === "正常" && "bg-emerald-50 text-emerald-700",
-                              account.status === "限流" && "bg-amber-50 text-amber-700",
-                              account.status === "异常" && "bg-red-50/60 text-red-400",
-                              account.status === "禁用" && "bg-stone-100 text-stone-400",
-                            )}
-                          >
-                            <StatusIcon className="size-3" />
-                            {account.status}
-                          </span>
-                        </td>
-
-                        {/* 类型 */}
-                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
-                          <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] font-medium text-stone-500">
-                            {account.type}
-                          </span>
-                        </td>
-
-                        {/* 图片额度 */}
-                        <td className="px-3 py-1.5 text-center">
-                          <div className="inline-flex items-center gap-1.5">
-                            <span className="text-sm font-semibold tabular-nums text-stone-800">
-                              {imageGenRemaining == null ? "—" : formatQuota(imageGenRemaining)}
-                            </span>
-                            <span className="text-[11px] text-stone-400">/ {formatQuota(account.quota)}</span>
-                          </div>
-                        </td>
-
-                        {/* 刷新时间 */}
-                        <td className="px-3 py-1.5 text-center whitespace-nowrap">
-                          <span className="font-mono tabular-nums text-xs text-stone-500">
-                            {formatTableTime(account.lastRefreshedAt)}
-                          </span>
-                        </td>
-
-                        {/* 图片重置 */}
-                        <td className="px-3 py-1.5 text-center text-xs text-stone-500 whitespace-nowrap">
-                          <span className="font-medium text-stone-700">{imageGenRestore}</span>
-                        </td>
-
-                        {/* 操作 */}
-                        <td className="px-3 py-1.5 text-center">
-                          <div className="flex items-center justify-center gap-0.5 text-stone-400">
-                            <button
-                              type="button"
-                              className="rounded-lg p-1.5 transition hover:bg-stone-100 hover:text-stone-700"
-                              onClick={() => openEditDialog(account)}
-                              disabled={isUpdating}
-                              title="编辑"
-                            >
-                              <Pencil className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              className="rounded-lg p-1.5 transition hover:bg-sky-50 hover:text-sky-500"
-                              onClick={() => void handleRefreshSelectedAccounts([account.access_token], "row", account.access_token)}
-                              disabled={isAnyRefreshRunning}
-                              title="刷新状态"
-                            >
-                              {refreshingRowToken === account.access_token ? (
-                                <LoaderCircle className="size-3.5 animate-spin" />
-                              ) : (
-                                <RefreshCw className="size-3.5" />
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="rounded-lg p-1.5 transition hover:bg-rose-50 hover:text-rose-500"
-                              onClick={() => void handleDeleteTokens([account.access_token])}
-                              disabled={isDeleting}
-                              title="删除本地账户"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {!isLoading && currentRows.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
-                  <div className="rounded-xl bg-stone-100 p-3 text-stone-500">
-                    <Search className="size-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-stone-700">没有匹配的账户</p>
-                    <p className="text-sm text-stone-500">调整筛选条件或搜索关键字后重试。</p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-          </CardContent>
-        </Card>
+        <AccountsTable
+          accountsCount={accounts.length}
+          rows={currentRows}
+          selectedIds={selectedIds}
+          selectedTokens={selectedTokens}
+          abnormalTokens={abnormalTokens}
+          allCurrentSelected={allCurrentSelected}
+          isLoading={isLoading}
+          isDeleting={isDeleting}
+          isUpdating={isUpdating}
+          isAnyRefreshRunning={isAnyRefreshRunning}
+          refreshingAction={refreshingAction}
+          refreshingRowToken={refreshingRowToken}
+          onRefreshSelectedAccounts={handleRefreshSelectedAccounts}
+          onDeleteTokens={handleDeleteTokens}
+          onOpenEditDialog={openEditDialog}
+          onToggleSelectAll={toggleSelectAll}
+          onToggleSelectedId={toggleSelectedId}
+        />
       </section>
     </div>
   );

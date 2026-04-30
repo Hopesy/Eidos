@@ -193,3 +193,6 @@ export function normalizeSyncStatus(payload: SyncStatusResponse | null) {
     } satisfies Record<SyncStatus, number>,
   };
 }
+
+export type AccountSummaryView = ReturnType<typeof buildAccountsSummary>;
+export type AccountSyncView = ReturnType<typeof normalizeSyncStatus>;
