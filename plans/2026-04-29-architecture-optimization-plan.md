@@ -459,7 +459,16 @@ src/server/providers/openai-image-errors.ts
   图片生成错误类型、失败分类、retryAction、HTTP status meta、上游错误归一化
 
 src/server/providers/openai-api-service-adapter.ts
-  OpenAI-compatible Images API 与 Responses API 适配、文件上传、结果解析
+  对外兼容入口 / API service 旧导入路径 re-export
+
+src/server/providers/openai-api-service-shared.ts
+  API service 配置类型、endpoint 解析、文件上传、data URL 转换
+
+src/server/providers/openai-v1-image-adapter.ts
+  OpenAI-compatible /v1/images generations 与 edits 适配
+
+src/server/providers/openai-responses-image-adapter.ts
+  Responses API image_generation generate/edit 适配、Responses 结果解析
 
 src/server/providers/chatgpt-file-upload-adapter.ts
   ChatGPT Web conversation 文件注册、上传、finalize 与图片尺寸探测
@@ -657,7 +666,7 @@ tests/account-view-model.test.ts
 - `chatgpt-result-download-adapter`（已完成首轮）
 - `upstream-error-classifier`（已完成首轮，落在 `openai-image-errors.ts`）
 - `proof-token-provider`（仍复用现有 `openai-proof.ts`，由 session/conversation adapter 调用）
-- `openai-api-service-adapter`（已完成首轮）
+- `openai-api-service-adapter`（已完成首轮，后续已按 shared / v1 / responses 继续拆分）
 
 原则：
 
