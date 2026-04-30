@@ -2,6 +2,7 @@ import { logger } from "@/server/logger";
 import {
   fetchRemoteAccountInfo as fetchRemoteAccountInfoFromUpstream,
 } from "@/server/providers/openai-client";
+import { normalizeAccountType } from "@/server/account-type-policy";
 import type { AccountRecord, AccountRefreshError, AccountType, PublicAccount } from "@/server/types";
 
 export type AccountRemoteRefreshDependencies = {
@@ -35,20 +36,6 @@ function dedupeTokens(tokens: string[]) {
     cleaned.push(normalized);
   }
   return cleaned;
-}
-
-export function normalizeAccountType(value: unknown): AccountType | null {
-  const normalized = cleanToken(value).toLowerCase();
-  const mapping: Record<string, AccountType> = {
-    free: "Free",
-    plus: "Plus",
-    team: "Team",
-    pro: "Pro",
-    personal: "Plus",
-    business: "Team",
-    enterprise: "Team",
-  };
-  return mapping[normalized] ?? null;
 }
 
 function searchAccountType(value: unknown): AccountType | null {

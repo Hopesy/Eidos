@@ -295,7 +295,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 
 ---
 
-## 5. 已落地进度（截至 2026-04-29 晚）
+## 5. 已落地进度（截至 2026-04-30）
 
 本轮已经从计划进入实施，当前落地结果如下：
 
@@ -450,7 +450,29 @@ src/server/image-recovery-service.ts
 - 账号远端刷新 / plan 识别链已移出，但 `account-service.ts` 继续保留 facade 入口；
 - recover 用例已移出，但 `account-service.ts` 继续保留 facade 入口；
 - 账号管理 CRUD 已移出，但 `account-service.ts` 继续保留 facade 入口；
-- 下一步 `account-service.ts` 已基本收敛为组合 facade，应转向测试护栏或前端 Accounts 页面拆分。
+- 账号类型归一化已抽到 `src/server/account-type-policy.ts`，账号管理与远端刷新共用同一事实源；
+- `account-admin-service.ts` 已增加 store 依赖注入入口，默认仍接真实 SQLite store，测试可传入内存 store；
+- 下一步 `account-service.ts` 已基本收敛为组合 facade，应转向更多测试护栏或前端 Accounts 页面拆分。
+
+#### Phase 6：重构护栏继续补强
+
+在首轮规则测试之后，已继续补账号管理服务测试：
+
+```text
+tests/account-admin-service.test.ts
+  覆盖账号 public 映射、token 列表、限流 token 列表、导入去重、删除计数、
+  updateAccount 字段归一化、markImageResult 成功/失败计数与 quota/status 语义。
+
+tests/ts-resolve-loader.mjs
+tests/register-ts-resolve-loader.mjs
+  为 Node.js 内置 node:test 增加项目别名 `@/*` 与扩展名解析能力，
+  后续测试可以直接导入使用 `@/` 的源码模块。
+```
+
+已验证：
+
+- `pnpm test`：19 个测试全部通过。
+- `pnpm build`：Next.js 生产构建通过。
 
 ---
 
@@ -616,18 +638,21 @@ src/server/image-recovery-service.ts
 - `package.json`
   - 新增 `pnpm test`
   - 使用 Node.js 内置 `node:test` + `--experimental-strip-types`，不额外引入测试框架依赖。
+  - 新增测试 loader，用于解析源码里的 `@/*` 路径别名与扩展名省略导入。
 - `tests/image-generation.test.ts`
   - 覆盖图片比例 / 质量到尺寸映射、尺寸回推比例、upscale 质量兼容与 prompt 构造。
 - `tests/openai-image-errors.test.ts`
   - 覆盖上游错误归一化、input/account blocked 分类、HTTP status 到 retryAction 语义映射。
 - `tests/release-shared.test.ts`
   - 覆盖版本比较、installer asset 选择、latest release payload 解析。
+- `tests/account-admin-service.test.ts`
+  - 覆盖账号 normalize / public mapping、导入去重、删除、更新与图片结果计数语义。
 
 后续继续补这些小测试：
 
 1. 配置默认值一致性
 2. 账号选择 / 轮转策略
-3. 账号 normalize / public mapping
+3. 账号远端刷新错误归集
 4. 关键 repository 的最小读写测试
 
 同时补脚本：
@@ -715,8 +740,8 @@ src/
 4. **下一优先级：继续拆服务端 God file**：
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
-5. **Phase 6 最小护栏首轮已完成**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping。
-6. **下一优先级：处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
+5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service。
+6. **下一优先级：继续补账号选择/远端刷新测试，随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。

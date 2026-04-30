@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 
+import { normalizeAccountType } from "@/server/account-type-policy";
 import { updateAccounts, readAccounts } from "@/server/store";
-import type { AccountRecord, AccountStatus, AccountType, PublicAccount } from "@/server/types";
-import { normalizeAccountType } from "@/server/account-remote-refresh-service";
+import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 
 function cleanToken(value: unknown) {
   return String(value || "").trim();
@@ -74,9 +74,19 @@ function publicAccount(account: AccountRecord): PublicAccount {
 
 export type AccountAdminService = ReturnType<typeof createAccountAdminService>;
 
-export function createAccountAdminService() {
+export type AccountAdminStoreDependencies = {
+  readAccounts(): Promise<AccountRecord[]>;
+  updateAccounts<T>(updater: (accounts: AccountRecord[]) => Promise<T> | T): Promise<T>;
+};
+
+const defaultDependencies: AccountAdminStoreDependencies = {
+  readAccounts,
+  updateAccounts,
+};
+
+export function createAccountAdminService(dependencies: AccountAdminStoreDependencies = defaultDependencies) {
   async function listRecords() {
-    const raw = await readAccounts();
+    const raw = await dependencies.readAccounts();
     return raw
       .map((item) => normalizeAccount(item as Record<string, unknown>))
       .filter((item): item is AccountRecord => Boolean(item));
@@ -85,7 +95,7 @@ export function createAccountAdminService() {
   async function saveTransformed(
     updater: (accounts: AccountRecord[]) => Promise<AccountRecord[]> | AccountRecord[],
   ) {
-    return updateAccounts(async (accounts) => {
+    return dependencies.updateAccounts(async (accounts) => {
       const normalized = accounts
         .map((item) => normalizeAccount(item as Record<string, unknown>))
         .filter((item): item is AccountRecord => Boolean(item));
