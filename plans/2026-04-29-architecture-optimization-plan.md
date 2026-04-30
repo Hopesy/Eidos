@@ -587,6 +587,36 @@ src/server/image-recovery-service.ts
 - `account-admin-service.ts` 已增加 store 依赖注入入口，默认仍接真实 SQLite store，测试可传入内存 store；
 - 下一步 `account-service.ts` 已基本收敛为组合 facade，应转向更多测试护栏或前端 Accounts 页面拆分。
 
+#### Phase 3：CPA 同步模块拆分（主体已完成）
+
+`src/server/cpa-sync.ts` 已从约 386 行同步编排文件收窄为 2 行兼容 facade。当前边界：
+
+```text
+src/server/cpa-sync.ts
+  对外兼容入口，继续导出 getSyncStatus / runSync
+
+src/server/cpa-sync-shared.ts
+  CPA 配置 / 远端 auth file / 本地账号最小类型、token/provider 归一化、
+  账号文件名、禁用状态、远端 auth 内容、空 sync status 与初始 run result 构造
+
+src/server/cpa-sync-client.ts
+  CPA 配置解析、管理端 HTTP client、auth-files 列表 / 下载 / 上传 / 状态 patch、
+  远端 auth file 批量加载
+
+src/server/cpa-sync-status.ts
+  /api/sync/status 用例：本地账号与远端 auth-files 对账、summary 与 mismatch 构造
+
+src/server/cpa-sync-runner.ts
+  /api/sync/run 用例：pull / push / both 同步执行、远端独有拉取、本地缺失推送、
+  禁用状态对齐、sync run 结果持久化
+```
+
+这一步的取舍：
+
+- 保留 `@/server/cpa-sync` 旧入口，避免 API route 同步扩散；
+- 按 client / status / runner / shared 四块拆，不把每个小循环继续拆成碎片 helper；
+- CPA 同步仍通过 `account-service` 做账号增删改刷新，不直接绕过账号服务写 repository。
+
 #### Phase 4：Repository / Store 边界收口（首轮已完成）
 
 已新增 `src/server/repositories/*`，把 SQLite / 本地文件持久化入口从业务服务命名里显式分离出来。旧 `*-store.ts` 文件保留为兼容 facade，减少调用方扩散和历史导入断裂。
@@ -952,9 +982,10 @@ src/
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
 6. **Phase 2 次级页面首轮已完成**：Settings / Requests 已按页面壳 + feature hook / view-model 收口，后续不再优先机械拆它们的 JSX。
 7. **Phase 2 Accounts 主体已完成**：账号页已经按页面壳 + feature hook / view-model + 页面私有展示组件收口，后续不再为了行数继续机械拆分。
-8. **Phase 4 / Phase 5 首轮已完成**：repository 入口与 Electron IPC / sandbox 边界已经收口，后续只在具体需求驱动时继续拆 `cpa-sync.ts`、`src/lib/api.ts` 或桌面 lifecycle 模块。
+8. **Phase 4 / Phase 5 首轮已完成**：repository 入口与 Electron IPC / sandbox 边界已经收口。
+9. **CPA 同步主体已完成**：`cpa-sync.ts` 已收口为 facade，client / status / runner / shared 已拆出。
 
-原则：已经拆稳的 Image Workbench、Accounts、repository 入口和 Electron IPC 不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修。
+原则：已经拆稳的 Image Workbench、Accounts、repository 入口、Electron IPC 和 CPA 同步不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修，剩余可选块主要是 `src/lib/api.ts` 或桌面 lifecycle 模块。
 
 ---
 
