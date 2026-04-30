@@ -149,7 +149,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 
 当前仓库里最值得警惕的热点文件包括：
 
-- `src/app/image/page.tsx`：2730 行（初始基线；Phase 2 已拆到约 856 行）
+- `src/app/image/page.tsx`：2730 行（初始基线；Phase 2 已拆到约 277 行）
 - `src/server/providers/openai-client.ts`：2165 行（初始基线；Phase 3 已收窄为 30 行兼容 facade）
 - `src/server/account-service.ts`：1509 行（初始基线；Phase 3 已开始拆分，当前约 229 行）
 - `src/app/accounts/page.tsx`：1097 行
@@ -161,7 +161,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 
 #### A. 页面层承担了应用层编排
 
-以 `src/app/image/page.tsx` 为例，它现在同时承担：
+以 `src/app/image/page.tsx` 的初始状态为例，它曾经同时承担：
 
 - 页面展示
 - 本地状态机
@@ -172,7 +172,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 - 错误语义转换
 - 重试与恢复动作选择
 
-这已经不是“页面复杂”，而是**页面正在扮演 feature application service**。
+这已经不是“页面复杂”，而是**页面正在扮演 feature application service**。当前 Image Workbench 已通过 `use-image-page.ts` 把这类编排移出页面。
 
 #### B. 服务端存在两个 God file
 
@@ -323,11 +323,17 @@ Node 官方 `node:sqlite` 文档明确写明：
 
 #### Phase 2：Image Workbench 页面拆分
 
-`src/app/image/page.tsx` 已从约 2730 行拆到约 856 行。当前边界：
+`src/app/image/page.tsx` 已从约 2730 行拆到约 277 行。当前边界：
 
 ```text
 src/app/image/page.tsx
-  页面壳 / state 持有 / 事件接线
+  页面壳、布局、组件拼装、展示绑定
+
+src/features/image-workbench/use-image-page.ts
+  工作台状态、生命周期、历史/运行态同步、提交/取消/恢复/编辑编排
+
+src/features/image-workbench/page-options.ts
+  工作台模型、模式、尺寸、质量选项与空状态示例
 
 src/features/image-workbench/browser-actions.ts
   浏览器副作用：打开图片、下载图片
@@ -607,8 +613,8 @@ tests/account-view-model.test.ts
 
 1. **Image Workbench**
    - 已落地 `src/features/image-workbench/*` 模块化拆分。
-   - 页面仍保留 state 持有与事件接线，后续如有必要可再收口成 hook / reducer。
-   - 当前优先不继续机械拆分，下一步应转向 Accounts 页面或服务端 God file。
+   - 已抽出 `use-image-page.ts` 承载页面状态与工作流编排。
+   - 当前优先不继续机械拆分，下一步应转向 Accounts 页面剩余 UI 体量、repository 护栏或 Electron IPC 边界。
 
 2. **Accounts**
    - 列表筛选/排序
@@ -819,7 +825,7 @@ src/
 当前推荐顺序已根据本轮落地进度更新：
 
 1. **Phase 1 首轮已完成**：配置默认值、图片参数映射、release/version、图片错误响应已经收口到共享模块。
-2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成 feature modules，并保持外部行为不变。
+2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成页面壳 + `use-image-page` + feature modules，并保持外部行为不变。
 3. **Phase 3 OpenAI Provider 主体已完成**：`openai-client.ts` 已收窄为 30 行兼容 facade，ChatGPT session/conversation/upload/result 与 API service adapter 已拆出。
 4. **下一优先级：继续拆服务端 God file**：
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
@@ -829,7 +835,7 @@ src/
 7. **下一优先级：继续 Accounts 页面组件拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 的纯逻辑和状态编排已移出，剩余主要是 UI 结构体量。
 8. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
-原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。
+原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到 Accounts 剩余 UI 体量、服务端边界和持久化护栏。
 
 ---
 
