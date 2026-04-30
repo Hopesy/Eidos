@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import { getDb } from "@/server/db";
-import { cleanupOrphanedImageFiles, deleteImageFilesIfUnreferenced, getConversationImageReferences, normalizeConversationAssets } from "@/server/repositories/image-file-repository";
-import { deleteImageUpstreamTasksByConversationIds, upsertImageUpstreamTask } from "@/server/repositories/image-upstream-task-repository";
+import { cleanupOrphanedImageFiles, deleteImageFilesIfUnreferenced, getConversationImageReferences, normalizeConversationAssets } from "@/server/repositories/image/file-repository";
+import { deleteImageUpstreamTasksByConversationIds, upsertImageUpstreamTask } from "@/server/repositories/image/upstream-task-repository";
 
 type ImageConversationRecord = Record<string, unknown> & {
   id: string;

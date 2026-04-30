@@ -1,6 +1,6 @@
 import type { SyncStatusResponse } from "@/lib/api";
 import { listAccounts } from "@/server/account-service";
-import { getLastSyncRun } from "@/server/repositories/sync-run-repository";
+import { getLastSyncRun } from "@/server/repositories/sync-run";
 
 import { CpaClient, getCpaConfig, loadRemoteAuthFiles } from "./client";
 import {

@@ -4,14 +4,14 @@ import {
   ImageGenerationError,
   buildHttpImageError,
   createImageError,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 import {
   cleanToken,
   resolveImageApiEndpoint,
   type ImageApiServiceConfig,
   type ImageGenerationOptions,
-} from "./openai-api-service-shared";
+} from "./api-service-shared";
 
 export async function generateImageResultWithApiService(
   serviceConfig: ImageApiServiceConfig,

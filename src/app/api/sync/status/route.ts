@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { getSyncStatus } from "@/server/cpa-sync";
+import { getSyncStatus } from "@/server/cpa-sync/status";
 import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";

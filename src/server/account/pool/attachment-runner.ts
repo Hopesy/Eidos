@@ -1,5 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import { persistImageResponseItems } from "@/server/repositories/image-file-repository";
+import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
   generateImageResultWithAttachments,
@@ -7,10 +7,10 @@ import {
   ImageGenerationError,
   isTokenInvalidError,
 } from "@/server/providers/openai-client";
-import { addRequestLog } from "@/server/repositories/request-log-repository";
+import { addRequestLog } from "@/server/repositories/request-log";
 
-import type { AccountPoolImageRunnerDependencies } from "./account-pool-image-runner-types";
-import { cleanToken, isRetryableImageError } from "./account-pool-image-runner-shared";
+import type { AccountPoolImageRunnerDependencies } from "./image-runner-types";
+import { cleanToken, isRetryableImageError } from "./image-runner-shared";
 
 export async function runAttachmentTaskWithPool(
   dependencies: AccountPoolImageRunnerDependencies,

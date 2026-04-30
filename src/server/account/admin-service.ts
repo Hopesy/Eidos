@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
-import { normalizeAccountType } from "@/server/account-type-policy";
-import { updateAccounts, readAccounts } from "@/server/repositories/accounts-repository";
+import { normalizeAccountType } from "@/server/account/type-policy";
+import { updateAccounts, readAccounts } from "@/server/repositories/account";
 import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 
 function cleanToken(value: unknown) {

@@ -2,9 +2,9 @@ import {
   createImageError,
   isInputBlockedMessage,
   normalizeUpstreamErrorMessage,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
-import { cleanToken } from "./chatgpt-result-shared";
+import { cleanToken } from "./result-shared";
 
 export function parseSsePayload(raw: string) {
   const fileIds: string[] = [];

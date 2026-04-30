@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { runSync } from "@/server/cpa-sync";
+import { runSync } from "@/server/cpa-sync/runner";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";

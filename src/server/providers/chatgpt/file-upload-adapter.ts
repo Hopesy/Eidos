@@ -2,7 +2,7 @@ import {
   buildHttpImageError,
   createImageError,
   isAccountBlockedMessage,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 const BASE_URL = "https://chatgpt.com";
 
@@ -232,6 +232,3 @@ export async function uploadChatGptConversationFile(
     assetPointer: `file-service://${fileId}`,
   } satisfies UploadedMultimodalFile;
 }
-
-
-

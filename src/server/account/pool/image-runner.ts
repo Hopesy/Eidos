@@ -1,14 +1,14 @@
-import { runAttachmentTaskWithPool } from "@/server/account-pool-attachment-runner";
-import { runGenerateTaskWithPool } from "@/server/account-pool-generate-runner";
+import { runAttachmentTaskWithPool } from "@/server/account/pool/attachment-runner";
+import { runGenerateTaskWithPool } from "@/server/account/pool/generate-runner";
 import type {
   AccountPoolImageRunner,
   AccountPoolImageRunnerDependencies,
-} from "@/server/account-pool-image-runner-types";
+} from "@/server/account/pool/image-runner-types";
 
 export type {
   AccountPoolImageRunner,
   AccountPoolImageRunnerDependencies,
-} from "@/server/account-pool-image-runner-types";
+} from "@/server/account/pool/image-runner-types";
 
 export function createAccountPoolImageRunner(
   dependencies: AccountPoolImageRunnerDependencies,

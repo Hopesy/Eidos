@@ -5,7 +5,7 @@ import {
   refreshAccounts,
   updateAccount,
 } from "@/server/account-service";
-import { saveSyncRun } from "@/server/repositories/sync-run-repository";
+import { saveSyncRun } from "@/server/repositories/sync-run";
 
 import { CpaClient, getCpaConfig, loadRemoteAuthFiles } from "./client";
 import {

@@ -1,10 +1,10 @@
-import { persistImageResponseItems } from "@/server/repositories/image-file-repository";
+import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import {
   getImageErrorMeta,
   ImageGenerationError,
   recoverImageResult,
 } from "@/server/providers/openai-client";
-import { addRequestLog } from "@/server/repositories/request-log-repository";
+import { addRequestLog } from "@/server/repositories/request-log";
 import type { AccountRecord } from "@/server/types";
 
 export type ImageRecoveryServiceDependencies = {

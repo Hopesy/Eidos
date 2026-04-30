@@ -1,15 +1,15 @@
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import { createAccountAdminService } from "@/server/account-admin-service";
-import { createAccountSelector } from "@/server/account-selection-service";
-import { createAccountPoolImageRunner } from "@/server/account-pool-image-runner";
-import { createAccountRemoteRefreshService } from "@/server/account-remote-refresh-service";
-import { createImageRecoveryService } from "@/server/image-recovery-service";
-import { getImageApiServiceConfig } from "@/server/image-api-service-config";
-import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image-api-task-runner";
+import { createAccountAdminService } from "@/server/account/admin-service";
+import { createAccountSelector } from "@/server/account/selection-service";
+import { createAccountPoolImageRunner } from "@/server/account/pool/image-runner";
+import { createAccountRemoteRefreshService } from "@/server/account/remote-refresh-service";
+import { createImageRecoveryService } from "@/server/image/recovery-service";
+import { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
+import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image/api-service/task-runner";
 import { logger } from "@/server/logger";
 import type { AccountRecord } from "@/server/types";
 
-export { getImageApiServiceConfig } from "@/server/image-api-service-config";
+export { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
 
 const accountAdminService = createAccountAdminService();
 

@@ -1,5 +1,5 @@
 import type { ImageApiStyle } from "@/lib/api";
-import { getSavedConfig } from "@/server/repositories/config-repository";
+import { getSavedConfig } from "@/server/repositories/config";
 import { getDefaultConfigPayload } from "@/shared/app-config";
 
 function cleanToken(value: unknown) {
@@ -35,3 +35,6 @@ export function getImageApiServiceConfig() {
     responsesModel,
   };
 }
+
+export type ImageApiServiceConfig = NonNullable<ReturnType<typeof getImageApiServiceConfig>>;
+export type ImageApiTaskResult = { created: number; data: Array<Record<string, unknown>> };

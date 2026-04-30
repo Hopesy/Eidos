@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 import { logger } from "@/server/logger";
-import { uploadChatGptConversationFile, type UploadedMultimodalFile } from "@/server/providers/chatgpt-file-upload-adapter";
-import { collectGeneratedItems, recoverGeneratedItems } from "@/server/providers/chatgpt-result-adapter";
+import { uploadChatGptConversationFile, type UploadedMultimodalFile } from "@/server/providers/chatgpt/file-upload-adapter";
+import { collectGeneratedItems, recoverGeneratedItems } from "@/server/providers/chatgpt/generated-items";
 import {
   bootstrapChatGptSession,
   CHATGPT_BASE_URL,
@@ -14,13 +14,13 @@ import {
   maskAccessToken,
   resolveFingerprint,
   resolveUpstreamModel,
-} from "@/server/providers/chatgpt-session-adapter";
+} from "@/server/providers/chatgpt/session-adapter";
 import {
   buildHttpImageError,
   createImageError,
-} from "@/server/providers/openai-image-errors";
-import { getProofToken } from "@/server/providers/openai-proof";
-import type { ImageGenerationOptions } from "@/server/providers/openai-api-service-adapter";
+} from "@/server/providers/openai/image-errors";
+import { getProofToken } from "@/server/providers/openai/proof";
+import type { ImageGenerationOptions } from "@/server/providers/openai/api-service-shared";
 import type { AccountRecord } from "@/server/types";
 
 type ConversationInput = {

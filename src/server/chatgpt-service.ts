@@ -1,5 +1,5 @@
 import { generateWithPool } from "@/server/account-service";
-import { parseImageCount } from "@/server/image-request";
+import { parseImageCount } from "@/server/image/request";
 import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
 import { ApiError } from "@/server/response";
 

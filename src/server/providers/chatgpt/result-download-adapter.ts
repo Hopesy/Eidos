@@ -1,14 +1,14 @@
 import { logger } from "@/server/logger";
 import {
   createImageError,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 import {
   BASE_URL,
   maskAccessToken,
   type ChatGptResultSession,
-} from "./chatgpt-result-shared";
-import { extractImageIds } from "./chatgpt-result-parser";
+} from "./result-shared";
+import { extractImageIds } from "./result-parser";
 
 export async function pollImageIds(session: ChatGptResultSession, accessToken: string, deviceId: string, conversationId: string) {
   const started = Date.now();

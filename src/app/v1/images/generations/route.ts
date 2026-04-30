@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 
 import { ensureAccountWatcherStarted, generateWithPool } from "@/server/account-service";
-import { createImageApiError } from "@/server/image-error-response";
-import { parseImageCount } from "@/server/image-request";
+import { createImageApiError } from "@/server/image/error-response";
+import { parseImageCount } from "@/server/image/request";
 import { logger } from "@/server/logger";
 import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
 import { ApiError, jsonError, jsonOk } from "@/server/response";

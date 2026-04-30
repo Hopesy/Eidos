@@ -3,7 +3,7 @@ import {
   buildHttpImageError,
   createImageError,
   normalizeUpstreamErrorMessage,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 export type ImageApiServiceConfig = {
   apiKey: string;

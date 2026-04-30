@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
-import { createImageApiError } from "@/server/image-error-response";
+import { createImageApiError } from "@/server/image/error-response";
 import { logger } from "@/server/logger";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {

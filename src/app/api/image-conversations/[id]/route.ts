@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { deleteImageConversationRecord, getImageConversationRecord, saveImageConversationRecord } from "@/server/repositories/image-conversation-repository";
+import { deleteImageConversationRecord, getImageConversationRecord, saveImageConversationRecord } from "@/server/repositories/image/conversation-repository";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";

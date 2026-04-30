@@ -4,7 +4,7 @@ import {
   ImageGenerationError,
   buildHttpImageError,
   createImageError,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 import {
   cleanToken,
@@ -14,7 +14,7 @@ import {
   type ImageApiServiceConfig,
   type ImageGenerationOptions,
   type ResponsesContinuationOptions,
-} from "./openai-api-service-shared";
+} from "./api-service-shared";
 
 type ParsedResponsesImageItem = {
   b64_json: string;

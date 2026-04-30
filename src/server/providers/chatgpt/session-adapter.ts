@@ -4,8 +4,8 @@ import { logger } from "@/server/logger";
 import {
   buildHttpImageError,
   createImageError,
-} from "@/server/providers/openai-image-errors";
-import { captureBuildInfoFromHtml, getPowConfig, getRequirementsToken } from "@/server/providers/openai-proof";
+} from "@/server/providers/openai/image-errors";
+import { captureBuildInfoFromHtml, getPowConfig, getRequirementsToken } from "@/server/providers/openai/proof";
 import type { AccountRecord } from "@/server/types";
 
 export const CHATGPT_BASE_URL = "https://chatgpt.com";

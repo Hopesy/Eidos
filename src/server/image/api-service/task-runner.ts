@@ -4,11 +4,11 @@ import {
   editImageResultWithResponsesApiService,
 } from "@/server/providers/openai-client";
 
-import { runApiGenerateTask } from "./image-api-generate-runner";
-import { runApiSingleTask } from "./image-api-single-runner";
-import type { ImageApiServiceConfig } from "./image-api-task-runner-types";
+import { runApiGenerateTask } from "./generate-runner";
+import { runApiSingleTask } from "./single-runner";
+import type { ImageApiServiceConfig } from "./service-config";
 
-export { runApiGenerateTask } from "./image-api-generate-runner";
+export { runApiGenerateTask } from "./generate-runner";
 
 export function runApiEditTask(
   imageApiService: ImageApiServiceConfig,

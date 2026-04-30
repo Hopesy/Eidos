@@ -1,4 +1,4 @@
-import { getSavedConfig } from "@/server/repositories/config-repository";
+import { getSavedConfig } from "@/server/repositories/config";
 import { ApiError } from "@/server/response";
 
 import {

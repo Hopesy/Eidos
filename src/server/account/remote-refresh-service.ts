@@ -2,7 +2,7 @@ import { logger } from "@/server/logger";
 import {
   fetchRemoteAccountInfo as fetchRemoteAccountInfoFromUpstream,
 } from "@/server/providers/openai-client";
-import { normalizeAccountType } from "@/server/account-type-policy";
+import { normalizeAccountType } from "@/server/account/type-policy";
 import type { AccountRecord, AccountRefreshError, AccountType, PublicAccount } from "@/server/types";
 
 export type AccountRemoteRefreshDependencies = {

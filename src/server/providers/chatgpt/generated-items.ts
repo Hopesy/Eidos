@@ -1,22 +1,22 @@
 import { logger } from "@/server/logger";
 import {
   createImageError,
-} from "@/server/providers/openai-image-errors";
+} from "@/server/providers/openai/image-errors";
 
 import {
   downloadAsBase64,
   fetchDownloadUrl,
   pollImageIds,
-} from "./chatgpt-result-download-adapter";
+} from "./result-download-adapter";
 import {
   buildNoImageReturnedError,
   parseSsePayload,
-} from "./chatgpt-result-parser";
+} from "./result-parser";
 import {
   cleanToken,
   maskAccessToken,
   type ChatGptResultSession,
-} from "./chatgpt-result-shared";
+} from "./result-shared";
 
 type GeneratedDownloadItem = {
   b64_json: string;

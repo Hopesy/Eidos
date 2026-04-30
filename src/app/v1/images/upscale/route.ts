@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import type { ImageGenerationQuality } from "@/lib/api";
 
 import { ensureAccountWatcherStarted, getImageApiServiceConfig, upscaleWithApiService, upscaleWithPool } from "@/server/account-service";
-import { createImageApiError } from "@/server/image-error-response";
+import { createImageApiError } from "@/server/image/error-response";
 import { logger } from "@/server/logger";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {

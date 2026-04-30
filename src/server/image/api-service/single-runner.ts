@@ -1,18 +1,18 @@
-import { persistImageResponseItems } from "@/server/repositories/image-file-repository";
+import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
   getImageErrorMeta,
   ImageGenerationError,
 } from "@/server/providers/openai-client";
-import { addRequestLog } from "@/server/repositories/request-log-repository";
+import { addRequestLog } from "@/server/repositories/request-log";
 
 import {
   API_MAX_ATTEMPTS,
   delay,
   getApiRetryDelayMs,
   isRetryableApiError,
-} from "./image-api-task-retry-policy";
-import type { ImageApiServiceConfig, ImageApiTaskResult } from "./image-api-task-runner-types";
+} from "./task-retry-policy";
+import type { ImageApiServiceConfig, ImageApiTaskResult } from "./service-config";
 
 export async function runApiSingleTask<T extends ImageApiTaskResult>(
   imageApiService: ImageApiServiceConfig,

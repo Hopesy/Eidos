@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { readImageFileBytes } from "@/server/repositories/image-file-repository";
+import { readImageFileBytes } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import { ApiError, jsonError } from "@/server/response";
 
