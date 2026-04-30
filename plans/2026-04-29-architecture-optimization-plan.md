@@ -512,7 +512,19 @@ src/server/image-api-task-runner.ts
   图像 API 服务 generate/edit/upscale 执行编排、重试策略、请求日志、图片持久化
 
 src/server/account-pool-image-runner.ts
-  账号池 Web 通道 generate/edit/upscale 执行编排、token 切换、失败重试、请求日志、图片持久化
+  账号池 Web 通道对外 runner facade
+
+src/server/account-pool-generate-runner.ts
+  账号池 Web 通道 generate 执行编排、token 切换、部分完成与请求日志
+
+src/server/account-pool-attachment-runner.ts
+  账号池 Web 通道 edit/upscale 附件请求编排、token 切换与请求日志
+
+src/server/account-pool-image-runner-types.ts
+  账号池图片 runner 依赖与对外接口类型
+
+src/server/account-pool-image-runner-shared.ts
+  账号池图片 runner token 清洗与可重试错误判断
 
 src/server/account-remote-refresh-service.ts
   账号类型识别、JWT payload 解析、远端 quota/plan 刷新、批量刷新错误归集
@@ -653,7 +665,7 @@ tests/account-view-model.test.ts
 
 - `account-admin-service`（已完成首轮）
 - `account-selection-service`（已完成首轮）
-- `image-generation-service` / `image-edit-service` / `image-upscale-service`（账号池 Web 通道已完成首轮，落在 `account-pool-image-runner.ts`）
+- `image-generation-service` / `image-edit-service` / `image-upscale-service`（账号池 Web 通道已完成首轮，后续已拆到 generate / attachment runner）
 - `account-remote-refresh-service`（已完成首轮）
 - `image-recovery-service`（已完成首轮）
 - `image-api-service-switch`（已完成配置与 API task runner 拆分）
