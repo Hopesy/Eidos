@@ -151,7 +151,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 
 - `src/app/image/page.tsx`：2730 行（初始基线；Phase 2 已拆到约 856 行）
 - `src/server/providers/openai-client.ts`：2165 行（初始基线；Phase 3 已收窄为 30 行兼容 facade）
-- `src/server/account-service.ts`：1509 行（初始基线；Phase 3 已开始拆分，当前约 463 行）
+- `src/server/account-service.ts`：1509 行（初始基线；Phase 3 已开始拆分，当前约 392 行）
 - `src/app/accounts/page.tsx`：1097 行
 - `src/app/settings/page.tsx`：466 行
 
@@ -413,7 +413,7 @@ src/server/providers/chatgpt-conversation-adapter.ts
 
 #### Phase 3：Account Service 拆分（首轮已开始）
 
-`src/server/account-service.ts` 已开始从账号池 God file 拆出低风险边界，当前从初始约 1509 行收窄到约 463 行。
+`src/server/account-service.ts` 已开始从账号池 God file 拆出低风险边界，当前从初始约 1509 行收窄到约 392 行。
 
 当前已拆出的边界：
 
@@ -432,6 +432,9 @@ src/server/account-pool-image-runner.ts
 
 src/server/account-remote-refresh-service.ts
   账号类型识别、JWT payload 解析、远端 quota/plan 刷新、批量刷新错误归集
+
+src/server/image-recovery-service.ts
+  recover 任务恢复、原账号校验、恢复结果持久化、恢复日志记录
 ```
 
 这一步的取舍：
@@ -442,7 +445,8 @@ src/server/account-remote-refresh-service.ts
 - 图像 API 服务的 generate/edit/upscale 执行编排已从账号池主文件移出；
 - 账号池 Web 通道 generate/edit/upscale 执行编排已通过依赖注入移出；
 - 账号远端刷新 / plan 识别链已移出，但 `account-service.ts` 继续保留 facade 入口；
-- 下一步继续拆 `account-service.ts` 中仍保留的账号管理 / recover 用例。
+- recover 用例已移出，但 `account-service.ts` 继续保留 facade 入口；
+- 下一步继续拆 `account-service.ts` 中仍保留的账号管理逻辑。
 
 ---
 
@@ -532,7 +536,7 @@ src/server/account-remote-refresh-service.ts
 - `account-selection-service`（已完成首轮）
 - `image-generation-service` / `image-edit-service` / `image-upscale-service`（账号池 Web 通道已完成首轮，落在 `account-pool-image-runner.ts`）
 - `account-remote-refresh-service`（已完成首轮）
-- `image-recovery-service`
+- `image-recovery-service`（已完成首轮）
 - `image-api-service-switch`（已完成配置与 API task runner 拆分）
 
 #### 从 `openai-client.ts` 拆出
@@ -696,7 +700,7 @@ src/
 2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成 feature modules，并保持外部行为不变。
 3. **Phase 3 OpenAI Provider 主体已完成**：`openai-client.ts` 已收窄为 30 行兼容 facade，ChatGPT session/conversation/upload/result 与 API service adapter 已拆出。
 4. **下一优先级：继续拆服务端 God file**：
-   - 继续拆 `account-service.ts` 的 recover 用例与账号管理逻辑；
+   - 继续拆 `account-service.ts` 的账号管理逻辑；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **并行补 Phase 6 最小护栏**：优先给已抽出的纯规则补测试，例如 image-generation、release-shared、turn-patches、error mapping。
 6. **随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。

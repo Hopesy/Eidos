@@ -1,19 +1,13 @@
 import { createHash } from "node:crypto";
-import { addRequestLog } from "@/server/request-log-store";
 
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import {
-  getImageErrorMeta,
-  ImageGenerationError,
-  recoverImageResult,
-} from "@/server/providers/openai-client";
 import { logger } from "@/server/logger";
-import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
 import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 import { createAccountSelector } from "@/server/account-selection-service";
 import { createAccountPoolImageRunner } from "@/server/account-pool-image-runner";
 import { createAccountRemoteRefreshService, normalizeAccountType } from "@/server/account-remote-refresh-service";
+import { createImageRecoveryService } from "@/server/image-recovery-service";
 import { getImageApiServiceConfig } from "@/server/image-api-service-config";
 import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image-api-task-runner";
 
@@ -136,6 +130,10 @@ const accountPoolImageRunner = createAccountPoolImageRunner({
   getAccount,
   markImageResult,
   removeToken,
+});
+
+const imageRecoveryService = createImageRecoveryService({
+  getAccountById,
 });
 
 export async function listAccounts() {
@@ -441,78 +439,5 @@ export async function recoverImageTaskWithAccount(
     count: number;
   },
 ) {
-  const startedAt = new Date().toISOString();
-  const startTime = Date.now();
-  const conversationId = cleanToken(params.conversationId);
-  if (!conversationId) {
-    throw new ImageGenerationError("conversation id is required", {
-      kind: "input_blocked",
-      retryAction: "none",
-      retryable: false,
-      stage: "validation",
-    });
-  }
-
-  const account = await getAccountById(params.sourceAccountId || "");
-  if (!account) {
-    const error = new ImageGenerationError("无法恢复原始账号，请重新提交任务", {
-      kind: "account_blocked",
-      retryAction: "switch_account",
-      retryable: false,
-      stage: "account",
-      upstreamConversationId: conversationId,
-      sourceAccountId: cleanToken(params.sourceAccountId),
-    });
-    addRequestLog({
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      endpoint: requestMeta.endpoint,
-      operation: requestMeta.operation,
-      route: requestMeta.route,
-      model: params.model,
-      count: requestMeta.count,
-      success: false,
-      error: error.message,
-      durationMs: Date.now() - startTime,
-      attemptCount: 1,
-      finalStatus: "failed",
-      statusCode: error.statusCode,
-      ...getImageErrorMeta(error),
-    });
-    throw error;
-  }
-
-  const result = await recoverImageResult(account.access_token, params.model, account, {
-    conversationId,
-    fileIds: params.fileIds,
-    revisedPrompt: params.revisedPrompt,
-    waitMs: params.waitMs,
-  }) as { created: number; data: Array<Record<string, unknown>> };
-
-  result.data = await persistImageResponseItems(result.data, {
-    route: requestMeta.route,
-    operation: requestMeta.operation,
-    model: params.model,
-    prompt: params.revisedPrompt ?? "",
-    accountEmail: account.email ?? null,
-    accountType: account.type ?? null,
-  }, { keepBase64: true });
-
-  addRequestLog({
-    startedAt,
-    finishedAt: new Date().toISOString(),
-    endpoint: requestMeta.endpoint,
-    operation: requestMeta.operation,
-    route: requestMeta.route,
-    model: params.model,
-    count: requestMeta.count,
-    success: true,
-    durationMs: Date.now() - startTime,
-    accountEmail: account.email ?? undefined,
-    accountType: account.type ?? undefined,
-    attemptCount: 1,
-    finalStatus: "success",
-  });
-
-  return result;
+  return imageRecoveryService.recoverImageTaskWithAccount(params, requestMeta);
 }
