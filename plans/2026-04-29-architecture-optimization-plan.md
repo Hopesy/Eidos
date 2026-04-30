@@ -509,7 +509,19 @@ src/server/image-api-service-config.ts
   图像 API 服务开关、baseUrl、apiKey、apiStyle、responsesModel 配置解析
 
 src/server/image-api-task-runner.ts
-  图像 API 服务 generate/edit/upscale 执行编排、重试策略、请求日志、图片持久化
+  图像 API 服务对外 task runner facade
+
+src/server/image-api-generate-runner.ts
+  图像 API 服务 generate 重试补齐、部分完成、请求日志与图片持久化
+
+src/server/image-api-single-runner.ts
+  图像 API 服务 edit/upscale 单任务重试、请求日志与图片持久化
+
+src/server/image-api-task-retry-policy.ts
+  图像 API 服务可重试错误判断、退避延迟与重试次数
+
+src/server/image-api-task-runner-types.ts
+  图像 API 服务 runner 共享类型
 
 src/server/account-pool-image-runner.ts
   账号池 Web 通道对外 runner facade
@@ -668,7 +680,7 @@ tests/account-view-model.test.ts
 - `image-generation-service` / `image-edit-service` / `image-upscale-service`（账号池 Web 通道已完成首轮，后续已拆到 generate / attachment runner）
 - `account-remote-refresh-service`（已完成首轮）
 - `image-recovery-service`（已完成首轮）
-- `image-api-service-switch`（已完成配置与 API task runner 拆分）
+- `image-api-service-switch`（已完成配置与 API task runner 拆分，后续已拆到 generate / single runner）
 
 #### 从 `openai-client.ts` 拆出
 
