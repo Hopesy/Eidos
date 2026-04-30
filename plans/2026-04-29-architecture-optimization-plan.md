@@ -412,6 +412,33 @@ src/features/accounts/use-accounts-page.ts
 - 纯规则和请求/状态编排已经离开页面，后续再拆组件时不会再碰业务流程；
 - 下一步如继续处理 Accounts，优先抽表格行或顶部控制区，而不是继续细碎地拆 hook。
 
+#### Phase 2：Settings 与 Requests 页面拆分（已完成首轮）
+
+继续按 `plans/架构原则.md` 的“页面壳 + feature hook / view-model”模式收口两个次级页面：
+
+```text
+src/app/settings/page.tsx
+  配置页 UI 壳、表单布局、字段绑定
+
+src/features/settings/use-settings-page.ts
+  配置加载、保存、恢复默认、dirty 状态、sync cache 清理
+
+src/app/requests/page.tsx
+  请求日志页 UI 壳、表格结构、筛选控件绑定
+
+src/features/requests/use-requests-page.ts
+  请求日志加载、刷新态、筛选状态与页面 view state 编排
+
+src/features/requests/request-view-model.ts
+  请求日志时间格式化、最终态归一化、筛选/排序、统计摘要和筛选选项
+```
+
+这一步的取舍：
+
+- 不拆表单字段组件和表格行组件，避免为了行数做机械拆分；
+- 把请求编排和纯派生逻辑从页面移出，使 `app/**/page.tsx` 更接近路由展示层；
+- Settings / Requests 后续如继续演进，优先在 feature 层扩展规则和 action，不把状态机重新塞回页面。
+
 #### Phase 3：OpenAI Provider 适配层拆分（主体已完成）
 
 `src/server/providers/openai-client.ts` 已从约 2165 行拆到 30 行，当前不再承载上游协议实现，而是作为兼容 facade 保留既有导出入口，避免一次性扩散修改调用方。
@@ -798,8 +825,9 @@ src/
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
-6. **下一优先级：继续 Accounts 页面组件拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 的纯逻辑和状态编排已移出，剩余主要是 UI 结构体量。
-7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
+6. **Phase 2 次级页面首轮已完成**：Settings / Requests 已按页面壳 + feature hook / view-model 收口，后续不再优先机械拆它们的 JSX。
+7. **下一优先级：继续 Accounts 页面组件拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 的纯逻辑和状态编排已移出，剩余主要是 UI 结构体量。
+8. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。
 

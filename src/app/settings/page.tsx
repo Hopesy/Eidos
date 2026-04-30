@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import {
     CircleHelp,
     LoaderCircle,
     RefreshCcw,
     Save,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,9 +19,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { fetchConfig, fetchDefaultConfig, updateConfig, type ImageApiStyle } from "@/lib/api";
-import { getDefaultConfigPayload, type ConfigPayload } from "@/shared/app-config";
-import { clearCachedSyncStatus } from "@/store/sync-status-cache";
+import { useSettingsPage } from "@/features/settings/use-settings-page";
+import type { ImageApiStyle } from "@/lib/api";
 
 function HintTooltip({ text }: { text: string }) {
     return (
@@ -62,7 +60,7 @@ function ConfigSection({
 }: {
     title: string;
     description?: string;
-    children: React.ReactNode;
+    children: ReactNode;
 }) {
     return (
         <Card className="border-stone-200/60 bg-white shadow-sm rounded-2xl dark:border-stone-700 dark:bg-stone-900">
@@ -86,7 +84,7 @@ function Field({
     id: string;
     label: string;
     hint?: string;
-    children: React.ReactNode;
+    children: ReactNode;
 }) {
     return (
         <div>
@@ -125,90 +123,16 @@ function ToggleField({
 }
 
 export default function SettingsPage() {
-    const [config, setConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
-    const [savedConfig, setSavedConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
-    const [defaultConfig, setDefaultConfig] = useState<ConfigPayload | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [restoringDefaults, setRestoringDefaults] = useState(false);
-
-    const isDirty = useMemo(
-        () => JSON.stringify(config) !== JSON.stringify(savedConfig),
-        [config, savedConfig],
-    );
-
-    async function loadCurrentConfig() {
-        try {
-            const cfgRes = await fetchConfig();
-            if (cfgRes) {
-                setConfig(cfgRes as ConfigPayload);
-                setSavedConfig(cfgRes as ConfigPayload);
-            }
-        } catch {
-            toast.error("读取配置失败");
-        }
-    }
-
-    async function loadDefaultConfig(options?: { suppressError?: boolean }) {
-        try {
-            const defRes = await fetchDefaultConfig();
-            if (defRes) {
-                setDefaultConfig(defRes as ConfigPayload);
-                return defRes as ConfigPayload;
-            }
-        } catch {
-            if (!options?.suppressError) {
-                toast.error("读取默认配置失败");
-            }
-        }
-        return null;
-    }
-
-    useEffect(() => {
-        setLoading(true);
-        void loadCurrentConfig().finally(() => setLoading(false));
-    }, []);
-
-    async function restoreDefaults() {
-        setRestoringDefaults(true);
-        try {
-            const nextDefaults = defaultConfig ?? await loadDefaultConfig();
-            if (!nextDefaults) {
-                return;
-            }
-            setConfig(nextDefaults);
-            toast.info("已恢复默认配置（未保存）");
-        } finally {
-            setRestoringDefaults(false);
-        }
-    }
-
-    async function saveConfig() {
-        setSaving(true);
-        try {
-            const res = await updateConfig(config);
-            if (res) {
-                setSavedConfig(res as ConfigPayload);
-                setConfig(res as ConfigPayload);
-            }
-            clearCachedSyncStatus();
-            toast.success("配置已保存");
-        } catch {
-            toast.error("保存配置失败");
-        } finally {
-            setSaving(false);
-        }
-    }
-
-    function setSection<K extends keyof ConfigPayload>(
-        section: K,
-        patch: Partial<NonNullable<ConfigPayload[K]>>,
-    ) {
-        setConfig((prev) => ({
-            ...prev,
-            [section]: { ...(prev[section] as object), ...patch },
-        }));
-    }
+    const {
+        config,
+        loading,
+        saving,
+        restoringDefaults,
+        isDirty,
+        restoreDefaults,
+        saveConfig,
+        setSection,
+    } = useSettingsPage();
 
     return (
         <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">

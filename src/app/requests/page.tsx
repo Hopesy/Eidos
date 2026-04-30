@@ -1,102 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertCircle, RefreshCw } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { fetchRequestLogs, type RequestLogItem } from "@/lib/api";
-
-function formatTime(value: string) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return value || "—";
-    }
-    return new Intl.DateTimeFormat("zh-CN", {
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    }).format(date);
-}
-
-function resolveFinalStatus(item: RequestLogItem) {
-    if (item.finalStatus === "success" || item.finalStatus === "partial" || item.finalStatus === "failed") {
-        return item.finalStatus;
-    }
-    return item.success ? "success" : "failed";
-}
-
-function finalStatusMeta(status: "success" | "partial" | "failed") {
-    if (status === "success") {
-        return { label: "成功", variant: "success" as const };
-    }
-    if (status === "partial") {
-        return { label: "部分完成", variant: "warning" as const };
-    }
-    return { label: "失败", variant: "danger" as const };
-}
+import {
+    formatRequestTime,
+    getRequestFinalStatusMeta,
+    requestOperationFilterOptions,
+    requestResultFilterOptions,
+    resolveRequestFinalStatus,
+    type RequestOperationFilter,
+    type RequestResultFilter,
+} from "@/features/requests/request-view-model";
+import { useRequestsPage } from "@/features/requests/use-requests-page";
 
 export default function RequestsPage() {
-    const [items, setItems] = useState<RequestLogItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [resultFilter, setResultFilter] = useState<"all" | "success" | "failed">("all");
-    const [operationFilter, setOperationFilter] = useState<"all" | "generate" | "edit" | "upscale">("all");
-
-    const loadItems = async (isRefresh = false) => {
-        if (isRefresh) {
-            setIsRefreshing(true);
-        } else {
-            setIsLoading(true);
-        }
-        try {
-            const data = await fetchRequestLogs();
-            setItems(data.items);
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : "读取调用请求失败");
-        } finally {
-            if (isRefresh) {
-                setIsRefreshing(false);
-            } else {
-                setIsLoading(false);
-            }
-        }
-    };
-
-    useEffect(() => {
-        void loadItems();
-    }, []);
-
-    const summary = useMemo(() => {
-        const success = items.filter((item) => item.success).length;
-        const failed = items.filter((item) => !item.success).length;
-        const latest = items[0]?.finishedAt || items[0]?.startedAt || "";
-        return { total: items.length, success, failed, latest };
-    }, [items]);
-
-    const filteredItems = useMemo(() => {
-        return items.filter((item) => {
-            const matchesResult =
-                resultFilter === "all" ||
-                (resultFilter === "success" ? item.success : !item.success);
-            const normalizedOperation = String(item.operation || "").trim().toLowerCase();
-            const matchesOperation =
-                operationFilter === "all" || normalizedOperation === operationFilter;
-            return matchesResult && matchesOperation;
-        });
-    }, [items, operationFilter, resultFilter]);
-
-    const sortedItems = useMemo(() => {
-        return [...filteredItems].sort((a, b) => {
-            return (b.finishedAt || b.startedAt || "").localeCompare(a.finishedAt || a.startedAt || "");
-        });
-    }, [filteredItems]);
+    const {
+        isLoading,
+        isRefreshing,
+        resultFilter,
+        setResultFilter,
+        operationFilter,
+        setOperationFilter,
+        summary,
+        filteredItems,
+        sortedItems,
+        refreshItems,
+    } = useRequestsPage();
 
     return (
         <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
@@ -112,7 +46,7 @@ export default function RequestsPage() {
                     type="button"
                     variant="outline"
                     className="h-9 rounded-full border-stone-300/60 bg-white px-4 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600 dark:hover:bg-stone-700"
-                    onClick={() => void loadItems(true)}
+                    onClick={() => void refreshItems()}
                     disabled={isRefreshing}
                 >
                     {isRefreshing ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
@@ -126,7 +60,7 @@ export default function RequestsPage() {
                         { label: "总记录", value: String(summary.total), color: "stone" },
                         { label: "成功", value: String(summary.success), color: "emerald" },
                         { label: "失败", value: String(summary.failed), color: "rose" },
-                        { label: "最近", value: summary.latest ? formatTime(summary.latest) : "—", color: "blue" },
+                        { label: "最近", value: summary.latest ? formatRequestTime(summary.latest) : "—", color: "blue" },
                     ].map(({ label, value, color }) => (
                         <div key={label} className="flex items-center gap-2">
                             <div className={`size-2 rounded-full ${
@@ -146,25 +80,24 @@ export default function RequestsPage() {
                     ))}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Select value={resultFilter} onValueChange={(value) => setResultFilter(value as typeof resultFilter)}>
+                    <Select value={resultFilter} onValueChange={(value) => setResultFilter(value as RequestResultFilter)}>
                         <SelectTrigger className="h-8 w-[110px] rounded-lg border-stone-200 text-xs dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">全部</SelectItem>
-                            <SelectItem value="success">成功</SelectItem>
-                            <SelectItem value="failed">失败</SelectItem>
+                            {requestResultFilterOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
-                    <Select value={operationFilter} onValueChange={(value) => setOperationFilter(value as typeof operationFilter)}>
+                    <Select value={operationFilter} onValueChange={(value) => setOperationFilter(value as RequestOperationFilter)}>
                         <SelectTrigger className="h-8 w-[110px] rounded-lg border-stone-200 text-xs dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">全部操作</SelectItem>
-                            <SelectItem value="generate">generate</SelectItem>
-                            <SelectItem value="edit">edit</SelectItem>
-                            <SelectItem value="upscale">upscale</SelectItem>
+                            {requestOperationFilterOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     <span className="text-xs text-stone-500 dark:text-stone-400">{filteredItems.length} 条记录</span>
@@ -207,13 +140,13 @@ export default function RequestsPage() {
                                         : sortedItems.map((item) => (
                                             <tr key={item.id} className={`border-b text-xs transition-colors ${item.success ? "border-stone-100/80 text-stone-600 hover:bg-stone-50/70 dark:border-stone-800 dark:text-stone-400 dark:hover:bg-stone-800/70" : "border-rose-100 bg-rose-50/45 text-rose-900 hover:bg-rose-50/70 dark:border-rose-900/30 dark:bg-rose-900/20 dark:text-rose-300 dark:hover:bg-rose-900/30"}`}>
                                                 {(() => {
-                                                    const finalStatus = resolveFinalStatus(item);
-                                                    const finalMeta = finalStatusMeta(finalStatus);
+                                                    const finalStatus = resolveRequestFinalStatus(item);
+                                                    const finalMeta = getRequestFinalStatusMeta(finalStatus);
                                                     return (
                                                         <>
                                                 <td className="whitespace-nowrap px-3 py-2">
-                                                    <div className="text-[11px] font-medium text-stone-700">{formatTime(item.startedAt)}</div>
-                                                    <div className="text-[10px] text-stone-400">{item.finishedAt ? formatTime(item.finishedAt) : "进行中"}</div>
+                                                    <div className="text-[11px] font-medium text-stone-700">{formatRequestTime(item.startedAt)}</div>
+                                                    <div className="text-[10px] text-stone-400">{item.finishedAt ? formatRequestTime(item.finishedAt) : "进行中"}</div>
                                                 </td>
                                                 <td className="whitespace-nowrap px-3 py-2">
                                                     <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-600">
