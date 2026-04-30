@@ -121,94 +121,98 @@ function extractQuotaAndRestoreAt(limitsProgress: Array<Record<string, unknown>>
 export function createAccountRemoteRefreshService(
   dependencies: AccountRemoteRefreshDependencies,
 ): AccountRemoteRefreshService {
-  return {
-    async fetchAccountRemoteInfo(accessToken: string) {
-      const account = await dependencies.getAccount(accessToken);
-      if (!account) {
-        throw new Error("account not found");
-      }
+  async function fetchAccountRemoteInfo(accessToken: string) {
+    const account = await dependencies.getAccount(accessToken);
+    if (!account) {
+      throw new Error("account not found");
+    }
 
-      const { mePayload, initPayload } = await fetchRemoteAccountInfoFromUpstream(accessToken, account);
-      const limitsProgress = Array.isArray(initPayload.limits_progress)
-        ? (initPayload.limits_progress as Array<Record<string, unknown>>)
-        : [];
-      const { quota, restoreAt } = extractQuotaAndRestoreAt(limitsProgress);
+    const { mePayload, initPayload } = await fetchRemoteAccountInfoFromUpstream(accessToken, account);
+    const limitsProgress = Array.isArray(initPayload.limits_progress)
+      ? (initPayload.limits_progress as Array<Record<string, unknown>>)
+      : [];
+    const { quota, restoreAt } = extractQuotaAndRestoreAt(limitsProgress);
 
-      return {
-        email: cleanToken(mePayload.email) || null,
-        user_id: cleanToken(mePayload.id) || null,
-        type: detectAccountType(accessToken, mePayload, initPayload),
-        quota,
-        limits_progress: limitsProgress,
-        default_model_slug: cleanToken(initPayload.default_model_slug) || null,
-        restore_at: restoreAt,
-        status: quota === 0 ? "限流" : "正常",
-      } satisfies Partial<AccountRecord>;
-    },
+    return {
+      email: cleanToken(mePayload.email) || null,
+      user_id: cleanToken(mePayload.id) || null,
+      type: detectAccountType(accessToken, mePayload, initPayload),
+      quota,
+      limits_progress: limitsProgress,
+      default_model_slug: cleanToken(initPayload.default_model_slug) || null,
+      restore_at: restoreAt,
+      status: quota === 0 ? "限流" : "正常",
+    } satisfies Partial<AccountRecord>;
+  }
 
-    async refreshAccountState(accessToken: string): Promise<AccountRecord | null> {
-      try {
-        const info = await this.fetchAccountRemoteInfo(accessToken);
-        const result = await dependencies.updateAccount(accessToken, info);
-        logger.info("account-service", "账号刷新成功", {
-          email: info.email,
-          type: info.type,
-          quota: info.quota,
-          status: info.status,
-        });
-        return result;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (message.includes("/backend-api/me failed: HTTP 401")) {
-          logger.warn("account-service", "账号 401 异常，标记禁用", { token: accessToken.slice(0, 16) + "..." });
-          return dependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
-        }
-        logger.error("account-service", "账号刷新失败", { message, token: accessToken.slice(0, 16) + "..." });
-        return null;
-      }
-    },
-
-    async refreshAccounts(accessTokens: string[], options?: { markRefreshedAt?: boolean }) {
-      const normalizedTokens = dedupeTokens(accessTokens);
-      if (normalizedTokens.length === 0) {
-        return { refreshed: 0, errors: [] as AccountRefreshError[], items: await dependencies.listAccounts() };
-      }
-
-      const refreshedAt = options?.markRefreshedAt ? new Date().toISOString() : null;
-      let refreshed = 0;
-      const errors: AccountRefreshError[] = [];
-
-      const settled = await Promise.allSettled(
-        normalizedTokens.map(async (accessToken) => {
-          const remoteInfo = await this.fetchAccountRemoteInfo(accessToken);
-          const updated = await dependencies.updateAccount(accessToken, {
-            ...remoteInfo,
-            ...(refreshedAt ? { last_refreshed_at: refreshedAt } : {}),
-          });
-          if (updated) {
-            refreshed += 1;
-          }
-        }),
-      );
-
-      settled.forEach((item, index) => {
-        if (item.status === "fulfilled") {
-          return;
-        }
-        const accessToken = normalizedTokens[index];
-        let message = item.reason instanceof Error ? item.reason.message : String(item.reason);
-        if (message.includes("/backend-api/me failed: HTTP 401")) {
-          void dependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
-          message = "检测到封号";
-        }
-        errors.push({ access_token: accessToken, error: message });
+  async function refreshAccountState(accessToken: string): Promise<AccountRecord | null> {
+    try {
+      const info = await fetchAccountRemoteInfo(accessToken);
+      const result = await dependencies.updateAccount(accessToken, info);
+      logger.info("account-service", "账号刷新成功", {
+        email: info.email,
+        type: info.type,
+        quota: info.quota,
+        status: info.status,
       });
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("/backend-api/me failed: HTTP 401")) {
+        logger.warn("account-service", "账号 401 异常，标记禁用", { token: accessToken.slice(0, 16) + "..." });
+        return dependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
+      }
+      logger.error("account-service", "账号刷新失败", { message, token: accessToken.slice(0, 16) + "..." });
+      return null;
+    }
+  }
 
-      return {
-        refreshed,
-        errors,
-        items: await dependencies.listAccounts(),
-      };
-    },
+  async function refreshAccounts(accessTokens: string[], options?: { markRefreshedAt?: boolean }) {
+    const normalizedTokens = dedupeTokens(accessTokens);
+    if (normalizedTokens.length === 0) {
+      return { refreshed: 0, errors: [] as AccountRefreshError[], items: await dependencies.listAccounts() };
+    }
+
+    const refreshedAt = options?.markRefreshedAt ? new Date().toISOString() : null;
+    let refreshed = 0;
+    const errors: AccountRefreshError[] = [];
+
+    const settled = await Promise.allSettled(
+      normalizedTokens.map(async (accessToken) => {
+        const remoteInfo = await fetchAccountRemoteInfo(accessToken);
+        const updated = await dependencies.updateAccount(accessToken, {
+          ...remoteInfo,
+          ...(refreshedAt ? { last_refreshed_at: refreshedAt } : {}),
+        });
+        if (updated) {
+          refreshed += 1;
+        }
+      }),
+    );
+
+    settled.forEach((item, index) => {
+      if (item.status === "fulfilled") {
+        return;
+      }
+      const accessToken = normalizedTokens[index];
+      let message = item.reason instanceof Error ? item.reason.message : String(item.reason);
+      if (message.includes("/backend-api/me failed: HTTP 401")) {
+        void dependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
+        message = "检测到封号";
+      }
+      errors.push({ access_token: accessToken, error: message });
+    });
+
+    return {
+      refreshed,
+      errors,
+      items: await dependencies.listAccounts(),
+    };
+  }
+
+  return {
+    fetchAccountRemoteInfo,
+    refreshAccountState,
+    refreshAccounts,
   };
 }
