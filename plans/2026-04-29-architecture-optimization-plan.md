@@ -474,7 +474,19 @@ src/server/providers/chatgpt-file-upload-adapter.ts
   ChatGPT Web conversation 文件注册、上传、finalize 与图片尺寸探测
 
 src/server/providers/chatgpt-result-adapter.ts
-  ChatGPT Web SSE 结果收集、图片 ID 轮询、下载 URL 获取、base64 下载与 recover
+  对外兼容入口 / ChatGPT result 旧导入路径 re-export
+
+src/server/providers/chatgpt-result-shared.ts
+  ChatGPT result session 类型、基础 URL、token 清洗与脱敏
+
+src/server/providers/chatgpt-result-parser.ts
+  SSE payload 解析、conversation mapping 图片 ID 提取、无图文本错误归一化
+
+src/server/providers/chatgpt-result-download-adapter.ts
+  图片 ID 轮询、下载 URL 获取、base64 下载
+
+src/server/providers/chatgpt-generated-items.ts
+  collectGeneratedItems / recoverGeneratedItems 用例编排
 
 src/server/providers/chatgpt-session-adapter.ts
   ChatGPT Web CookieSession、fingerprint、bootstrap、chat-requirements、账号远端信息探测
@@ -687,7 +699,7 @@ tests/account-view-model.test.ts
 - `chatgpt-session-bootstrap-adapter`（已完成，落在 `chatgpt-session-adapter.ts`）
 - `chatgpt-file-upload-adapter`（已完成首轮）
 - `chatgpt-conversation-adapter`（已完成）
-- `chatgpt-result-download-adapter`（已完成首轮）
+- `chatgpt-result-download-adapter`（已完成首轮，后续已拆出 parser / shared / generated-items）
 - `upstream-error-classifier`（已完成首轮，落在 `openai-image-errors.ts`）
 - `proof-token-provider`（仍复用现有 `openai-proof.ts`，由 session/conversation adapter 调用）
 - `openai-api-service-adapter`（已完成首轮，后续已按 shared / v1 / responses 继续拆分）
