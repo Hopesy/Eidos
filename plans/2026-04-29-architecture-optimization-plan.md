@@ -373,21 +373,25 @@ src/features/image-workbench/utils.ts
 
 已执行多轮 `pnpm build`，最近一次构建通过。
 
-#### Phase 2：Accounts 页面拆分（首轮已开始）
+#### Phase 2：Accounts 页面拆分（已完成前两刀）
 
-`src/app/accounts/page.tsx` 已从约 1017 行收窄到约 887 行。当前首轮先不动 JSX 结构，只把页面顶部的纯规则与派生逻辑移到 feature 模块：
+`src/app/accounts/page.tsx` 已从约 1017 行收窄到约 625 行。当前已先后完成两步：
 
 ```text
 src/features/accounts/account-view-model.ts
   账号筛选/排序、统计摘要、token mask、额度与时间格式化、
   import summary、选中项修剪、sync status 归一化等纯逻辑
+
+src/features/accounts/use-accounts-page.ts
+  页面状态、初始加载、缓存回填、import / refresh / delete / update /
+  sync action handlers，以及选中态和编辑态编排
 ```
 
 这一步的取舍：
 
-- 页面继续保留请求调用、toast、dialog、表格 JSX 与事件接线；
-- 先抽可单测的纯逻辑，避免一开始就把交互和布局一起拆散；
-- 下一步再视收益决定是否继续抽 `accounts` 页的 action handlers 或表格行组件。
+- 页面现在保留 JSX 结构、图标/Badge 元数据和少量交互绑定；
+- 纯规则和请求/状态编排已经离开页面，后续再拆组件时不会再碰业务流程；
+- 下一步如继续处理 Accounts，优先抽表格行或顶部控制区，而不是继续细碎地拆 hook。
 
 #### Phase 3：OpenAI Provider 适配层拆分（主体已完成）
 
@@ -775,7 +779,7 @@ src/
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
-6. **下一优先级：继续 Accounts 页面拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 已完成首轮派生逻辑抽离，但请求/事件编排仍在页面内。
+6. **下一优先级：继续 Accounts 页面组件拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 的纯逻辑和状态编排已移出，剩余主要是 UI 结构体量。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。
