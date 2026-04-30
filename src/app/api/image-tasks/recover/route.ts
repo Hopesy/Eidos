@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 import { ensureAccountWatcherStarted, recoverImageTaskWithAccount } from "@/server/account-service";
 import { createImageApiError } from "@/server/image-error-response";
-import { listRecoverableImageUpstreamTasks } from "@/server/image-upstream-task-store";
+import { listRecoverableImageUpstreamTasks } from "@/server/repositories/image-upstream-task-repository";
 import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 

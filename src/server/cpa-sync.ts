@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 
 import type { SyncRunResult, SyncStatusResponse } from "@/lib/api";
 import { addAccounts, listAccounts, refreshAccounts, updateAccount } from "@/server/account-service";
-import { getSavedConfig } from "@/server/config-store";
+import { getSavedConfig } from "@/server/repositories/config-repository";
 import { ApiError } from "@/server/response";
-import { getLastSyncRun, saveSyncRun } from "@/server/sync-run-store";
+import { getLastSyncRun, saveSyncRun } from "@/server/repositories/sync-run-repository";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -384,4 +384,3 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
     saveSyncRun(result);
     return result;
 }
-

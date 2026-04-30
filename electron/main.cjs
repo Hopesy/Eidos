@@ -109,7 +109,7 @@ function createWindow() {
     show: false,
     webPreferences: {
       contextIsolation: true,
-      sandbox: false,
+      sandbox: true,
       preload: path.join(__dirname, "preload.cjs"),
     },
   });
@@ -377,10 +377,35 @@ async function downloadAndInstallUpdate() {
   return installerDownloadPromise;
 }
 
-ipcMain.handle("eidos-updater:get-state", async () => cloneUpdaterState());
-ipcMain.handle("eidos-updater:check", async () => checkForUpdates());
-ipcMain.handle("eidos-updater:download", async () => downloadAndInstallUpdate());
-ipcMain.handle("eidos-shell:open-data-dir", async () => {
+function isTrustedRendererUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    const isLoopback = url.hostname === "127.0.0.1" || url.hostname === "localhost";
+    return url.protocol === "http:" && isLoopback && Number(url.port) === serverPort;
+  } catch {
+    return false;
+  }
+}
+
+function assertTrustedIpcSender(event) {
+  const senderFrameUrl = event.senderFrame?.url;
+  const senderUrl = senderFrameUrl || event.sender.getURL();
+  if (!isTrustedRendererUrl(senderUrl)) {
+    throw new Error("Blocked IPC request from untrusted renderer");
+  }
+}
+
+function handleTrustedIpc(channel, handler) {
+  ipcMain.handle(channel, async (event, ...args) => {
+    assertTrustedIpcSender(event);
+    return handler(event, ...args);
+  });
+}
+
+handleTrustedIpc("eidos-updater:get-state", async () => cloneUpdaterState());
+handleTrustedIpc("eidos-updater:check", async () => checkForUpdates());
+handleTrustedIpc("eidos-updater:download", async () => downloadAndInstallUpdate());
+handleTrustedIpc("eidos-shell:open-data-dir", async () => {
   const targetDir = getDesktopDataDir();
   const openResult = await shell.openPath(targetDir);
   if (openResult) {

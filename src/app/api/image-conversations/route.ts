@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { clearImageConversationRecords, listImageConversationRecords, saveImageConversationRecord } from "@/server/image-conversation-store";
+import { clearImageConversationRecords, listImageConversationRecords, saveImageConversationRecord } from "@/server/repositories/image-conversation-repository";
 import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
@@ -29,4 +29,3 @@ export async function DELETE(request: NextRequest) {
     return jsonError(error);
   }
 }
-

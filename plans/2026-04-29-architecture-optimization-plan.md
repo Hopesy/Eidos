@@ -587,6 +587,64 @@ src/server/image-recovery-service.ts
 - `account-admin-service.ts` 已增加 store 依赖注入入口，默认仍接真实 SQLite store，测试可传入内存 store；
 - 下一步 `account-service.ts` 已基本收敛为组合 facade，应转向更多测试护栏或前端 Accounts 页面拆分。
 
+#### Phase 4：Repository / Store 边界收口（首轮已完成）
+
+已新增 `src/server/repositories/*`，把 SQLite / 本地文件持久化入口从业务服务命名里显式分离出来。旧 `*-store.ts` 文件保留为兼容 facade，减少调用方扩散和历史导入断裂。
+
+当前边界：
+
+```text
+src/server/repositories/accounts-repository.ts
+  accounts 表读写、账号 JSON payload 映射、串行 update lock
+
+src/server/repositories/config-repository.ts
+  app_config runtime 配置读写
+
+src/server/repositories/request-log-repository.ts
+  request_logs 结构化日志写入、保留最近 500 条与列表读取
+
+src/server/repositories/sync-run-repository.ts
+  sync_runs 最近一次同步结果读取与同步运行记录写入
+
+src/server/repositories/image-file-repository.ts
+  image_files 表、本地图片文件落盘、图片字节读取、孤儿图片清理、会话引用扫描
+
+src/server/repositories/image-conversation-repository.ts
+  image_conversations 会话持久化、会话资产归档、删除会话时清理关联 upstream task 与未引用图片
+
+src/server/repositories/image-upstream-task-repository.ts
+  image_upstream_tasks upsert、recoverable 任务查询与按会话删除
+
+src/server/*-store.ts
+  兼容 facade，只 re-export 对应 repository
+```
+
+这一步的取舍：
+
+- 先建立清晰的 repository 入口，不做大规模表结构迁移；
+- 旧 store 文件不直接承载实现，避免后续业务服务继续依赖含糊命名；
+- `image-file-repository.ts` 暂时同时包含文件系统落盘和 image_files 表操作，因为这条链的事务边界与文件路径安全检查强相关，暂不拆成两个互相绕调用的小文件。
+
+#### Phase 5：Electron IPC / Sandbox 边界收口（首轮已完成）
+
+已收紧桌面宿主的最小安全边界：
+
+```text
+electron/main.cjs
+  BrowserWindow webPreferences.sandbox 已切为 true
+  所有 renderer -> main IPC 已改为 handleTrustedIpc(...)
+  IPC sender 必须来自当前内置服务的 loopback URL 和运行时 serverPort
+
+electron/preload.cjs
+  仍只通过 contextBridge 暴露 eidosUpdater / eidosShell 白名单能力
+```
+
+这一步的取舍：
+
+- 不把 updater / shell / server lifecycle 立即拆成多个 CJS 文件，避免桌面启动链同时承受大搬家；
+- 先补最关键的 sandbox 与 sender 校验；
+- 后续只有在继续扩展桌面能力时，再按 `desktop-updater` / `desktop-shell` / `desktop-paths` 继续拆模块。
+
 #### Phase 6：重构护栏继续补强
 
 在首轮规则测试之后，已继续补账号管理服务测试：
@@ -888,15 +946,15 @@ src/
 1. **Phase 1 首轮已完成**：配置默认值、图片参数映射、release/version、图片错误响应已经收口到共享模块。
 2. **Phase 2 Image Workbench 主体已完成**：`image/page.tsx` 已从巨型页面拆成页面壳 + `use-image-page` + feature modules，并保持外部行为不变。
 3. **Phase 3 OpenAI Provider 主体已完成**：`openai-client.ts` 已收窄为 30 行兼容 facade，ChatGPT session/conversation/upload/result 与 API service adapter 已拆出。
-4. **下一优先级：继续拆服务端 God file**：
+4. **服务端 God file 主体已完成**：
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
 6. **Phase 2 次级页面首轮已完成**：Settings / Requests 已按页面壳 + feature hook / view-model 收口，后续不再优先机械拆它们的 JSX。
 7. **Phase 2 Accounts 主体已完成**：账号页已经按页面壳 + feature hook / view-model + 页面私有展示组件收口，后续不再为了行数继续机械拆分。
-8. **下一优先级：转向 repository 护栏与 Electron IPC 安全边界精修**，只在具体需求驱动时继续拆账号页表格行等细节。
+8. **Phase 4 / Phase 5 首轮已完成**：repository 入口与 Electron IPC / sandbox 边界已经收口，后续只在具体需求驱动时继续拆 `cpa-sync.ts`、`src/lib/api.ts` 或桌面 lifecycle 模块。
 
-原则：已经拆稳的 Image Workbench 和 Accounts 不继续为了行数而拆；下一步要把主要收益转到持久化护栏、Electron IPC 安全边界和具体需求驱动的服务端精修。
+原则：已经拆稳的 Image Workbench、Accounts、repository 入口和 Electron IPC 不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修。
 
 ---
 

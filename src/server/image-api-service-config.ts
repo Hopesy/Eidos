@@ -1,5 +1,5 @@
 import type { ImageApiStyle } from "@/lib/api";
-import { getSavedConfig } from "@/server/config-store";
+import { getSavedConfig } from "@/server/repositories/config-repository";
 import { getDefaultConfigPayload } from "@/shared/app-config";
 
 function cleanToken(value: unknown) {

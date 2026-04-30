@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { getSavedConfig, setSavedConfig } from "@/server/config-store";
+import { getSavedConfig, setSavedConfig } from "@/server/repositories/config-repository";
 import { jsonError, jsonOk } from "@/server/response";
 import { getDefaultConfigPayload, sanitizeConfigPayload } from "@/shared/app-config";
 

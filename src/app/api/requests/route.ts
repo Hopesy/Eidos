@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { getRequestLogs } from "@/server/request-log-store";
+import { getRequestLogs } from "@/server/repositories/request-log-repository";
 import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";

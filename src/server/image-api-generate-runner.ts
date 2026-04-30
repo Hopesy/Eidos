@@ -1,5 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import { persistImageResponseItems } from "@/server/image-file-store";
+import { persistImageResponseItems } from "@/server/repositories/image-file-repository";
 import { logger } from "@/server/logger";
 import {
   generateImageResultWithApiService,
@@ -7,7 +7,7 @@ import {
   getImageErrorMeta,
   ImageGenerationError,
 } from "@/server/providers/openai-client";
-import { addRequestLog } from "@/server/request-log-store";
+import { addRequestLog } from "@/server/repositories/request-log-repository";
 
 import {
   API_MAX_ATTEMPTS,
