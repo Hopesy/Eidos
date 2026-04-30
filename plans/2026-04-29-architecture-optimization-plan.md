@@ -611,20 +611,29 @@ src/server/image-recovery-service.ts
 
 目标：让后续架构收口不再完全靠人工小心。
 
-优先补这些小测试：
+已完成首轮轻量测试接入：
 
-1. 版本比较
-2. release installer 资产选择
-3. 配置默认值一致性
-4. 图片尺寸 / 质量映射
-5. 错误分类与 retryAction 选择
-6. 账号选择 / 轮转策略
-7. 关键 repository 的最小读写测试
+- `package.json`
+  - 新增 `pnpm test`
+  - 使用 Node.js 内置 `node:test` + `--experimental-strip-types`，不额外引入测试框架依赖。
+- `tests/image-generation.test.ts`
+  - 覆盖图片比例 / 质量到尺寸映射、尺寸回推比例、upscale 质量兼容与 prompt 构造。
+- `tests/openai-image-errors.test.ts`
+  - 覆盖上游错误归一化、input/account blocked 分类、HTTP status 到 retryAction 语义映射。
+- `tests/release-shared.test.ts`
+  - 覆盖版本比较、installer asset 选择、latest release payload 解析。
+
+后续继续补这些小测试：
+
+1. 配置默认值一致性
+2. 账号选择 / 轮转策略
+3. 账号 normalize / public mapping
+4. 关键 repository 的最小读写测试
 
 同时补脚本：
 
 - `pnpm lint`
-- `pnpm test`
+- `pnpm test`（首轮已完成）
 - 必要时加一个轻量 `pnpm check`
 
 ---
@@ -706,8 +715,8 @@ src/
 4. **下一优先级：继续拆服务端 God file**：
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
-5. **并行补 Phase 6 最小护栏**：优先给已抽出的纯规则补测试，例如 image-generation、release-shared、turn-patches、error mapping。
-6. **随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
+5. **Phase 6 最小护栏首轮已完成**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping。
+6. **下一优先级：处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。
