@@ -617,6 +617,42 @@ src/server/cpa-sync-runner.ts
 - 按 client / status / runner / shared 四块拆，不把每个小循环继续拆成碎片 helper；
 - CPA 同步仍通过 `account-service` 做账号增删改刷新，不直接绕过账号服务写 repository。
 
+#### Phase 2：前端 API contract 分层（主体已完成）
+
+`src/lib/api.ts` 已从单文件聚合 client + types + 所有领域请求的结构，收口成“按领域模块 + 兼容 facade”：
+
+```text
+src/lib/api.ts
+  兼容聚合入口，继续 export 既有 accounts/config/images/requests/sync/version/types
+
+src/lib/api/types.ts
+  前后端共享的 API contract 类型：accounts、image、sync、request log、version
+
+src/lib/api/accounts.ts
+  账号相关请求：list/create/delete/refresh/update/import/quota
+
+src/lib/api/config.ts
+  配置读取 / 默认值 / 更新
+
+src/lib/api/images.ts
+  generate / edit / upscale / recover / recoverable task 查询
+
+src/lib/api/requests.ts
+  请求日志读取
+
+src/lib/api/sync.ts
+  sync status / run
+
+src/lib/api/version.ts
+  版本信息 / latest release
+```
+
+这一步的取舍：
+
+- 拆分原因是“一个 API 聚合文件同时承担所有领域 contract 和请求入口，导致前端功能横向耦合”，不是单纯因为文件行数；
+- 保留 `@/lib/api` 作为兼容 facade，避免一次性改动所有调用面；
+- 共享类型集中到 `types.ts`，避免前端 feature 和服务端模块重复从聚合入口中混用不相关请求实现。
+
 #### Phase 4：Repository / Store 边界收口（首轮已完成）
 
 已新增 `src/server/repositories/*`，把 SQLite / 本地文件持久化入口从业务服务命名里显式分离出来。旧 `*-store.ts` 文件保留为兼容 facade，减少调用方扩散和历史导入断裂。
@@ -984,8 +1020,9 @@ src/
 7. **Phase 2 Accounts 主体已完成**：账号页已经按页面壳 + feature hook / view-model + 页面私有展示组件收口，后续不再为了行数继续机械拆分。
 8. **Phase 4 / Phase 5 首轮已完成**：repository 入口与 Electron IPC / sandbox 边界已经收口。
 9. **CPA 同步主体已完成**：`cpa-sync.ts` 已收口为 facade，client / status / runner / shared 已拆出。
+10. **前端 API contract 主体已完成**：`src/lib/api.ts` 已收口为聚合 facade，领域请求与共享 contract 已按模块分层。
 
-原则：已经拆稳的 Image Workbench、Accounts、repository 入口、Electron IPC 和 CPA 同步不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修，剩余可选块主要是 `src/lib/api.ts` 或桌面 lifecycle 模块。
+原则：已经拆稳的 Image Workbench、Accounts、repository 入口、Electron IPC、CPA 同步和前端 API contract 不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修，剩余可选块主要是桌面 lifecycle 或具体 feature 的协议演进。
 
 ---
 
