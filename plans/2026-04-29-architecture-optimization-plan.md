@@ -302,6 +302,7 @@ Node 官方 `node:sqlite` 文档明确写明：
 #### Phase 0：文档和事实源基线
 
 - 已新增本计划文档到 `plans/2026-04-29-architecture-optimization-plan.md`。
+- 已新增 `plans/架构原则.md`，明确这个仓库后续的 Next.js 分层、BFF、feature hook 与共享规则约束。
 - 明确当前不拆独立后端服务，继续采用 Next.js BFF + Electron + 本地 SQLite / 文件存储。
 - 明确优先级：先收口规则事实源，再拆前端巨型页面，再处理服务端 God file。
 
@@ -372,6 +373,24 @@ src/features/image-workbench/utils.ts
 ```
 
 已执行多轮 `pnpm build`，最近一次构建通过。
+
+#### Phase 2：大型交互组件拆分（首轮已开始）
+
+`src/components/image-edit-modal.tsx` 已从约 710 行收窄到约 380 行，当前边界：
+
+```text
+src/components/image-edit-modal.tsx
+  模态框结构、按钮/提示文案、视觉和事件绑定
+
+src/features/image-edit/use-image-edit-modal.ts
+  选区状态、笔刷与缩放、撤销/重做、遮罩生成、提交编排
+```
+
+这一步的取舍：
+
+- 不把图片编辑拆成很多小 util 或很多小组件；
+- 只立起“展示组件 + feature hook”这一层边界；
+- 下一步如果继续处理 image-edit，优先抽顶部工具区或底部提交区，而不是继续细拆 hook 内部实现。
 
 #### Phase 2：Accounts 页面拆分（已完成前两刀）
 
