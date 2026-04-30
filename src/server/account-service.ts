@@ -3,7 +3,6 @@ import { addRequestLog } from "@/server/request-log-store";
 
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 import {
-  fetchRemoteAccountInfo,
   getImageErrorMeta,
   ImageGenerationError,
   recoverImageResult,
@@ -11,9 +10,10 @@ import {
 import { logger } from "@/server/logger";
 import { persistImageResponseItems } from "@/server/image-file-store";
 import { updateAccounts, readAccounts } from "@/server/store";
-import type { AccountRecord, AccountRefreshError, AccountStatus, AccountType, PublicAccount } from "@/server/types";
+import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 import { createAccountSelector } from "@/server/account-selection-service";
 import { createAccountPoolImageRunner } from "@/server/account-pool-image-runner";
+import { createAccountRemoteRefreshService, normalizeAccountType } from "@/server/account-remote-refresh-service";
 import { getImageApiServiceConfig } from "@/server/image-api-service-config";
 import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image-api-task-runner";
 
@@ -35,79 +35,6 @@ function dedupeTokens(tokens: string[]) {
     cleaned.push(normalized);
   }
   return cleaned;
-}
-
-function normalizeAccountType(value: unknown): AccountType | null {
-  const normalized = cleanToken(value).toLowerCase();
-  const mapping: Record<string, AccountType> = {
-    free: "Free",
-    plus: "Plus",
-    team: "Team",
-    pro: "Pro",
-    personal: "Plus",
-    business: "Team",
-    enterprise: "Team",
-  };
-  return mapping[normalized] ?? null;
-}
-
-function searchAccountType(value: unknown): AccountType | null {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const matched = searchAccountType(item);
-      if (matched) {
-        return matched;
-      }
-    }
-    return null;
-  }
-
-  if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>);
-    for (const [key, item] of entries) {
-      const matched = normalizeAccountType(item);
-      if (matched && /(plan|type|subscription|workspace|tier)/i.test(key)) {
-        return matched;
-      }
-    }
-    for (const [, item] of entries) {
-      const matched = searchAccountType(item);
-      if (matched) {
-        return matched;
-      }
-    }
-    return null;
-  }
-
-  return normalizeAccountType(value);
-}
-
-function decodeAccessTokenPayload(accessToken: string) {
-  const parts = cleanToken(accessToken).split(".");
-  if (parts.length < 2) {
-    return {} as Record<string, unknown>;
-  }
-  const payload = parts[1].padEnd(parts[1].length + ((4 - (parts[1].length % 4)) % 4), "=");
-  try {
-    const decoded = Buffer.from(payload, "base64url").toString("utf8");
-    const parsed = JSON.parse(decoded);
-    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
-  } catch {
-    return {} as Record<string, unknown>;
-  }
-}
-
-function detectAccountType(accessToken: string, mePayload: Record<string, unknown>, initPayload: Record<string, unknown>): AccountType {
-  const tokenPayload = decodeAccessTokenPayload(accessToken);
-  const authPayload = tokenPayload["https://api.openai.com/auth"];
-  if (authPayload && typeof authPayload === "object") {
-    const matched = normalizeAccountType((authPayload as Record<string, unknown>).chatgpt_plan_type);
-    if (matched) {
-      return matched;
-    }
-  }
-
-  return searchAccountType(mePayload) || searchAccountType(initPayload) || searchAccountType(tokenPayload) || "Free";
 }
 
 function normalizeAccount(input: Record<string, unknown>): AccountRecord | null {
@@ -160,14 +87,6 @@ function publicAccount(account: AccountRecord): PublicAccount {
   };
 }
 
-function extractQuotaAndRestoreAt(limitsProgress: Array<Record<string, unknown>>) {
-  const imageGen = limitsProgress.find((item) => item.feature_name === "image_gen");
-  return {
-    quota: Math.max(0, Number(imageGen?.remaining ?? 0) || 0),
-    restoreAt: cleanToken(imageGen?.reset_after) || null,
-  };
-}
-
 async function listRecords() {
   const raw = await readAccounts();
   return raw
@@ -201,9 +120,15 @@ async function getAccountById(accountId: string) {
   return (await listRecords()).find((item) => cleanToken(item.id) === normalized) ?? null;
 }
 
+const accountRemoteRefreshService = createAccountRemoteRefreshService({
+  getAccount,
+  updateAccount,
+  listAccounts,
+});
+
 const accountSelector = createAccountSelector({
   listRecords,
-  refreshAccountState,
+  refreshAccountState: accountRemoteRefreshService.refreshAccountState,
 });
 
 const accountPoolImageRunner = createAccountPoolImageRunner({
@@ -328,92 +253,15 @@ export async function markImageResult(accessToken: string, success: boolean) {
 }
 
 export async function fetchAccountRemoteInfo(accessToken: string) {
-  const account = await getAccount(accessToken);
-  if (!account) {
-    throw new Error("account not found");
-  }
-
-  const { mePayload, initPayload } = await fetchRemoteAccountInfo(accessToken, account);
-  const limitsProgress = Array.isArray(initPayload.limits_progress)
-    ? (initPayload.limits_progress as Array<Record<string, unknown>>)
-    : [];
-  const { quota, restoreAt } = extractQuotaAndRestoreAt(limitsProgress);
-
-  return {
-    email: cleanToken(mePayload.email) || null,
-    user_id: cleanToken(mePayload.id) || null,
-    type: detectAccountType(accessToken, mePayload, initPayload),
-    quota,
-    limits_progress: limitsProgress,
-    default_model_slug: cleanToken(initPayload.default_model_slug) || null,
-    restore_at: restoreAt,
-    status: quota === 0 ? "限流" : "正常",
-  } satisfies Partial<AccountRecord>;
+  return accountRemoteRefreshService.fetchAccountRemoteInfo(accessToken);
 }
 
 export async function refreshAccountState(accessToken: string): Promise<AccountRecord | null> {
-  try {
-    const info = await fetchAccountRemoteInfo(accessToken);
-    const result = await updateAccount(accessToken, info);
-    logger.info("account-service", "账号刷新成功", {
-      email: info.email,
-      type: info.type,
-      quota: info.quota,
-      status: info.status,
-    });
-    return result;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.includes("/backend-api/me failed: HTTP 401")) {
-      logger.warn("account-service", "账号 401 异常，标记禁用", { token: accessToken.slice(0, 16) + "..." });
-      return updateAccount(accessToken, { status: "异常", quota: 0 });
-    }
-    logger.error("account-service", "账号刷新失败", { message, token: accessToken.slice(0, 16) + "..." });
-    return null;
-  }
+  return accountRemoteRefreshService.refreshAccountState(accessToken);
 }
 
 export async function refreshAccounts(accessTokens: string[], options?: { markRefreshedAt?: boolean }) {
-  const normalizedTokens = dedupeTokens(accessTokens);
-  if (normalizedTokens.length === 0) {
-    return { refreshed: 0, errors: [] as AccountRefreshError[], items: await listAccounts() };
-  }
-
-  const refreshedAt = options?.markRefreshedAt ? new Date().toISOString() : null;
-  let refreshed = 0;
-  const errors: AccountRefreshError[] = [];
-
-  const settled = await Promise.allSettled(
-    normalizedTokens.map(async (accessToken) => {
-      const remoteInfo = await fetchAccountRemoteInfo(accessToken);
-      const updated = await updateAccount(accessToken, {
-        ...remoteInfo,
-        ...(refreshedAt ? { last_refreshed_at: refreshedAt } : {}),
-      });
-      if (updated) {
-        refreshed += 1;
-      }
-    }),
-  );
-
-  settled.forEach((item, index) => {
-    if (item.status === "fulfilled") {
-      return;
-    }
-    const accessToken = normalizedTokens[index];
-    let message = item.reason instanceof Error ? item.reason.message : String(item.reason);
-    if (message.includes("/backend-api/me failed: HTTP 401")) {
-      void updateAccount(accessToken, { status: "异常", quota: 0 });
-      message = "检测到封号";
-    }
-    errors.push({ access_token: accessToken, error: message });
-  });
-
-  return {
-    refreshed,
-    errors,
-    items: await listAccounts(),
-  };
+  return accountRemoteRefreshService.refreshAccounts(accessTokens, options);
 }
 
 export async function getAvailableAccessToken(excludedTokens?: Set<string>) {
