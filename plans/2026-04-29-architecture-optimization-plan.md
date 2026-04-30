@@ -373,6 +373,22 @@ src/features/image-workbench/utils.ts
 
 已执行多轮 `pnpm build`，最近一次构建通过。
 
+#### Phase 2：Accounts 页面拆分（首轮已开始）
+
+`src/app/accounts/page.tsx` 已从约 1017 行收窄到约 887 行。当前首轮先不动 JSX 结构，只把页面顶部的纯规则与派生逻辑移到 feature 模块：
+
+```text
+src/features/accounts/account-view-model.ts
+  账号筛选/排序、统计摘要、token mask、额度与时间格式化、
+  import summary、选中项修剪、sync status 归一化等纯逻辑
+```
+
+这一步的取舍：
+
+- 页面继续保留请求调用、toast、dialog、表格 JSX 与事件接线；
+- 先抽可单测的纯逻辑，避免一开始就把交互和布局一起拆散；
+- 下一步再视收益决定是否继续抽 `accounts` 页的 action handlers 或表格行组件。
+
 #### Phase 3：OpenAI Provider 适配层拆分（主体已完成）
 
 `src/server/providers/openai-client.ts` 已从约 2165 行拆到 30 行，当前不再承载上游协议实现，而是作为兼容 facade 保留既有导出入口，避免一次性扩散修改调用方。
@@ -475,11 +491,15 @@ tests/account-selection-service.test.ts
 tests/account-remote-refresh-service.test.ts
   覆盖远端 payload 到本地账号字段的归一化、JWT plan type 识别、
   401 刷新降级、批量刷新去重、`last_refreshed_at` 打点与错误归集。
+
+tests/account-view-model.test.ts
+  覆盖 accounts 页面筛选/排序、统计、选中 token、状态归一化、
+  import summary、时间格式化与 sync status 归一化。
 ```
 
 已验证：
 
-- `pnpm test`：27 个测试全部通过。
+- `pnpm test`：30 个测试全部通过。
 - `pnpm build`：Next.js 生产构建通过。
 
 ---
@@ -659,13 +679,15 @@ tests/account-remote-refresh-service.test.ts
   - 覆盖账号选择批次优先级、轮转与候选耗尽语义。
 - `tests/account-remote-refresh-service.test.ts`
   - 覆盖远端刷新 payload mapping、401 降级、批量刷新去重与时间戳语义。
+- `tests/account-view-model.test.ts`
+  - 覆盖 accounts 页首轮抽离出的纯派生逻辑。
 
 后续继续补这些小测试：
 
 1. 配置默认值一致性
 2. 关键 repository 的最小读写测试
 3. 图片会话 / 上游任务恢复链的最小行为测试
-4. Accounts 页面拆分后的纯逻辑模块测试
+4. Accounts 页面后续 action / reducer 抽离后的行为测试
 
 同时补脚本：
 
@@ -753,7 +775,7 @@ src/
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
 5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
-6. **下一优先级：转向 Accounts 页面拆分或 repository 护栏**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
+6. **下一优先级：继续 Accounts 页面拆分或转向 repository 护栏**：`src/app/accounts/page.tsx` 已完成首轮派生逻辑抽离，但请求/事件编排仍在页面内。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。

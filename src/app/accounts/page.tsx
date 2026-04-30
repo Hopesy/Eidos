@@ -15,7 +15,6 @@ import {
   RefreshCcw,
   RefreshCw,
   Search,
-  Shield,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -49,10 +48,8 @@ import {
   runSync,
   updateAccount,
   type Account,
-  type AccountImportResponse,
   type AccountStatus,
   type AccountType,
-  type SyncAccount,
   type SyncStatus,
   type SyncStatusResponse,
 } from "@/lib/api";
@@ -60,22 +57,25 @@ import { APP_CREDENTIALS_REFRESHED_EVENT } from "@/lib/app-startup-refresh";
 import { cn } from "@/lib/utils";
 import { getCachedAccountsView, setCachedAccountsView } from "@/store/accounts-view-cache";
 import { getCachedSyncStatus, setCachedSyncStatus } from "@/store/sync-status-cache";
-
-const accountTypeOptions: { label: string; value: AccountType | "all" }[] = [
-  { label: "全部类型", value: "all" },
-  { label: "Free", value: "Free" },
-  { label: "Plus", value: "Plus" },
-  { label: "Team", value: "Team" },
-  { label: "Pro", value: "Pro" },
-];
-
-const accountStatusOptions: { label: string; value: AccountStatus | "all" }[] = [
-  { label: "全部状态", value: "all" },
-  { label: "正常", value: "正常" },
-  { label: "限流", value: "限流" },
-  { label: "异常", value: "异常" },
-  { label: "禁用", value: "禁用" },
-];
+import {
+  accountStatusOptions,
+  accountTypeOptions,
+  buildAccountsSummary,
+  buildImportSummary,
+  extractImageGenLimit,
+  filterAndSortAccounts,
+  formatQuota,
+  formatRelativeTime,
+  formatTableTime,
+  getAbnormalTokens,
+  getSelectedTokens,
+  maskToken,
+  normalizeAccounts,
+  normalizeSyncStatus,
+  pruneSelectedIds,
+  type AccountStatusFilter,
+  type AccountTypeFilter,
+} from "@/features/accounts/account-view-model";
 
 const statusMeta: Record<
   AccountStatus,
@@ -103,120 +103,6 @@ const syncMeta: Record<
   remote_deleted: { label: "远端已删", badge: "danger" },
 };
 
-function formatCompact(value: number) {
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}k`;
-  }
-  return String(value);
-}
-
-function formatQuota(value: number) {
-  return String(Math.max(0, value));
-}
-
-function formatRelativeTime(value?: string | null) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  const diffMs = Math.max(0, date.getTime() - Date.now());
-  if (diffMs <= 0) {
-    return "已到恢复时间";
-  }
-
-  const totalHours = Math.ceil(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(totalHours / 24);
-  const hours = totalHours % 24;
-  return `剩余 ${days}d ${hours}h`;
-}
-
-function formatQuotaSummary(accounts: Account[]) {
-  return formatCompact(accounts.reduce((sum, account) => sum + Math.max(0, account.quota), 0));
-}
-
-function maskToken(token?: string) {
-  if (!token) return "—";
-  if (token.length <= 18) return token;
-  return `${token.slice(0, 16)}...${token.slice(-8)}`;
-}
-
-function normalizeAccounts(items: Account[]): Account[] {
-  return items.map((item) => ({
-    ...item,
-    type:
-      item.type === "Plus" || item.type === "Team" || item.type === "Pro" || item.type === "Free"
-        ? item.type
-        : "Free",
-  }));
-}
-
-function buildImportSummary(data: AccountImportResponse) {
-  const imported = data.imported ?? 0;
-  const duplicates = data.duplicates?.length ?? 0;
-  const failed = data.failed?.length ?? 0;
-  const refreshed = data.refreshed ?? 0;
-  return `导入 ${imported} 个，刷新 ${refreshed} 个，重复 ${duplicates} 个，失败 ${failed} 个`;
-}
-
-function extractImageGenLimit(account: Account) {
-  const imageGen = account.limits_progress?.find((item) => item.feature_name === "image_gen");
-  return {
-    remaining: typeof imageGen?.remaining === "number" ? imageGen.remaining : null,
-    resetAfter: imageGen?.reset_after || account.restoreAt || null,
-  };
-}
-
-const accountStatusSortOrder: Record<AccountStatus, number> = {
-  正常: 0,
-  限流: 1,
-  异常: 2,
-  禁用: 3,
-};
-
-function toSortTime(value?: string | null) {
-  if (!value) {
-    return 0;
-  }
-  const time = new Date(value).getTime();
-  return Number.isNaN(time) ? 0 : time;
-}
-
-function formatTableTime(value?: string | null) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  const pad = (num: number) => String(num).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function normalizeSyncStatus(payload: SyncStatusResponse | null) {
-  return {
-    configured: payload?.configured ?? false,
-    local: payload?.local ?? 0,
-    remote: payload?.remote ?? 0,
-    accounts: payload?.accounts ?? [],
-    disabledMismatch: payload?.disabledMismatch ?? 0,
-    lastRun: payload?.lastRun ?? null,
-    summary: {
-      synced: payload?.summary?.synced ?? 0,
-      pending_upload: payload?.summary?.pending_upload ?? 0,
-      remote_only: payload?.summary?.remote_only ?? 0,
-      remote_deleted: payload?.summary?.remote_deleted ?? 0,
-    } satisfies Record<SyncStatus, number>,
-  };
-}
-
 export default function AccountsPage() {
   const router = useRouter();
   const cachedAccountsView = getCachedAccountsView();
@@ -225,8 +111,8 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>(() => cachedAccountsView?.items ?? []);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<AccountType | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<AccountStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<AccountTypeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<AccountStatusFilter>("all");
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [editType, setEditType] = useState<AccountType>("Free");
   const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
@@ -248,7 +134,7 @@ export default function AccountsPage() {
     try {
       const data = await fetchAccounts();
       setAccounts(normalizeAccounts(data.items));
-      setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
     } catch (error) {
       const message = error instanceof Error ? error.message : "加载账户失败";
       toast.error(message);
@@ -327,59 +213,21 @@ export default function AccountsPage() {
     });
   }, [accounts, isLoading]);
 
-  const filteredAccounts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const filtered = accounts.filter((account) => {
-      const searchMatched =
-        normalizedQuery.length === 0 ||
-        (account.email ?? "").toLowerCase().includes(normalizedQuery) ||
-        (account.fileName ?? "").toLowerCase().includes(normalizedQuery) ||
-        (account.note ?? "").toLowerCase().includes(normalizedQuery);
-      const typeMatched = typeFilter === "all" || account.type === typeFilter;
-      const statusMatched = statusFilter === "all" || account.status === statusFilter;
-      return searchMatched && typeMatched && statusMatched;
-    });
-
-    return filtered.sort((a, b) => {
-      const statusDelta = accountStatusSortOrder[a.status] - accountStatusSortOrder[b.status];
-      if (statusDelta !== 0) {
-        return statusDelta;
-      }
-      return toSortTime(b.updatedAt ?? b.lastUsedAt) - toSortTime(a.updatedAt ?? a.lastUsedAt);
-    });
-  }, [accounts, query, statusFilter, typeFilter]);
+  const filteredAccounts = useMemo(
+    () => filterAndSortAccounts(accounts, { query, typeFilter, statusFilter }),
+    [accounts, query, statusFilter, typeFilter],
+  );
 
   const currentRows = filteredAccounts;
   const allCurrentSelected = currentRows.length > 0 && currentRows.every((row) => selectedIds.includes(row.id));
 
-  const summary = useMemo(() => {
-    const total = accounts.length;
-    const active = accounts.filter((item) => item.status === "正常").length;
-    const limited = accounts.filter((item) => item.status === "限流").length;
-    const abnormal = accounts.filter((item) => item.status === "异常").length;
-    const disabled = accounts.filter((item) => item.status === "禁用").length;
-    const quota = formatQuotaSummary(accounts);
+  const summary = useMemo(() => buildAccountsSummary(accounts), [accounts]);
 
-    return { total, active, limited, abnormal, disabled, quota };
-  }, [accounts]);
+  const selectedTokens = useMemo(() => getSelectedTokens(accounts, selectedIds), [accounts, selectedIds]);
 
-  const selectedTokens = useMemo(() => {
-    const selectedSet = new Set(selectedIds);
-    return accounts.filter((item) => selectedSet.has(item.id)).map((item) => item.access_token);
-  }, [accounts, selectedIds]);
-
-  const abnormalTokens = useMemo(() => {
-    return accounts.filter((item) => item.status === "异常").map((item) => item.access_token);
-  }, [accounts]);
+  const abnormalTokens = useMemo(() => getAbnormalTokens(accounts), [accounts]);
 
   const syncView = useMemo(() => normalizeSyncStatus(syncStatus), [syncStatus]);
-
-  const syncMap = useMemo(() => {
-    return syncView.accounts.reduce<Record<string, SyncAccount>>((acc, item) => {
-      acc[item.name] = item;
-      return acc;
-    }, {});
-  }, [syncView.accounts]);
 
   const handleImportFiles = async (files: FileList | null) => {
     const normalizedFiles = files ? Array.from(files) : [];
@@ -391,7 +239,7 @@ export default function AccountsPage() {
     try {
       const data = await importAccountFiles(normalizedFiles);
       setAccounts(normalizeAccounts(data.items));
-      setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
       await loadSync({ silent: true, force: true });
 
       const failedMessage = data.failed?.[0]?.error;
@@ -420,7 +268,7 @@ export default function AccountsPage() {
     try {
       const data = await deleteAccounts(tokens);
       setAccounts(normalizeAccounts(data.items));
-      setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
       await loadSync({ silent: true, force: true });
       const removed = data.removed ?? 0;
       if (syncView.configured) {
@@ -457,7 +305,7 @@ export default function AccountsPage() {
     try {
       const data = await refreshAccounts(accessTokens);
       setAccounts(normalizeAccounts(data.items));
-      setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
       await loadSync({ silent: true, force: true });
       if (data.errors.length > 0) {
         const firstError = data.errors[0]?.error;
@@ -545,7 +393,7 @@ export default function AccountsPage() {
         quota: Number(editQuota || 0),
       });
       setAccounts(normalizeAccounts(data.items));
-      setSelectedIds((prev) => prev.filter((id) => data.items.some((item) => item.id === id)));
+      setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
       setEditingAccount(null);
       toast.success("账号信息已更新");
     } catch (error) {
