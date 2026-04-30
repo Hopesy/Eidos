@@ -467,11 +467,19 @@ tests/ts-resolve-loader.mjs
 tests/register-ts-resolve-loader.mjs
   为 Node.js 内置 node:test 增加项目别名 `@/*` 与扩展名解析能力，
   后续测试可以直接导入使用 `@/` 的源码模块。
+
+tests/account-selection-service.test.ts
+  覆盖账号池优先使用本地已有 quota 批次、正 quota 批次耗尽后回退到 zero-quota 批次、
+  round-robin 轮转与 reset、候选全部失效时的稳定报错。
+
+tests/account-remote-refresh-service.test.ts
+  覆盖远端 payload 到本地账号字段的归一化、JWT plan type 识别、
+  401 刷新降级、批量刷新去重、`last_refreshed_at` 打点与错误归集。
 ```
 
 已验证：
 
-- `pnpm test`：19 个测试全部通过。
+- `pnpm test`：27 个测试全部通过。
 - `pnpm build`：Next.js 生产构建通过。
 
 ---
@@ -647,13 +655,17 @@ tests/register-ts-resolve-loader.mjs
   - 覆盖版本比较、installer asset 选择、latest release payload 解析。
 - `tests/account-admin-service.test.ts`
   - 覆盖账号 normalize / public mapping、导入去重、删除、更新与图片结果计数语义。
+- `tests/account-selection-service.test.ts`
+  - 覆盖账号选择批次优先级、轮转与候选耗尽语义。
+- `tests/account-remote-refresh-service.test.ts`
+  - 覆盖远端刷新 payload mapping、401 降级、批量刷新去重与时间戳语义。
 
 后续继续补这些小测试：
 
 1. 配置默认值一致性
-2. 账号选择 / 轮转策略
-3. 账号远端刷新错误归集
-4. 关键 repository 的最小读写测试
+2. 关键 repository 的最小读写测试
+3. 图片会话 / 上游任务恢复链的最小行为测试
+4. Accounts 页面拆分后的纯逻辑模块测试
 
 同时补脚本：
 
@@ -740,8 +752,8 @@ src/
 4. **下一优先级：继续拆服务端 God file**：
    - `account-service.ts` 已基本收敛为 facade，后续只做小幅清理；
    - 只在确有收益时再继续移动 `openai-proof.ts` 这类底层细节。
-5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service。
-6. **下一优先级：继续补账号选择/远端刷新测试，随后处理 Accounts 页面**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
+5. **Phase 6 最小护栏继续推进**：已接入 `pnpm test`，覆盖 image-generation、release-shared、openai image error mapping、account-admin-service、account-selection-service、account-remote-refresh-service。
+6. **下一优先级：转向 Accounts 页面拆分或 repository 护栏**：`src/app/accounts/page.tsx` 仍是前端第二大热点。
 7. **最后推进 SQLite repository 与 Electron IPC 安全边界精修**。
 
 原则：已经拆稳的 Image Workbench 不继续为了行数而拆；下一步要把主要收益转到服务端边界和测试护栏。

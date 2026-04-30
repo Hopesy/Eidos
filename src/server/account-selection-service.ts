@@ -13,6 +13,22 @@ export type AccountSelector = {
 export function createAccountSelector(dependencies: AccountSelectorDependencies): AccountSelector {
   let nextIndex = 0;
 
+  async function trySelectFromCandidates(candidates: AccountRecord[], excludedTokens?: Set<string>) {
+    const available = [...candidates];
+    while (available.length > 0) {
+      const account = available[nextIndex % available.length];
+      nextIndex += 1;
+      const refreshed = await dependencies.refreshAccountState(account.access_token);
+      if (refreshed && refreshed.status !== "禁用" && refreshed.quota > 0) {
+        return refreshed.access_token;
+      }
+      excludedTokens?.add(account.access_token);
+      const nextAccounts = available.filter((item) => item.access_token !== account.access_token);
+      available.splice(0, available.length, ...nextAccounts);
+    }
+    return null;
+  }
+
   return {
     reset(accountCount: number) {
       if (accountCount > 0) {
@@ -34,18 +50,14 @@ export function createAccountSelector(dependencies: AccountSelectorDependencies)
 
       // 优先使用已有 quota 的账号（避免对每个新账号都发起远端请求拖慢速度）
       const withQuota = candidates.filter((item) => item.quota > 0);
-      const available = withQuota.length > 0 ? withQuota : candidates;
+      const withoutQuota = candidates.filter((item) => item.quota <= 0);
+      const batches = withQuota.length > 0 ? [withQuota, withoutQuota] : [withoutQuota];
 
-      while (available.length > 0) {
-        const account = available[nextIndex % available.length];
-        nextIndex += 1;
-        const refreshed = await dependencies.refreshAccountState(account.access_token);
-        if (refreshed && refreshed.status !== "禁用" && refreshed.quota > 0) {
-          return refreshed.access_token;
+      for (const batch of batches) {
+        const accessToken = await trySelectFromCandidates(batch, excludedTokens);
+        if (accessToken) {
+          return accessToken;
         }
-        excludedTokens?.add(account.access_token);
-        const nextAccounts = available.filter((item) => item.access_token !== account.access_token);
-        available.splice(0, available.length, ...nextAccounts);
       }
 
       throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
