@@ -595,18 +595,18 @@ src/server/image-recovery-service.ts
 src/server/cpa-sync.ts
   对外兼容入口，继续导出 getSyncStatus / runSync
 
-src/server/cpa-sync-shared.ts
+src/server/cpa-sync/shared.ts
   CPA 配置 / 远端 auth file / 本地账号最小类型、token/provider 归一化、
   账号文件名、禁用状态、远端 auth 内容、空 sync status 与初始 run result 构造
 
-src/server/cpa-sync-client.ts
+src/server/cpa-sync/client.ts
   CPA 配置解析、管理端 HTTP client、auth-files 列表 / 下载 / 上传 / 状态 patch、
   远端 auth file 批量加载
 
-src/server/cpa-sync-status.ts
+src/server/cpa-sync/status.ts
   /api/sync/status 用例：本地账号与远端 auth-files 对账、summary 与 mismatch 构造
 
-src/server/cpa-sync-runner.ts
+src/server/cpa-sync/runner.ts
   /api/sync/run 用例：pull / push / both 同步执行、远端独有拉取、本地缺失推送、
   禁用状态对齐、sync run 结果持久化
 ```
@@ -625,25 +625,25 @@ src/server/cpa-sync-runner.ts
 src/lib/api.ts
   兼容聚合入口，继续 export 既有 accounts/config/images/requests/sync/version/types
 
-src/lib/api/types.ts
+src/lib/api/types/index.ts
   前后端共享的 API contract 类型：accounts、image、sync、request log、version
 
-src/lib/api/accounts.ts
+src/lib/api/accounts/index.ts
   账号相关请求：list/create/delete/refresh/update/import/quota
 
-src/lib/api/config.ts
+src/lib/api/config/index.ts
   配置读取 / 默认值 / 更新
 
-src/lib/api/images.ts
+src/lib/api/images/index.ts
   generate / edit / upscale / recover / recoverable task 查询
 
-src/lib/api/requests.ts
+src/lib/api/requests/index.ts
   请求日志读取
 
-src/lib/api/sync.ts
+src/lib/api/sync/index.ts
   sync status / run
 
-src/lib/api/version.ts
+src/lib/api/version/index.ts
   版本信息 / latest release
 ```
 

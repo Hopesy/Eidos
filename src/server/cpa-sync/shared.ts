@@ -78,7 +78,10 @@ export function buildRemoteAuthContent(account: CpaLocalAccount) {
   );
 }
 
-export function createEmptySyncStatus(configured: boolean, lastRun: SyncRunResult | null): SyncStatusResponse {
+export function createEmptySyncStatus(
+  configured: boolean,
+  lastRun: SyncRunResult | null,
+): SyncStatusResponse {
   return {
     configured,
     local: 0,
@@ -115,7 +118,10 @@ export function createUnconfiguredSyncResult(
   };
 }
 
-export function createInitialSyncResult(direction: "pull" | "push" | "both", startedAt: string): SyncRunResult {
+export function createInitialSyncResult(
+  direction: "pull" | "push" | "both",
+  startedAt: string,
+): SyncRunResult {
   return {
     ok: true,
     direction,

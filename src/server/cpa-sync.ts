@@ -1,2 +1,2 @@
-export { runSync } from "@/server/cpa-sync-runner";
-export { getSyncStatus } from "@/server/cpa-sync-status";
+export { runSync } from "./cpa-sync/runner";
+export { getSyncStatus } from "./cpa-sync/status";

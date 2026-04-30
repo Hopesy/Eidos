@@ -8,7 +8,7 @@ import {
   type SavedCpaConfigShape,
   normalizeProvider,
   normalizeToken,
-} from "./cpa-sync-shared";
+} from "./shared";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -17,12 +17,25 @@ export async function getCpaConfig(): Promise<CpaConfig> {
   const syncEnabled = Boolean(savedConfig?.sync?.enabled);
   const cpaEnabled = Boolean(savedConfig?.cpa?.enabled);
   const provider = normalizeProvider(savedConfig?.sync?.provider);
-  const providerType = String(savedConfig?.cpa?.providerType || provider || process.env.CPA_PROVIDER_TYPE || "codex").trim();
-  const baseUrl = String(savedConfig?.cpa?.baseUrl || process.env.CPA_BASE_URL || "").trim().replace(/\/+$/, "");
-  const managementKey = String(savedConfig?.cpa?.managementKey || process.env.CPA_MANAGEMENT_KEY || "").trim();
+  const providerType = String(
+    savedConfig?.cpa?.providerType ||
+      provider ||
+      process.env.CPA_PROVIDER_TYPE ||
+      "codex",
+  ).trim();
+  const baseUrl = String(
+    savedConfig?.cpa?.baseUrl || process.env.CPA_BASE_URL || "",
+  )
+    .trim()
+    .replace(/\/+$/, "");
+  const managementKey = String(
+    savedConfig?.cpa?.managementKey || process.env.CPA_MANAGEMENT_KEY || "",
+  ).trim();
 
   return {
-    enabled: (syncEnabled || cpaEnabled || Boolean(baseUrl)) && Boolean(baseUrl && managementKey),
+    enabled:
+      (syncEnabled || cpaEnabled || Boolean(baseUrl)) &&
+      Boolean(baseUrl && managementKey),
     baseUrl,
     managementKey,
     providerType,
@@ -33,7 +46,11 @@ export class CpaClient {
   constructor(private readonly config: CpaConfig) {}
 
   configured() {
-    return this.config.enabled && Boolean(this.config.baseUrl) && Boolean(this.config.managementKey);
+    return (
+      this.config.enabled &&
+      Boolean(this.config.baseUrl) &&
+      Boolean(this.config.managementKey)
+    );
   }
 
   private async request(path: string, init: RequestInit = {}) {
@@ -68,7 +85,11 @@ export class CpaClient {
     if (!expected) {
       return true;
     }
-    return [info.type, info.provider].some((value) => normalizeProvider(value) === expected || normalizeProvider(value) === "");
+    return [info.type, info.provider].some(
+      (value) =>
+        normalizeProvider(value) === expected ||
+        normalizeProvider(value) === "",
+    );
   }
 
   async listAuthFiles() {
@@ -77,7 +98,10 @@ export class CpaClient {
       headers: { Accept: "application/json" },
     });
     if (!response.ok) {
-      throw new ApiError(response.status, `列出 CPA auth-files 失败：${await response.text()}`);
+      throw new ApiError(
+        response.status,
+        `列出 CPA auth-files 失败：${await response.text()}`,
+      );
     }
 
     const payload = (await response.json()) as { files?: RemoteAuthFileInfo[] };
@@ -85,10 +109,13 @@ export class CpaClient {
   }
 
   async downloadAuthFile(name: string) {
-    const response = await this.request(`/v0/management/auth-files/download?name=${encodeURIComponent(name)}`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
+    const response = await this.request(
+      `/v0/management/auth-files/download?name=${encodeURIComponent(name)}`,
+      {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      },
+    );
     const text = await response.text();
     if (!response.ok) {
       throw new ApiError(response.status, `下载 CPA auth-file 失败：${text}`);
@@ -104,7 +131,10 @@ export class CpaClient {
       body: formData,
     });
     if (![200, 201, 409].includes(response.status)) {
-      throw new ApiError(response.status, `上传 CPA auth-file 失败：${await response.text()}`);
+      throw new ApiError(
+        response.status,
+        `上传 CPA auth-file 失败：${await response.text()}`,
+      );
     }
   }
 
@@ -115,7 +145,10 @@ export class CpaClient {
       body: JSON.stringify({ name, disabled }),
     });
     if (![200, 204].includes(response.status)) {
-      throw new ApiError(response.status, `更新 CPA auth-file 状态失败：${await response.text()}`);
+      throw new ApiError(
+        response.status,
+        `更新 CPA auth-file 状态失败：${await response.text()}`,
+      );
     }
   }
 }

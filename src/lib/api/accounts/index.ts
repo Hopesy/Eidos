@@ -6,7 +6,7 @@ import type {
   AccountQuotaResponse,
   AccountStatus,
   AccountType,
-} from "./types";
+} from "../types";
 
 type AccountListResponse = {
   items: Account[];

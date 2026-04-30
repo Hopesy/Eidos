@@ -7,7 +7,7 @@ import type {
   ImageResponseItem,
   InpaintSourceReference,
   RecoverableImageTaskItem,
-} from "./types";
+} from "../types";
 
 export async function generateImage(
   prompt: string,

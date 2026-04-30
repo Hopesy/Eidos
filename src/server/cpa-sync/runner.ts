@@ -1,17 +1,24 @@
 import type { SyncRunResult } from "@/lib/api";
-import { addAccounts, listAccounts, refreshAccounts, updateAccount } from "@/server/account-service";
+import {
+  addAccounts,
+  listAccounts,
+  refreshAccounts,
+  updateAccount,
+} from "@/server/account-service";
 import { saveSyncRun } from "@/server/repositories/sync-run-repository";
 
-import { CpaClient, getCpaConfig, loadRemoteAuthFiles } from "./cpa-sync-client";
+import { CpaClient, getCpaConfig, loadRemoteAuthFiles } from "./client";
 import {
   buildAccountName,
   buildRemoteAuthContent,
   createInitialSyncResult,
   createUnconfiguredSyncResult,
   isLocalDisabled,
-} from "./cpa-sync-shared";
+} from "./shared";
 
-export async function runSync(direction: "pull" | "push" | "both"): Promise<SyncRunResult> {
+export async function runSync(
+  direction: "pull" | "push" | "both",
+): Promise<SyncRunResult> {
   const config = await getCpaConfig();
   const startedAt = new Date().toISOString();
 
@@ -28,7 +35,12 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
 
     if (direction === "pull" || direction === "both") {
       const remoteOnlyTokens = Array.from(remoteMap.values())
-        .filter((item) => !localAccounts.some((account) => account.access_token === item.accessToken))
+        .filter(
+          (item) =>
+            !localAccounts.some(
+              (account) => account.access_token === item.accessToken,
+            ),
+        )
         .map((item) => item.accessToken);
 
       if (remoteOnlyTokens.length > 0) {
@@ -38,7 +50,9 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
       }
 
       for (const remote of remoteMap.values()) {
-        const local = localAccounts.find((account) => account.access_token === remote.accessToken);
+        const local = localAccounts.find(
+          (account) => account.access_token === remote.accessToken,
+        );
         if (!local) {
           continue;
         }
@@ -46,7 +60,9 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
         const isDisabled = isLocalDisabled(local);
         if (shouldDisable !== isDisabled) {
           try {
-            await updateAccount(local.access_token, { status: shouldDisable ? "禁用" : "正常" });
+            await updateAccount(local.access_token, {
+              status: shouldDisable ? "禁用" : "正常",
+            });
             result.disabled_aligned += 1;
           } catch {
             result.disabled_align_failed += 1;
@@ -60,7 +76,10 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
         const remote = remoteMap.get(account.access_token);
         if (!remote) {
           try {
-            await client.uploadAuthFile(buildAccountName(account.access_token), buildRemoteAuthContent(account));
+            await client.uploadAuthFile(
+              buildAccountName(account.access_token),
+              buildRemoteAuthContent(account),
+            );
             result.uploaded += 1;
           } catch {
             result.upload_failed += 1;
@@ -70,7 +89,10 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
 
         if (remote.disabled !== isLocalDisabled(account)) {
           try {
-            await client.patchAuthFileStatus(remote.name, isLocalDisabled(account));
+            await client.patchAuthFileStatus(
+              remote.name,
+              isLocalDisabled(account),
+            );
             result.disabled_aligned += 1;
           } catch {
             result.disabled_align_failed += 1;
@@ -80,7 +102,8 @@ export async function runSync(direction: "pull" | "push" | "both"): Promise<Sync
     }
   } catch (error) {
     result.ok = false;
-    result.error = error instanceof Error ? error.message : "执行 CPA 同步失败";
+    result.error =
+      error instanceof Error ? error.message : "执行 CPA 同步失败";
   }
 
   result.finished_at = new Date().toISOString();
