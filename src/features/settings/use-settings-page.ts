@@ -5,13 +5,20 @@ import { toast } from "sonner";
 
 import { fetchConfig, fetchDefaultConfig, updateConfig } from "@/lib/api";
 import { getDefaultConfigPayload, type ConfigPayload } from "@/shared/app-config";
-import { clearCachedSyncStatus } from "@/store/sync-status-cache";
 
-export function useSettingsPage() {
-  const [config, setConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
-  const [savedConfig, setSavedConfig] = useState<ConfigPayload>(getDefaultConfigPayload());
-  const [defaultConfig, setDefaultConfig] = useState<ConfigPayload | null>(null);
-  const [loading, setLoading] = useState(true);
+type UseSettingsPageOptions = {
+  initialConfig?: ConfigPayload;
+  initialDefaultConfig?: ConfigPayload;
+  saveConfigAction?: (config: ConfigPayload) => Promise<ConfigPayload>;
+};
+
+export function useSettingsPage(options: UseSettingsPageOptions = {}) {
+  const hasInitialConfig = options.initialConfig !== undefined;
+  const initialConfig = options.initialConfig ?? getDefaultConfigPayload();
+  const [config, setConfig] = useState<ConfigPayload>(initialConfig);
+  const [savedConfig, setSavedConfig] = useState<ConfigPayload>(initialConfig);
+  const [defaultConfig, setDefaultConfig] = useState<ConfigPayload | null>(options.initialDefaultConfig ?? null);
+  const [loading, setLoading] = useState(!hasInitialConfig);
   const [saving, setSaving] = useState(false);
   const [restoringDefaults, setRestoringDefaults] = useState(false);
 
@@ -48,9 +55,13 @@ export function useSettingsPage() {
   }
 
   useEffect(() => {
+    if (hasInitialConfig) {
+      return;
+    }
+
     setLoading(true);
     void loadCurrentConfig().finally(() => setLoading(false));
-  }, []);
+  }, [hasInitialConfig]);
 
   async function restoreDefaults() {
     setRestoringDefaults(true);
@@ -69,12 +80,11 @@ export function useSettingsPage() {
   async function saveConfig() {
     setSaving(true);
     try {
-      const res = await updateConfig(config);
+      const res = options.saveConfigAction ? await options.saveConfigAction(config) : await updateConfig(config);
       if (res) {
         setSavedConfig(res);
         setConfig(res);
       }
-      clearCachedSyncStatus();
       toast.success("配置已保存");
     } catch {
       toast.error("保存配置失败");

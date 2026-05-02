@@ -18,6 +18,11 @@ type SavedImageFile = {
   created_at: string;
 };
 
+export type ImageFileListItem = Pick<
+  SavedImageFile,
+  "id" | "role" | "file_path" | "public_path" | "mime_type" | "size_bytes" | "created_at"
+>;
+
 type ImageReference = {
   imageId: string;
   conversationId?: string;
@@ -240,6 +245,32 @@ export function getImageFile(id: string): SavedImageFile | null {
     sha256: String(row.sha256),
     created_at: String(row.created_at),
   };
+}
+
+export function listImageFiles(limit = 500): ImageFileListItem[] {
+  const rows = getDb().prepare(`
+    SELECT
+      id,
+      role,
+      file_path,
+      public_path,
+      mime_type,
+      size_bytes,
+      created_at
+    FROM image_files
+    ORDER BY created_at DESC
+    LIMIT ?
+  `).all(Math.max(1, Math.min(1000, limit))) as Array<Record<string, unknown>>;
+
+  return rows.map((row) => ({
+    id: String(row.id || ""),
+    role: normalizeRole(String(row.role || "result")),
+    file_path: String(row.file_path || ""),
+    public_path: String(row.public_path || ""),
+    mime_type: String(row.mime_type || "image/png"),
+    size_bytes: Number(row.size_bytes || 0),
+    created_at: String(row.created_at || ""),
+  }));
 }
 
 export async function deleteImageFilesIfUnreferenced(imageIds: string[], excludedConversationIds: string[] = []) {

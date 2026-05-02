@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { deleteImageConversationRecord, getImageConversationRecord, saveImageConversationRecord } from "@/server/repositories/image/conversation-repository";
+import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
@@ -27,7 +28,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = (await request.json()) as Record<string, unknown>;
+    const body = await parseJsonBody(request, recordBodySchema);
     return jsonOk({ item: await saveImageConversationRecord({ ...body, id }) });
   } catch (error) {
     return jsonError(error);

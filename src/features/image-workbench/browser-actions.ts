@@ -4,6 +4,63 @@ import type { StoredImage } from "@/store/image-conversations";
 
 import { buildImageDataUrl } from "./utils";
 
+export type DownloadImageFileOptions = {
+  prompt?: string;
+  model?: string;
+  resolution?: string;
+  fileName?: string;
+};
+
+function sanitizeFileNameSegment(value: string, fallback: string) {
+  const normalized = value
+    .replace(/[\\/:*?"<>|]/g, "-")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return fallback;
+  }
+
+  return normalized.slice(0, 48);
+}
+
+function getExtensionFromMimeType(mimeType: string) {
+  if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/gif") return "gif";
+  return "png";
+}
+
+async function resolveImageResolution(blob: Blob) {
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const image = new window.Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("读取图片分辨率失败"));
+      image.src = objectUrl;
+    });
+
+    return `${image.naturalWidth}x${image.naturalHeight}`;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function buildDownloadFileName(blob: Blob, options?: DownloadImageFileOptions) {
+  if (options?.fileName) {
+    return options.fileName;
+  }
+
+  const prompt = sanitizeFileNameSegment(options?.prompt || "", "image");
+  const model = sanitizeFileNameSegment(options?.model || "", "model");
+  const resolution = sanitizeFileNameSegment(options?.resolution || await resolveImageResolution(blob), "auto");
+  const extension = getExtensionFromMimeType(blob.type || "image/png");
+
+  return `${prompt}-${model}-${resolution}.${extension}`;
+}
+
 export function openImageInNewTab(dataUrl: string) {
   const w = window.open("", "_blank");
   if (w) {
@@ -12,20 +69,20 @@ export function openImageInNewTab(dataUrl: string) {
   }
 }
 
-export async function downloadImageFile(image: StoredImage, suggestedFileName: string) {
+export async function downloadImageFile(image: StoredImage, options?: DownloadImageFileOptions) {
   const href = image.url || buildImageDataUrl(image);
   if (!href) {
     toast.error("当前图片没有可下载的数据");
     return;
   }
 
-  const fileName = suggestedFileName || "image.png";
   try {
     const response = await fetch(href);
     if (!response.ok) {
       throw new Error(`下载图片失败 (${response.status})`);
     }
     const blob = await response.blob();
+    const fileName = await buildDownloadFileName(blob, options);
 
     const picker = (window as Window & {
       showSaveFilePicker?: (options?: {

@@ -51,6 +51,8 @@ type ClearHistoryContext = {
   setSelectedConversationId: Dispatch<SetStateAction<string | null>>;
 };
 
+const conversationUpdateQueues = new Map<string, Promise<unknown>>();
+
 function sortConversations(items: ImageConversation[]) {
   return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
@@ -73,7 +75,21 @@ export async function updateConversation(
   conversationId: string,
   updater: (current: ImageConversation) => ImageConversation,
 ) {
-  const nextConversation = await updateImageConversation(conversationId, updater);
+  const previousQueue = conversationUpdateQueues.get(conversationId) ?? Promise.resolve();
+  const nextQueue = previousQueue
+    .catch(() => undefined)
+    .then(() => updateImageConversation(conversationId, updater));
+  conversationUpdateQueues.set(conversationId, nextQueue);
+
+  let nextConversation: ImageConversation;
+  try {
+    nextConversation = await nextQueue;
+  } finally {
+    if (conversationUpdateQueues.get(conversationId) === nextQueue) {
+      conversationUpdateQueues.delete(conversationId);
+    }
+  }
+
   if (!ctx.mountedRef.current) {
     return;
   }

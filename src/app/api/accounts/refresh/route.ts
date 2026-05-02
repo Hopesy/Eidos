@@ -1,17 +1,16 @@
 import { NextRequest } from "next/server";
 
 import { ensureAccountWatcherStarted, listTokens, refreshAccounts } from "@/server/account-service";
-import { ApiError, jsonError, jsonOk } from "@/server/response";
+import { accessTokenListBodySchema, cleanStringList, parseJsonBody } from "@/server/request-validation";
+import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     await ensureAccountWatcherStarted();
-    const body = (await request.json()) as { access_tokens?: string[] };
-    let accessTokens = Array.isArray(body.access_tokens)
-      ? body.access_tokens.map((item) => String(item || "").trim()).filter(Boolean)
-      : [];
+    const body = await parseJsonBody(request, accessTokenListBodySchema);
+    let accessTokens = cleanStringList(body.access_tokens);
     if (accessTokens.length === 0) {
       accessTokens = await listTokens();
     }

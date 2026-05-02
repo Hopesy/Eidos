@@ -12,6 +12,8 @@ import {
 } from "@/lib/api";
 import { subscribeImageTasks } from "@/store/image-active-tasks";
 import {
+  normalizeConversation,
+  primeImageConversations,
   type ImageConversation,
   type ImageConversationTurn,
   type ImageMode,
@@ -68,8 +70,31 @@ import {
   updateConversation as updateWorkbenchConversation,
 } from "./workspace";
 
-export function useImagePage() {
+type UseImagePageOptions = {
+  initialConversations?: ImageConversation[];
+  initialRecoverableTasks?: RecoverableImageTaskItem[];
+  initialAvailableQuota?: string;
+};
+
+export function useImagePage(options: UseImagePageOptions = {}) {
   const cachedWorkspaceState = getCachedImageWorkspaceState();
+  const hasInitialConversations = options.initialConversations !== undefined;
+  const hasInitialRecoverableTasks = options.initialRecoverableTasks !== undefined;
+  const hasInitialAvailableQuota = options.initialAvailableQuota !== undefined;
+  const normalizedInitialConversations = useMemo(
+    () => (options.initialConversations ?? []).map(normalizeConversation),
+    [options.initialConversations],
+  );
+  const initialSelectedConversationId = useMemo(() => {
+    const cachedId = cachedWorkspaceState.selectedConversationId;
+    if (cachedId && normalizedInitialConversations.some((item) => item.id === cachedId)) {
+      return cachedId;
+    }
+    if (cachedWorkspaceState.isDraftSelection) {
+      return null;
+    }
+    return normalizedInitialConversations[0]?.id ?? null;
+  }, [cachedWorkspaceState.isDraftSelection, cachedWorkspaceState.selectedConversationId, normalizedInitialConversations]);
   const didLoadQuotaRef = useRef(false);
   const mountedRef = useRef(true);
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
@@ -104,21 +129,25 @@ export function useImagePage() {
   const [upscaleQuality, setUpscaleQuality] = useState<ImageGenerationQuality>("medium");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
   const [reuseLatestResultForGenerate, setReuseLatestResultForGenerate] = useState(true);
-  const [conversations, setConversations] = useState<ImageConversation[]>([]);
+  const [conversations, setConversations] = useState<ImageConversation[]>(normalizedInitialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    cachedWorkspaceState.selectedConversationId,
+    initialSelectedConversationId,
   );
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [filesCollapsed, setFilesCollapsed] = useState(true);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(!hasInitialConversations);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableQuota, setAvailableQuota] = useState("加载中");
-  const [recoverableTasks, setRecoverableTasks] = useState<RecoverableImageTaskItem[]>([]);
+  const [availableQuota, setAvailableQuota] = useState(options.initialAvailableQuota ?? "加载中");
+  const [recoverableTasks, setRecoverableTasks] = useState<RecoverableImageTaskItem[]>(options.initialRecoverableTasks ?? []);
   const [activeRequest, setActiveRequest] = useState<ActiveRequestState | null>(null);
   const [submitStartedAt, setSubmitStartedAt] = useState<number | null>(null);
   const [submitElapsedSeconds, setSubmitElapsedSeconds] = useState(0);
   const [pendingPickerMode, setPendingPickerMode] = useState<ImageMode | null>(null);
   const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
+  const [maskEditorTarget, setMaskEditorTarget] = useState<{
+    sourceDataUrl: string;
+    imageName: string;
+  } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const selectedConversation = useMemo(
@@ -222,6 +251,16 @@ export function useImagePage() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
+      if (hasInitialConversations) {
+        primeImageConversations(normalizedInitialConversations);
+        setCachedImageWorkspaceState({
+          selectedConversationId: initialSelectedConversationId,
+          isDraftSelection: initialSelectedConversationId === null,
+        });
+        syncRuntimeTaskState(initialSelectedConversationId);
+        return;
+      }
+
       void refreshHistory({ normalize: true, withLoading: true });
       syncRuntimeTaskState(selectedConversationId);
     });
@@ -260,12 +299,12 @@ export function useImagePage() {
       }
     };
 
-    if (didLoadQuotaRef.current) {
+    if (didLoadQuotaRef.current || hasInitialAvailableQuota) {
       return;
     }
     didLoadQuotaRef.current = true;
     void loadQuota();
-  }, []);
+  }, [hasInitialAvailableQuota]);
 
   useEffect(() => {
     const handleCredentialsRefreshed = () => {
@@ -466,6 +505,40 @@ export function useImagePage() {
     openWorkbenchSelectionEditor(composerContext, conversationId, turnId, image, imageName);
   };
 
+  const handleMaskEditorSubmit = async (
+    arg:
+      | "open"
+      | {
+        file: File;
+        previewDataUrl: string;
+      },
+  ) => {
+    if (arg === "open") {
+      const currentSourceImage = imageSources[0] ?? null;
+      if (!currentSourceImage) {
+        toast.error("请先上传源图，再添加遮罩");
+        return;
+      }
+
+      setMaskEditorTarget({
+        sourceDataUrl: currentSourceImage.dataUrl,
+        imageName: currentSourceImage.name || "source.png",
+      });
+      return;
+    }
+
+    setSourceImages((prev) => [
+      ...prev.filter((item) => item.role !== "mask"),
+      {
+        id: makeId(),
+        role: "mask",
+        name: arg.file.name || "mask.png",
+        dataUrl: arg.previewDataUrl,
+      },
+    ]);
+    setMaskEditorTarget(null);
+  };
+
   const handleSelectionEditSubmit = async ({
     prompt,
     mask,
@@ -505,25 +578,8 @@ export function useImagePage() {
 
   const handleRetryTurn = async (conversationId: string, turn: ImageConversationTurn, imageId?: string) => {
     await runRetryTurn({
-      mountedRef,
-      requestAbortControllerRef,
-      pendingAbortActionRef,
-      activeRequestMetaRef,
-      setIsSubmitting,
-      setActiveRequest,
-      setSubmitElapsedSeconds,
-      setSubmitStartedAt,
-      setConversations,
-      setImagePrompt,
-      setSourceImages,
-      setEditorTarget,
       focusConversation,
       updateConversation,
-      persistConversation,
-      resetComposer,
-      retractTurnAfterAbort,
-      restoreComposerFromTurn,
-      isSubmitting,
     }, conversationId, turn, imageId);
   };
 
@@ -684,6 +740,8 @@ export function useImagePage() {
     activeRequest,
     editorTarget,
     setEditorTarget,
+    maskEditorTarget,
+    setMaskEditorTarget,
     previewImage,
     setPreviewImage,
     selectedConversation,
@@ -711,6 +769,7 @@ export function useImagePage() {
     seedFromResult,
     openSelectionEditor,
     handleSelectionEditSubmit,
+    handleMaskEditorSubmit,
     handleRetryTurn,
     handleSubmit,
     handleComposerCancelAction,

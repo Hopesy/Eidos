@@ -62,6 +62,7 @@ export type ComposerPanelProps = {
     uploadInputRef: RefObject<HTMLInputElement | null>;
     maskInputRef: RefObject<HTMLInputElement | null>;
     onUploadFiles: (files: FileList | null, role: "image" | "mask") => void;
+    onOpenMaskEditor: () => void;
 };
 
 function renderQualityOption(value: ImageGenerationQuality, label: string) {
@@ -114,6 +115,7 @@ export function ComposerPanel({
     uploadInputRef,
     maskInputRef,
     onUploadFiles,
+    onOpenMaskEditor,
 }: ComposerPanelProps) {
     return (
         <div className="shrink-0 border-t border-stone-200/60 bg-white px-3 py-2.5 sm:px-5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
@@ -347,19 +349,34 @@ export function ComposerPanel({
                                 </Button>
 
                                 {mode === "edit" ? (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            maskInputRef.current?.click();
-                                        }}
-                                    >
-                                        <Upload className="size-3.5" />
-                                        遮罩
-                                    </Button>
+                                    <>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                maskInputRef.current?.click();
+                                            }}
+                                        >
+                                            <Upload className="size-3.5" />
+                                            上传遮罩
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                onOpenMaskEditor();
+                                            }}
+                                        >
+                                            <Pencil className="size-3.5" />
+                                            添加遮罩
+                                        </Button>
+                                    </>
                                 ) : null}
                             </div>
 

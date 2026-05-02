@@ -61,7 +61,7 @@ export type SubmissionContext = {
   focusConversation: (conversationId: string) => void;
   updateConversation: UpdateConversationFn;
   persistConversation: PersistConversationFn;
-  resetComposer: (nextMode?: ImageMode) => void;
+  resetComposer: (nextMode?: ImageMode, options?: { preserveImageSize?: boolean }) => void;
   retractTurnAfterAbort: (conversationId: string, turnId: string) => Promise<boolean>;
   restoreComposerFromTurn: RestoreComposerFn;
 };
@@ -79,9 +79,7 @@ export type SelectionEditContext = SubmissionContext & {
   imageModel: ImageModel;
 };
 
-export type RetryTurnContext = SubmissionContext & {
-  isSubmitting: boolean;
-};
+export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "updateConversation">;
 
 export type SubmitContext = SubmissionContext & {
   selectedConversationId: string | null;

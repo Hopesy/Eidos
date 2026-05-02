@@ -5,8 +5,14 @@ import { AccountSyncPanel } from "./_components/account-sync-panel";
 import { AccountsTable } from "./_components/accounts-table";
 import { AccountsToolbar } from "./_components/accounts-toolbar";
 import { useAccountsPage } from "@/features/accounts/use-accounts-page";
+import type { Account, SyncStatusResponse } from "@/lib/api";
 
-export default function AccountsPage() {
+type AccountsClientProps = {
+  initialAccounts: Account[];
+  initialSyncStatus: SyncStatusResponse;
+};
+
+export function AccountsClient({ initialAccounts, initialSyncStatus }: AccountsClientProps) {
   const {
     importInputRef,
     accounts,
@@ -50,7 +56,7 @@ export default function AccountsPage() {
     handleUpdateAccount,
     toggleSelectAll,
     toggleSelectedId,
-  } = useAccountsPage();
+  } = useAccountsPage({ initialAccounts, initialSyncStatus });
 
   return (
     <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">

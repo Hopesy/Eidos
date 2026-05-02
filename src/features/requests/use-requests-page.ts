@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { fetchRequestLogs, type RequestLogItem } from "@/lib/api";
@@ -13,14 +13,15 @@ import {
   type RequestResultFilter,
 } from "./request-view-model";
 
-export function useRequestsPage() {
-  const [items, setItems] = useState<RequestLogItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function useRequestsPage(initialItems?: RequestLogItem[]) {
+  const hasInitialItems = initialItems !== undefined;
+  const [items, setItems] = useState<RequestLogItem[]>(initialItems ?? []);
+  const [isLoading, setIsLoading] = useState(!hasInitialItems);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [resultFilter, setResultFilter] = useState<RequestResultFilter>("all");
   const [operationFilter, setOperationFilter] = useState<RequestOperationFilter>("all");
 
-  const loadItems = async (isRefresh = false) => {
+  const loadItems = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setIsRefreshing(true);
     } else {
@@ -38,11 +39,15 @@ export function useRequestsPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
+    if (hasInitialItems) {
+      return;
+    }
+
     void loadItems();
-  }, []);
+  }, [hasInitialItems, loadItems]);
 
   const summary = useMemo(() => buildRequestsSummary(items), [items]);
 

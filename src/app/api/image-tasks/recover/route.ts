@@ -4,6 +4,7 @@ import { ensureAccountWatcherStarted, recoverImageTaskWithAccount } from "@/serv
 import { createImageApiError } from "@/server/image/error-response";
 import { listRecoverableImageUpstreamTasks } from "@/server/repositories/image/upstream-task-repository";
 import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
+import { cleanStringList, imageTaskRecoverBodySchema, parseJsonBody } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
@@ -23,22 +24,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureAccountWatcherStarted();
-    const body = (await request.json()) as {
-      conversationId?: string;
-      sourceAccountId?: string;
-      revisedPrompt?: string;
-      fileIds?: string[];
-      waitMs?: number;
-      model?: string;
-      mode?: "generate" | "edit" | "upscale";
-    };
+    const body = await parseJsonBody(request, imageTaskRecoverBodySchema);
 
-    const conversationId = String(body.conversationId || "").trim();
+    const conversationId = body.conversationId;
     const model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
     const mode = body.mode || "generate";
-    if (!conversationId) {
-      throw new ApiError(400, "conversationId is required");
-    }
 
     const route = mode === "edit" ? "edits" : mode === "upscale" ? "upscale" : "generations";
     const operation = mode === "edit" ? "edit" : mode === "upscale" ? "upscale" : "generate";
@@ -48,8 +38,8 @@ export async function POST(request: NextRequest) {
       conversationId,
       sourceAccountId: String(body.sourceAccountId || "").trim() || undefined,
       revisedPrompt: String(body.revisedPrompt || "").trim() || undefined,
-      fileIds: Array.isArray(body.fileIds) ? body.fileIds.map((item) => String(item || "").trim()).filter(Boolean) : undefined,
-      waitMs: Number(body.waitMs || 0) > 0 ? Number(body.waitMs) : undefined,
+      fileIds: cleanStringList(body.fileIds),
+      waitMs: body.waitMs,
       model,
     }, {
       endpoint,

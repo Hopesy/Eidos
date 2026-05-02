@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { getSavedConfig, setSavedConfig } from "@/server/repositories/config";
+import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { jsonError, jsonOk } from "@/server/response";
 import { getDefaultConfigPayload, sanitizeConfigPayload } from "@/shared/app-config";
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const body = await parseJsonBody(request, recordBodySchema);
     const sanitized = sanitizeConfigPayload(body);
     setSavedConfig(sanitized);
     return jsonOk(sanitized);

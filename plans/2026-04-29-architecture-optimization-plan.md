@@ -1021,6 +1021,25 @@ src/
 8. **Phase 4 / Phase 5 首轮已完成**：repository 入口与 Electron IPC / sandbox 边界已经收口。
 9. **CPA 同步主体已完成**：`cpa-sync.ts` 已收口为 facade，client / status / runner / shared 已拆出。
 10. **前端 API contract 主体已完成**：`src/lib/api.ts` 已收口为聚合 facade，领域请求与共享 contract 已按模块分层。
+11. **Next.js App Router 边界治理已完成**：
+    - 真实业务页已迁到 `src/app/(app)` route group；
+    - `/accounts`、`/image`、`/requests`、`/settings` 的 `page.tsx` 已全部改成 Server Component 外壳；
+    - 对应交互 UI 分别进入 `accounts-client.tsx`、`image-client.tsx`、`requests-client.tsx`、`settings-client.tsx`；
+    - 首屏账号、同步状态、图片会话、图片文件、请求日志、配置均由 RSC 直接调用 `server/**` service / repository 获取；
+    - 四个业务页均使用 `dynamic = "force-dynamic"`，避免本地 SQLite / 文件运行态数据被 build-time 静态化；
+    - root 与 `(app)` group 已补齐 `error.tsx`、`loading.tsx`、`not-found.tsx`。
+12. **Route Handler 运行时校验首轮已完成**：
+    - 新增 `src/server/request-validation.ts`；
+    - JSON body route 已从 `await request.json() as ...` 改为 `parseJsonBody(...)` + zod schema；
+    - `zustand` 未使用依赖已移除，`zod` 成为运行时校验依赖。
+13. **Server Action 首轮已完成**：
+    - `src/app/(app)/settings/actions.ts` 已承接配置保存；
+    - 页面内简单配置 mutation 已从纯 API 调用迁到 Server Action；
+    - `/api/config` 仍保留为外部 / fallback HTTP 入口。
+14. **客户端服务端数据缓存清理已完成**：
+    - 已删除 `src/store/accounts-view-cache.ts` 和 `src/store/sync-status-cache.ts`；
+    - 账号列表 / 同步状态不再维护第二套客户端 in-memory source of truth；
+    - 仅保留 UI 状态、运行中任务状态和图片会话后续编辑缓存。
 
 原则：已经拆稳的 Image Workbench、Accounts、repository 入口、Electron IPC、CPA 同步和前端 API contract 不继续为了行数而拆；后续改造只围绕具体业务变化做局部精修，剩余可选块主要是桌面 lifecycle 或具体 feature 的协议演进。
 

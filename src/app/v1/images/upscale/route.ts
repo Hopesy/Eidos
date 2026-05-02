@@ -4,6 +4,7 @@ import type { ImageGenerationQuality } from "@/lib/api";
 import { ensureAccountWatcherStarted, getImageApiServiceConfig, upscaleWithApiService, upscaleWithPool } from "@/server/account-service";
 import { createImageApiError } from "@/server/image/error-response";
 import { logger } from "@/server/logger";
+import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {
     getImageErrorMeta,
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
             const imageValue = formData.get("image");
             image = imageValue instanceof File ? imageValue : null;
         } else {
-            const body = (await request.json()) as Record<string, unknown>;
+            const body = await parseJsonBody(request, recordBodySchema);
             prompt = String(body.prompt || "").trim();
             model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
             quality = resolveUpscaleQuality(body.quality, body.scale);

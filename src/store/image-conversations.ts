@@ -229,6 +229,10 @@ export async function listImageConversations(): Promise<ImageConversation[]> {
   return fetchConversations();
 }
 
+export function primeImageConversations(items: ImageConversation[]): void {
+  cachedConversations = sortConversations((items || []).map(normalizeConversation));
+}
+
 export async function getImageConversation(
   id: string,
 ): Promise<ImageConversation | null> {

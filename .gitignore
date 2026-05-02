@@ -51,7 +51,9 @@ data/
 .tmp-node-ts-test/
 
 # Local notes / scratch docs
-docs/
+docs/*
+!docs/
+!docs/ARCHITECTURE.md
 
 # Local runtime logs
 logs/*.log

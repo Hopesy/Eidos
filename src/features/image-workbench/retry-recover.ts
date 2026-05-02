@@ -1,11 +1,10 @@
 import { toast } from "sonner";
 
 import { editImage, generateImage, recoverImageTask, upscaleImage } from "@/lib/api";
-import type { ImageConversationTurn, StoredImage } from "@/store/image-conversations";
+import type { ImageConversationTurn } from "@/store/image-conversations";
 import { resolveUpscaleQuality } from "@/shared/image-generation";
 
 import type { RetryTurnContext } from "./submission-types";
-import { beginRequest, finishRequest } from "./request-lifecycle";
 import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "./turn-patches";
 import {
   buildSourceReference,
@@ -17,17 +16,49 @@ import {
   patchRetriedImages,
 } from "./utils";
 
+const activeRetryKeys = new Set<string>();
+
+function buildRetryKey(conversationId: string, turnId: string, imageId: string | undefined, retryIndexes: number[]) {
+  return `${conversationId}:${turnId}:${imageId ?? retryIndexes.join(",")}`;
+}
+
+function keepGeneratingWhileAnyImageLoads(turn: ImageConversationTurn) {
+  if (!turn.images.some((image) => image.status === "loading")) {
+    return turn;
+  }
+
+  return {
+    ...turn,
+    status: "generating" as const,
+    error: undefined,
+  };
+}
+
+function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, next: ImageConversationTurn) {
+  if (!next.images.some((image) => image.status === "error")) {
+    return next;
+  }
+
+  return {
+    ...next,
+    failureKind: next.failureKind ?? previous.failureKind,
+    retryAction: next.retryAction ?? previous.retryAction,
+    retryable: next.retryable ?? previous.retryable,
+    stage: next.stage ?? previous.stage,
+    upstreamConversationId: next.upstreamConversationId ?? previous.upstreamConversationId,
+    upstreamResponseId: next.upstreamResponseId ?? previous.upstreamResponseId,
+    imageGenerationCallId: next.imageGenerationCallId ?? previous.imageGenerationCallId,
+    sourceAccountId: next.sourceAccountId ?? previous.sourceAccountId,
+    fileIds: next.fileIds ?? previous.fileIds,
+  };
+}
+
 export async function runRetryTurn(
   ctx: RetryTurnContext,
   conversationId: string,
   turn: ImageConversationTurn,
   imageId?: string,
 ) {
-  if (ctx.isSubmitting) {
-    toast.error("正在处理中，请稍后再试");
-    return;
-  }
-
   const prompt = turn.prompt?.trim() ?? "";
   const turnMode = turn.mode || "generate";
   const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];
@@ -58,38 +89,45 @@ export async function runRetryTurn(
     toast.error("没有可重试的失败图片");
     return;
   }
+  if (retryIndexes.some((index) => turn.images[index]?.status === "loading")) {
+    toast.error("该图片正在处理中");
+    return;
+  }
+
+  const retryKey = buildRetryKey(conversationId, turn.id, imageId, retryIndexes);
+  if (activeRetryKeys.has(retryKey)) {
+    toast.error("该图片正在处理中");
+    return;
+  }
+  activeRetryKeys.add(retryKey);
 
   const turnId = turn.id;
-  const loadingImages = turn.images.map((image, index) =>
-    retryIndexes.includes(index)
-      ? {
-        id: image.id,
-        status: "loading" as const,
-      }
-      : image,
-  );
-  const retryCount = turnMode === "generate" && turnImageSources.length === 0 ? retryIndexes.length : 1;
-
   const startedAt = Date.now();
-  const signal = beginRequest(ctx, {
-    conversationId,
-    turnId,
-    mode: turnMode,
-    count: retryCount,
-    variant: "standard",
-    imageId,
-  }, startedAt, false);
+  const abortController = new AbortController();
+  const signal = abortController.signal;
   ctx.focusConversation(conversationId);
 
   try {
     await ctx.updateConversation(conversationId, (current) => ({
       ...current,
-      turns: (current.turns ?? []).map((item) =>
-        item.id === turnId ? applyTurnGenerating(item, loadingImages) : item,
-      ),
+      turns: (current.turns ?? []).map((item) => {
+        if (item.id !== turnId) {
+          return item;
+        }
+
+        const loadingImages = item.images.map((image, index) =>
+          retryIndexes.includes(index)
+            ? {
+              id: image.id,
+              status: "loading" as const,
+            }
+            : image,
+        );
+        return applyTurnGenerating(item, loadingImages);
+      }),
     }));
 
-    let resultItems: StoredImage[] = [];
+    let resultPayloadItems: Parameters<typeof patchRetriedImages>[2] = [];
     if ((turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") && turn.upstreamConversationId) {
       const data = await recoverImageTask({
         conversationId: turn.upstreamConversationId,
@@ -101,7 +139,7 @@ export async function runRetryTurn(
         mode: turnMode,
         signal,
       });
-      resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+      resultPayloadItems = data.data || [];
     } else if (turnMode === "generate") {
       if (turnImageSources.length > 0) {
         const files = await Promise.all(
@@ -116,14 +154,14 @@ export async function runRetryTurn(
           quality: turnImageQuality,
           signal,
         });
-        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+        resultPayloadItems = data.data || [];
       } else {
         const data = await generateImage(prompt, turn.model, retryIndexes.length, {
           size: turnImageSize,
           quality: turnImageQuality,
           signal,
         });
-        resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+        resultPayloadItems = data.data || [];
       }
     }
 
@@ -140,7 +178,7 @@ export async function runRetryTurn(
         model: turn.model,
         signal,
       });
-      resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+      resultPayloadItems = data.data || [];
     }
 
     if (turnMode === "upscale") {
@@ -152,40 +190,47 @@ export async function runRetryTurn(
         model: turn.model,
         signal,
       });
-      resultItems = patchRetriedImages(turn.images, retryIndexes, data.data || []);
+      resultPayloadItems = data.data || [];
     }
 
-    const failedCount = countFailures(resultItems);
     const durationMs = Date.now() - startedAt;
+    let failedCount = 0;
+    let retriedFailedCount = 0;
     await ctx.updateConversation(conversationId, (current) => ({
       ...current,
-      turns: (current.turns ?? []).map((item) =>
-        item.id === turnId ? applyTurnSuccess(item, resultItems, failedCount, durationMs) : item,
-      ),
+      turns: (current.turns ?? []).map((item) => {
+        if (item.id !== turnId) {
+          return item;
+        }
+
+        const resultItems = patchRetriedImages(item.images, retryIndexes, resultPayloadItems);
+        failedCount = countFailures(resultItems);
+        retriedFailedCount = retryIndexes.filter((index) => resultItems[index]?.status === "error").length;
+        return keepGeneratingWhileAnyImageLoads(
+          preserveRetryMetaWhenFailuresRemain(
+            item,
+            applyTurnSuccess(item, resultItems, failedCount, durationMs),
+          ),
+        );
+      }),
     }));
 
-    if (failedCount > 0) {
-      toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);
+    if (retriedFailedCount > 0) {
+      toast.error(`重试完成，但有 ${retriedFailedCount} 张仍处理失败`);
     } else {
       toast.success(turnMode === "generate" ? "图片已生成" : turnMode === "edit" ? "图片已编辑" : "图片已增强");
     }
   } catch (error) {
     if (isCanceledRequestError(error)) {
-      const pendingAbortAction = ctx.pendingAbortActionRef.current;
-      if (
-        pendingAbortAction?.conversationId === conversationId &&
-        pendingAbortAction?.turnId === turnId &&
-        pendingAbortAction.retractTurn
-      ) {
-        ctx.pendingAbortActionRef.current = null;
-        await ctx.retractTurnAfterAbort(conversationId, turnId);
-        return;
-      }
       await ctx.updateConversation(conversationId, (current) => ({
         ...current,
-        turns: (current.turns ?? []).map((item) =>
-          item.id === turnId ? applyTurnCanceled(item, retryIndexes) : item,
-        ),
+        turns: (current.turns ?? []).map((item) => {
+          if (item.id !== turnId) {
+            return item;
+          }
+
+          return keepGeneratingWhileAnyImageLoads(applyTurnCanceled(item, retryIndexes));
+        }),
       }));
       return;
     }
@@ -193,12 +238,16 @@ export async function runRetryTurn(
     const failureMeta = extractRequestFailureMeta(error);
     await ctx.updateConversation(conversationId, (current) => ({
       ...current,
-      turns: (current.turns ?? []).map((item) =>
-        item.id === turnId ? applyTurnFailure(item, message, failureMeta, retryIndexes) : item,
-      ),
+      turns: (current.turns ?? []).map((item) => {
+        if (item.id !== turnId) {
+          return item;
+        }
+
+        return keepGeneratingWhileAnyImageLoads(applyTurnFailure(item, message, failureMeta, retryIndexes));
+      }),
     }));
     toast.error(message);
   } finally {
-    finishRequest(ctx, conversationId, turnId);
+    activeRetryKeys.delete(retryKey);
   }
 }

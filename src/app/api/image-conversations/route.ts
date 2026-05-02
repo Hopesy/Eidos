@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { clearImageConversationRecords, listImageConversationRecords, saveImageConversationRecord } from "@/server/repositories/image/conversation-repository";
+import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
+    const body = await parseJsonBody(request, recordBodySchema);
     return jsonOk({ item: await saveImageConversationRecord(body) });
   } catch (error) {
     return jsonError(error);

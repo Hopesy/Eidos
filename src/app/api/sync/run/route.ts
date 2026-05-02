@@ -1,18 +1,14 @@
 import { NextRequest } from "next/server";
 
 import { runSync } from "@/server/cpa-sync/runner";
-import { ApiError, jsonError, jsonOk } from "@/server/response";
+import { parseJsonBody, syncDirectionBodySchema } from "@/server/request-validation";
+import { jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
     try {
-
-        const body = (await request.json()) as { direction?: string };
-        const direction = String(body.direction || "").trim();
-        if (direction !== "pull" && direction !== "push" && direction !== "both") {
-            throw new ApiError(400, 'direction must be "pull", "push" or "both"');
-        }
+        const { direction } = await parseJsonBody(request, syncDirectionBodySchema);
 
         return jsonOk(await runSync(direction));
     } catch (error) {

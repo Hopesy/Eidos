@@ -1,23 +1,15 @@
 import { NextRequest } from "next/server";
 
 import { listAccounts, updateAccount } from "@/server/account-service";
+import { accountUpdateBodySchema, parseJsonBody } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
-import type { AccountStatus, AccountType } from "@/server/types";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as {
-      access_token?: string;
-      type?: AccountType;
-      status?: AccountStatus;
-      quota?: number;
-    };
-    const accessToken = String(body.access_token || "").trim();
-    if (!accessToken) {
-      throw new ApiError(400, "access_token is required");
-    }
+    const body = await parseJsonBody(request, accountUpdateBodySchema);
+    const accessToken = body.access_token;
     const updates = Object.fromEntries(
       Object.entries({
         type: body.type,

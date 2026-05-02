@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
 import { createImageApiError } from "@/server/image/error-response";
 import { logger } from "@/server/logger";
+import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {
     getImageErrorMeta,
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
                 };
             }
         } else {
-            const body = (await request.json()) as Record<string, unknown>;
+            const body = await parseJsonBody(request, recordBodySchema);
             prompt = String(body.prompt || "").trim();
             model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
             size = (String(body.size || "auto").trim() || "auto") as ImageGenerationSize;

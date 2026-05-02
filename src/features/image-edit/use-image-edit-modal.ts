@@ -17,8 +17,10 @@ export type BrushCursor = { x: number; y: number };
 type UseImageEditModalParams = {
   open: boolean;
   imageSrc: string;
+  mode?: "selection-edit" | "mask-only";
   isSubmitting: boolean;
-  onSubmit: (payload: { prompt: string; mask: MaskPayload }) => Promise<void>;
+  onSubmit?: (payload: { prompt: string; mask: MaskPayload }) => Promise<void>;
+  onSubmitMask?: (mask: MaskPayload) => Promise<void>;
 };
 
 function clampPoint(value: number): number {
@@ -72,8 +74,10 @@ async function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
 export function useImageEditModal({
   open,
   imageSrc,
+  mode = "selection-edit",
   isSubmitting,
   onSubmit,
+  onSubmitMask,
 }: UseImageEditModalParams) {
   const [prompt, setPrompt] = useState("");
   const [brushSize, setBrushSize] = useState(32);
@@ -370,17 +374,28 @@ export function useImageEditModal({
   };
 
   const handleSubmit = async () => {
-    const trimmedPrompt = prompt.trim();
-    if (!trimmedPrompt) {
-      toast.error("请输入编辑提示词");
-      return;
-    }
     if (!hasSelection) {
       toast.error("请先在图片上绘制选区");
       return;
     }
     try {
       const mask = await buildMaskPayload();
+      if (mode === "mask-only") {
+        if (!onSubmitMask) {
+          throw new Error("缺少遮罩提交处理器");
+        }
+        await onSubmitMask(mask);
+        return;
+      }
+
+      const trimmedPrompt = prompt.trim();
+      if (!trimmedPrompt) {
+        toast.error("请输入编辑提示词");
+        return;
+      }
+      if (!onSubmit) {
+        throw new Error("缺少编辑提交处理器");
+      }
       await onSubmit({ prompt: trimmedPrompt, mask });
     } catch (error) {
       const message = error instanceof Error ? error.message : "提交失败";

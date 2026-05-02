@@ -7,16 +7,9 @@ import { toast } from "sonner";
 import { AppImage as Image } from "@/components/app-image";
 import { getDesktopShellApi } from "@/lib/desktop-shell";
 import { cn } from "@/lib/utils";
+import type { ImageFileListItem } from "@/server/repositories/image/file-repository";
 
-type ImageFileItem = {
-  id: string;
-  role: string;
-  file_path: string;
-  public_path: string;
-  mime_type: string;
-  size_bytes: number;
-  created_at: string;
-};
+type ImageFileItem = ImageFileListItem;
 
 async function fetchImageFiles() {
   const response = await fetch("/api/image-files");
@@ -65,12 +58,14 @@ const roleColorMap: Record<string, string> = {
 };
 
 export type FilesSidebarProps = {
+  initialFiles?: ImageFileItem[];
   onOpenImage?: (publicPath: string) => void;
 };
 
-export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
-  const [files, setFiles] = useState<ImageFileItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function FilesSidebar({ initialFiles, onOpenImage }: FilesSidebarProps) {
+  const hasInitialFiles = initialFiles !== undefined;
+  const [files, setFiles] = useState<ImageFileItem[]>(initialFiles ?? []);
+  const [isLoading, setIsLoading] = useState(!hasInitialFiles);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const desktopShell = getDesktopShellApi();
 
@@ -96,8 +91,12 @@ export function FilesSidebar({ onOpenImage }: FilesSidebarProps) {
   };
 
   useEffect(() => {
+    if (hasInitialFiles) {
+      return;
+    }
+
     void loadFiles();
-  }, []);
+  }, [hasInitialFiles]);
 
   const handleOpenFolder = async () => {
     try {

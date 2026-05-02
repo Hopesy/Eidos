@@ -1,5 +1,22 @@
 # CHANFELOG
 
+## [v0.1.11] - 2026-05-02
+
+### Added
+- 新增 Next.js App Router 架构文档，明确 Server Component 页面壳、Client Component 交互层、Route Handler 校验与 feature/server 边界。
+- 图片编辑模式新增手绘遮罩入口，支持在已上传源图上直接添加遮罩。
+
+### Changed
+- 真实业务页面迁移到 `(app)` 路由组，并改为 Server Component 首屏取数 + Client Component 交互的结构。
+- 账号、图片、请求、设置页面拆分为页面壳与客户端组件，补齐 `loading`、`error`、`not-found` 边界文件。
+- 图片下载文件名改为 `提示词-模型ID-分辨率` 格式。
+
+### Fixed
+- 修复批量图片失败后，重试其中一张会锁住其他失败图片重试按钮的问题。
+- 修复生成完成后分辨率选择被重置的问题。
+- 修复图片文件列表从 SQLite 返回非普通对象导致 RSC 序列化失败的问题。
+- 为多张失败图片并发重试增加同会话更新队列，避免结果互相覆盖。
+
 ## [v0.1.10] - 2026-04-28
 
 ### Fixed

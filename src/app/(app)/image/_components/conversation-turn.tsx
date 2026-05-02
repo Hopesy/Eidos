@@ -19,6 +19,7 @@ import {
 import { AppImage as Image } from "@/components/app-image";
 import { cn } from "@/lib/utils";
 import type { ImageConversationTurn, ImageMode, StoredImage, StoredSourceImage } from "@/store/image-conversations";
+import type { DownloadImageFileOptions } from "@/features/image-workbench/browser-actions";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ export type ConversationTurnProps = {
     onPreviewImage: (dataUrl: string) => void;
     onEditTurn: (conversationId: string, turn: ImageConversationTurn) => void | Promise<void>;
     onCopyPrompt: (prompt: string) => void;
-    onDownloadImage: (image: StoredImage, fileName: string) => void;
+    onDownloadImage: (image: StoredImage, options?: DownloadImageFileOptions) => void;
 };
 
 // ─── 组件 ─────────────────────────────────────────────────────────────────────
@@ -241,6 +242,7 @@ export function ConversationTurn({
                             const shouldShowErrorState = image.status === "error" || (!isProcessing && turn.status === "error");
                             const errorMessage = image.error || turn.error || "未知错误";
                             const isRetryingCurrentImage = retryingImageId === image.id;
+                            const isCurrentImageProcessing = isProcessing || image.status === "loading";
                             const retryLabel = buildRetryButtonLabel(turn);
                             const imageDataUrl = buildImageDataUrl(image);
                             return (
@@ -332,10 +334,10 @@ export function ConversationTurn({
                                                 type="button"
                                                 className="inline-flex size-7 items-center justify-center rounded-lg text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
                                                 onClick={() =>
-                                                    onDownloadImage(
-                                                        image,
-                                                        image.file_path?.split("/").pop() || `${turn.title || "image"}-${index + 1}.png`,
-                                                    )
+                                                    onDownloadImage(image, {
+                                                        prompt: turn.prompt,
+                                                        model: turn.model,
+                                                    })
                                                 }
                                                 title="下载"
                                             >
@@ -362,7 +364,7 @@ export function ConversationTurn({
                                                 type="button"
                                                 className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-stone-100"
                                                 onClick={() => onRetryTurn(conversationId, turn, image.id)}
-                                                disabled={isSubmitting}
+                                                disabled={isRetryingCurrentImage}
                                                 aria-label="重试"
                                             >
                                                 <RotateCcw className={cn("size-3.5", isRetryingCurrentImage && "animate-spin")} />
@@ -385,7 +387,7 @@ export function ConversationTurn({
                                                 <div className="relative flex size-16 items-center justify-center rounded-[22px] border border-stone-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-900">
                                                     <div className="absolute inset-2 rounded-[16px] bg-[linear-gradient(135deg,#fafaf9,#f1f5f9)] dark:bg-[linear-gradient(135deg,#292524,#1c1917)]" />
                                                     <div className="relative flex items-center justify-center">
-                                                        {isProcessing ? (
+                                                        {isCurrentImageProcessing ? (
                                                             <LoaderCircle className="size-5 animate-spin text-stone-600 dark:text-stone-300" />
                                                         ) : (
                                                             <ImageIcon className="size-5 text-stone-400 dark:text-stone-500" />
@@ -397,12 +399,16 @@ export function ConversationTurn({
                                                 <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
                                                     {isProcessing && processingStatus
                                                         ? processingStatus.title
-                                                        : "正在创建占位图…"}
+                                                        : isCurrentImageProcessing
+                                                          ? "正在重新处理图片…"
+                                                          : "正在创建占位图…"}
                                                 </p>
                                                 <p className="text-xs leading-5 text-stone-400 dark:text-stone-500">
                                                     {isProcessing && processingStatus
                                                         ? processingStatus.detail
-                                                        : "已接收请求，正在准备图像画布"}
+                                                          : isCurrentImageProcessing
+                                                          ? "正在等待上游返回结果"
+                                                          : "已接收请求，正在准备图像画布"}
                                                 </p>
                                             </div>
                                         </div>

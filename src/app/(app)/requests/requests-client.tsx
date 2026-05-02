@@ -17,8 +17,13 @@ import {
     type RequestResultFilter,
 } from "@/features/requests/request-view-model";
 import { useRequestsPage } from "@/features/requests/use-requests-page";
+import type { RequestLogItem } from "@/lib/api";
 
-export default function RequestsPage() {
+type RequestsClientProps = {
+    initialItems: RequestLogItem[];
+};
+
+export function RequestsClient({ initialItems }: RequestsClientProps) {
     const {
         isLoading,
         isRefreshing,
@@ -30,7 +35,7 @@ export default function RequestsPage() {
         filteredItems,
         sortedItems,
         refreshItems,
-    } = useRequestsPage();
+    } = useRequestsPage(initialItems);
 
     return (
         <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">

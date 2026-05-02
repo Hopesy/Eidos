@@ -13,7 +13,10 @@ import {
   upscaleQualityOptions,
 } from "@/features/image-workbench/page-options";
 import { useImagePage } from "@/features/image-workbench/use-image-page";
+import type { RecoverableImageTaskItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import type { ImageFileListItem } from "@/server/repositories/image/file-repository";
+import type { ImageConversation } from "@/store/image-conversations";
 
 import { ComposerPanel } from "./_components/composer-panel";
 import { ConversationTurn } from "./_components/conversation-turn";
@@ -21,7 +24,19 @@ import { EmptyState } from "./_components/empty-state";
 import { FilesSidebar } from "./_components/files-sidebar";
 import { HistorySidebar } from "./_components/history-sidebar";
 
-export default function ImagePage() {
+type ImageClientProps = {
+  initialConversations: ImageConversation[];
+  initialFiles: ImageFileListItem[];
+  initialRecoverableTasks: RecoverableImageTaskItem[];
+  initialAvailableQuota: string;
+};
+
+export function ImageClient({
+  initialConversations,
+  initialFiles,
+  initialRecoverableTasks,
+  initialAvailableQuota,
+}: ImageClientProps) {
   const {
     uploadInputRef,
     maskInputRef,
@@ -50,6 +65,8 @@ export default function ImagePage() {
     activeRequest,
     editorTarget,
     setEditorTarget,
+    maskEditorTarget,
+    setMaskEditorTarget,
     previewImage,
     setPreviewImage,
     selectedConversation,
@@ -76,6 +93,7 @@ export default function ImagePage() {
     seedFromResult,
     openSelectionEditor,
     handleSelectionEditSubmit,
+    handleMaskEditorSubmit,
     handleRetryTurn,
     handleSubmit,
     handleComposerCancelAction,
@@ -85,7 +103,7 @@ export default function ImagePage() {
     handleCopyTurnPrompt,
     openImageInNewTab,
     downloadImageFile,
-  } = useImagePage();
+  } = useImagePage({ initialConversations, initialRecoverableTasks, initialAvailableQuota });
 
   return (
     <section
@@ -174,11 +192,7 @@ export default function ImagePage() {
                   submitElapsedSeconds={submitElapsedSeconds}
                   isSubmitting={isSubmitting}
                   retryingImageId={
-                    isSubmitting &&
-                    activeRequest?.conversationId === selectedConversation.id &&
-                    activeRequest?.turnId === turn.id
-                      ? activeRequest.imageId ?? null
-                      : null
+                    turn.images.find((image) => image.status === "loading")?.id ?? null
                   }
                   onOpenImageInNewTab={openImageInNewTab}
                   onOpenSelectionEditor={openSelectionEditor}
@@ -241,12 +255,16 @@ export default function ImagePage() {
             onUploadFiles={(files, role) => {
               void appendFiles(files, role);
             }}
+            onOpenMaskEditor={() => {
+              void handleMaskEditorSubmit("open");
+            }}
           />
         </div>
       </div>
 
       {!filesCollapsed ? (
         <FilesSidebar
+          initialFiles={initialFiles}
           onOpenImage={(publicPath) => {
             setPreviewImage(publicPath);
           }}
@@ -271,6 +289,21 @@ export default function ImagePage() {
           }
         }}
         onSubmit={handleSelectionEditSubmit}
+      />
+
+      <ImageEditModal
+        key={maskEditorTarget?.imageName || "mask-editor-modal"}
+        open={Boolean(maskEditorTarget)}
+        mode="mask-only"
+        imageName={maskEditorTarget?.imageName || "source.png"}
+        imageSrc={maskEditorTarget?.sourceDataUrl || ""}
+        isSubmitting={isSubmitting}
+        onClose={() => {
+          if (!isSubmitting) {
+            setMaskEditorTarget(null);
+          }
+        }}
+        onSubmitMask={handleMaskEditorSubmit}
       />
     </section>
   );

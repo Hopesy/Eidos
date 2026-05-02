@@ -18,8 +18,6 @@ import {
   type AccountType,
   type SyncStatusResponse,
 } from "@/lib/api";
-import { getCachedAccountsView, setCachedAccountsView } from "@/store/accounts-view-cache";
-import { getCachedSyncStatus, setCachedSyncStatus } from "@/store/sync-status-cache";
 
 import {
   buildAccountsSummary,
@@ -34,12 +32,18 @@ import {
   type AccountTypeFilter,
 } from "./account-view-model";
 
-export function useAccountsPage() {
+type UseAccountsPageOptions = {
+  initialAccounts?: Account[];
+  initialSyncStatus?: SyncStatusResponse;
+};
+
+export function useAccountsPage(options: UseAccountsPageOptions = {}) {
   const router = useRouter();
-  const cachedAccountsView = getCachedAccountsView();
+  const hasInitialAccounts = options.initialAccounts !== undefined;
+  const hasInitialSyncStatus = options.initialSyncStatus !== undefined;
   const didLoadRef = useRef(false);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const [accounts, setAccounts] = useState<Account[]>(() => cachedAccountsView?.items ?? []);
+  const [accounts, setAccounts] = useState<Account[]>(() => normalizeAccounts(options.initialAccounts ?? []));
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<AccountTypeFilter>("all");
@@ -48,14 +52,14 @@ export function useAccountsPage() {
   const [editType, setEditType] = useState<AccountType>("Free");
   const [editStatus, setEditStatus] = useState<AccountStatus>("正常");
   const [editQuota, setEditQuota] = useState("0");
-  const [isLoading, setIsLoading] = useState(() => !cachedAccountsView);
+  const [isLoading, setIsLoading] = useState(!hasInitialAccounts);
   const [refreshingAction, setRefreshingAction] = useState<"all" | "selected" | null>(null);
   const [refreshingRowToken, setRefreshingRowToken] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
-  const [isSyncLoading, setIsSyncLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(options.initialSyncStatus ?? null);
+  const [isSyncLoading, setIsSyncLoading] = useState(!hasInitialSyncStatus);
   const [syncRunningDirection, setSyncRunningDirection] = useState<"pull" | "push" | "both" | null>(null);
 
   const loadAccounts = async (silent = false) => {
@@ -78,31 +82,16 @@ export function useAccountsPage() {
 
   const loadSync = async ({
     silent = false,
-    force = false,
-    revalidate = false,
     suppressError = false,
   }: {
     silent?: boolean;
-    force?: boolean;
-    revalidate?: boolean;
     suppressError?: boolean;
   } = {}) => {
-    const cachedStatus = getCachedSyncStatus();
-    if (!silent && !force && cachedStatus) {
-      setSyncStatus(cachedStatus);
-      setIsSyncLoading(false);
-      if (revalidate) {
-        void loadSync({ silent: true, force: true, suppressError: true });
-      }
-      return;
-    }
-
     if (!silent) {
       setIsSyncLoading(true);
     }
     try {
       const data = await fetchSyncStatus();
-      setCachedSyncStatus(data);
       setSyncStatus(data);
     } catch (error) {
       if (!suppressError) {
@@ -121,7 +110,11 @@ export function useAccountsPage() {
       return;
     }
     didLoadRef.current = true;
-    void Promise.all([loadAccounts(Boolean(cachedAccountsView)), loadSync({ revalidate: true })]);
+    if (hasInitialAccounts && hasInitialSyncStatus) {
+      return;
+    }
+
+    void Promise.all([loadAccounts(hasInitialAccounts), loadSync()]);
   }, []);
 
   useEffect(() => {
@@ -134,15 +127,6 @@ export function useAccountsPage() {
       window.removeEventListener(APP_CREDENTIALS_REFRESHED_EVENT, handleCredentialsRefreshed);
     };
   }, []);
-
-  useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-    setCachedAccountsView({
-      items: accounts,
-    });
-  }, [accounts, isLoading]);
 
   const filteredAccounts = useMemo(
     () => filterAndSortAccounts(accounts, { query, typeFilter, statusFilter }),
@@ -168,7 +152,7 @@ export function useAccountsPage() {
       const data = await importAccountFiles(normalizedFiles);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
-      await loadSync({ silent: true, force: true });
+      await loadSync({ silent: true });
 
       const failedMessage = data.failed?.[0]?.error;
       if ((data.failed?.length ?? 0) > 0) {
@@ -197,7 +181,7 @@ export function useAccountsPage() {
       const data = await deleteAccounts(tokens);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
-      await loadSync({ silent: true, force: true });
+      await loadSync({ silent: true });
       const removed = data.removed ?? 0;
       if (syncView.configured) {
         toast.success(`本地已删除 ${removed} 个账户；若这些账号已同步到 CPA 远端，仍需在远端管理端删除，否则后续执行 pull / both 可能重新出现。`);
@@ -232,7 +216,7 @@ export function useAccountsPage() {
       const data = await refreshAccounts(accessTokens);
       setAccounts(normalizeAccounts(data.items));
       setSelectedIds((prev) => pruneSelectedIds(prev, data.items));
-      await loadSync({ silent: true, force: true });
+      await loadSync({ silent: true });
       if (data.errors.length > 0) {
         const firstError = data.errors[0]?.error;
         toast.error(
@@ -275,7 +259,7 @@ export function useAccountsPage() {
     setSyncRunningDirection(direction);
     try {
       const result = await runSync(direction);
-      await loadSync({ silent: true, force: true });
+      await loadSync({ silent: true });
 
       if (!result.ok && result.error) {
         toast.error(result.error);

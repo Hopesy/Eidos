@@ -11,9 +11,11 @@ export type ImageEditModalProps = {
     open: boolean;
     imageName: string;
     imageSrc: string;
+    mode?: "selection-edit" | "mask-only";
     isSubmitting?: boolean;
     onClose: () => void;
-    onSubmit: (payload: { prompt: string; mask: MaskPayload }) => Promise<void>;
+    onSubmit?: (payload: { prompt: string; mask: MaskPayload }) => Promise<void>;
+    onSubmitMask?: (mask: MaskPayload) => Promise<void>;
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -22,9 +24,11 @@ export function ImageEditModal({
     open,
     imageName,
     imageSrc,
+    mode = "selection-edit",
     isSubmitting = false,
     onClose,
     onSubmit,
+    onSubmitMask,
 }: ImageEditModalProps) {
     const {
         prompt,
@@ -58,8 +62,10 @@ export function ImageEditModal({
     } = useImageEditModal({
         open,
         imageSrc,
+        mode,
         isSubmitting,
         onSubmit,
+        onSubmitMask,
     });
 
     if (!open) return null;
@@ -82,7 +88,7 @@ export function ImageEditModal({
 
                     <div className="flex min-w-0 flex-col">
                         <span className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100">
-                            编辑图片
+                            {mode === "mask-only" ? "添加遮罩" : "编辑图片"}
                         </span>
                         <span className="truncate text-xs text-stone-500 dark:text-stone-400">{imageName}</span>
                     </div>
@@ -323,77 +329,67 @@ export function ImageEditModal({
             {/* ── Footer ─────────────────────────────────────────────────────────── */}
             <footer className="shrink-0 border-t border-stone-200 bg-white px-4 py-4 dark:border-stone-800 dark:bg-stone-900 sm:px-6">
                 <div className="mx-auto flex max-w-3xl flex-col gap-3">
-                    {/* Prompt textarea */}
-                    <div className="relative rounded-2xl border border-stone-200 bg-stone-50 shadow-sm transition-all focus-within:border-stone-300 focus-within:bg-white focus-within:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:focus-within:border-stone-600 dark:focus-within:bg-stone-800">
-                        <Textarea
-                            placeholder="描述你希望如何修改选区内的内容…"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            disabled={isSubmitting}
-                            rows={3}
-                            className={cn(
-                                "resize-none rounded-2xl border-0 bg-transparent px-5 py-4 text-sm text-stone-900",
-                                "placeholder:text-stone-400 focus-visible:ring-0 dark:text-stone-100 dark:placeholder:text-stone-500",
-                                "min-h-[80px] max-h-[180px]",
-                            )}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                                    e.preventDefault();
-                                    void handleSubmit();
-                                }
-                            }}
-                        />
-
-                        {/* Submit button */}
-                        <div className="flex items-center justify-end px-4 pb-3">
+                    {mode === "mask-only" ? (
+                        <div className="flex items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 dark:border-stone-700 dark:bg-stone-800">
+                            <div className="text-xs text-stone-500 dark:text-stone-400">
+                                保存后会把当前选区作为编辑模式遮罩加入工作台。
+                            </div>
                             <Button
                                 onClick={() => void handleSubmit()}
-                                disabled={isSubmitting || !prompt.trim() || !hasSelection}
+                                disabled={isSubmitting || !hasSelection}
                                 className={cn(
                                     "rounded-full px-5 text-sm font-medium transition-all",
                                     "bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200",
                                     "disabled:opacity-50",
                                 )}
                             >
-                                {isSubmitting ? (
-                                    <>
-                                        <svg
-                                            className="size-4 animate-spin"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <circle
-                                                className="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                strokeWidth="4"
-                                            />
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                            />
-                                        </svg>
-                                        提交中…
-                                    </>
-                                ) : (
-                                    "提交编辑"
-                                )}
+                                {isSubmitting ? "保存中…" : "保存遮罩"}
                             </Button>
                         </div>
-                    </div>
-
-                    {/* Keyboard hints */}
-                    <div className="flex items-center justify-center gap-4 text-[10px] text-stone-400 dark:text-stone-500">
-                        <span>⌘ Enter 提交</span>
-                        <span>·</span>
-                        <span>B 切换画笔</span>
-                        <span>·</span>
-                        <span>[ ] 调整笔刷</span>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="relative rounded-2xl border border-stone-200 bg-stone-50 shadow-sm transition-all focus-within:border-stone-300 focus-within:bg-white focus-within:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:focus-within:border-stone-600 dark:focus-within:bg-stone-800">
+                                <Textarea
+                                    placeholder="描述你希望如何修改选区内的内容…"
+                                    value={prompt}
+                                    onChange={(e) => setPrompt(e.target.value)}
+                                    disabled={isSubmitting}
+                                    rows={3}
+                                    className={cn(
+                                        "resize-none rounded-2xl border-0 bg-transparent px-5 py-4 text-sm text-stone-900",
+                                        "placeholder:text-stone-400 focus-visible:ring-0 dark:text-stone-100 dark:placeholder:text-stone-500",
+                                        "min-h-[80px] max-h-[180px]",
+                                    )}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                            e.preventDefault();
+                                            void handleSubmit();
+                                        }
+                                    }}
+                                />
+                                <div className="flex items-center justify-end px-4 pb-3">
+                                    <Button
+                                        onClick={() => void handleSubmit()}
+                                        disabled={isSubmitting || !prompt.trim() || !hasSelection}
+                                        className={cn(
+                                            "rounded-full px-5 text-sm font-medium transition-all",
+                                            "bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200",
+                                            "disabled:opacity-50",
+                                        )}
+                                    >
+                                        {isSubmitting ? "提交中…" : "提交编辑"}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-center gap-4 text-[10px] text-stone-400 dark:text-stone-500">
+                                <span>⌘ Enter 提交</span>
+                                <span>·</span>
+                                <span>B 切换画笔</span>
+                                <span>·</span>
+                                <span>[ ] 调整笔刷</span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </footer>
         </div>

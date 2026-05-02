@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { addAccounts, deleteAccounts, ensureAccountWatcherStarted, listAccounts, refreshAccounts } from "@/server/account-service";
+import { cleanStringList, parseJsonBody, tokenListBodySchema } from "@/server/request-validation";
 import { ApiError, jsonError, jsonOk } from "@/server/response";
 
 export const runtime = "nodejs";
@@ -17,8 +18,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureAccountWatcherStarted();
-    const body = (await request.json()) as { tokens?: string[] };
-    const tokens = Array.isArray(body.tokens) ? body.tokens.map((item) => String(item || "").trim()).filter(Boolean) : [];
+    const body = await parseJsonBody(request, tokenListBodySchema);
+    const tokens = cleanStringList(body.tokens);
     if (tokens.length === 0) {
       throw new ApiError(400, "tokens is required");
     }
@@ -37,8 +38,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const body = (await request.json()) as { tokens?: string[] };
-    const tokens = Array.isArray(body.tokens) ? body.tokens.map((item) => String(item || "").trim()).filter(Boolean) : [];
+    const body = await parseJsonBody(request, tokenListBodySchema);
+    const tokens = cleanStringList(body.tokens);
     if (tokens.length === 0) {
       throw new ApiError(400, "tokens is required");
     }

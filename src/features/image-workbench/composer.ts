@@ -13,6 +13,10 @@ export type PromptExample = {
   prompt: string;
 };
 
+type ResetComposerOptions = {
+  preserveImageSize?: boolean;
+};
+
 type ComposerContext = {
   mode: ImageMode;
   isSubmitting: boolean;
@@ -34,11 +38,17 @@ type ComposerContext = {
   openDraftConversation: () => void;
 };
 
-export function resetComposer(ctx: ComposerContext, nextMode: ImageMode = ctx.mode) {
+export function resetComposer(
+  ctx: ComposerContext,
+  nextMode: ImageMode = ctx.mode,
+  options: ResetComposerOptions = {},
+) {
   ctx.setMode(nextMode);
   ctx.setImagePrompt("");
   ctx.setImageCount("1");
-  ctx.setImageSize("auto");
+  if (!options.preserveImageSize) {
+    ctx.setImageSize("auto");
+  }
   ctx.setImageQuality("medium");
   ctx.setUpscaleQuality("medium");
   ctx.setReuseLatestResultForGenerate(true);
