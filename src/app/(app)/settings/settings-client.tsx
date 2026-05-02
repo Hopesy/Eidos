@@ -30,7 +30,7 @@ function HintTooltip({ text }: { text: string }) {
                 className="size-4 text-stone-400 transition-colors hover:text-stone-600"
                 aria-hidden="true"
             />
-            <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
+            <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block sm:left-1/2 sm:right-auto sm:-translate-x-1/2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
                 {text}
             </span>
         </span>
@@ -65,7 +65,7 @@ function ConfigSection({
 }) {
     return (
         <Card className="border-stone-200/60 bg-white shadow-sm rounded-2xl dark:border-stone-700 dark:bg-stone-900">
-            <CardContent className="px-5 py-4">
+            <CardContent className="px-4 py-4 sm:px-5">
                 <div className="mb-3">
                     <h2 className="text-sm font-semibold tracking-tight text-stone-900 dark:text-stone-100">{title}</h2>
                     {description ? <p className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{description}</p> : null}
@@ -142,16 +142,16 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
     } = useSettingsPage({ initialConfig, initialDefaultConfig, saveConfigAction });
 
     return (
-        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
+        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[22px] border border-stone-200 bg-[#fcfcfb] px-3 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:rounded-[30px] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-4">
                     <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm dark:from-stone-100 dark:to-stone-300" />
                     <div className="flex-1 -translate-y-[10px]">
-                        <h1 className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-50">配置管理</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-stone-950 sm:text-[28px] dark:text-stone-50">配置管理</h1>
                         <p className="mt-1 text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">管理系统配置与服务参数</p>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                     <Button
                         type="button"
                         variant="outline"
@@ -183,7 +183,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                 ) : (
                     <>
                         <ConfigSection title="图片与接入">
-                            <div className="flex items-end gap-2 md:col-span-2">
+                            <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:items-end">
                                 <div className="flex-1">
                                     <LabelWithHint id="chatgpt-base-url" label="图像 API 地址" hint="地址和 Key 可以预先填写；只有勾选启用后，图片生成/编辑/放大才会只走 API 通道" />
                                     <div className="relative">
@@ -257,7 +257,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                             </div>
 
                             {/* CPA：接口地址 + Management Key + 开关 同一行 */}
-                            <div className="flex items-end gap-2 md:col-span-2">
+                            <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:items-end">
                                 <div className="flex-1">
                                     <LabelWithHint id="cpa-base-url" label="CPA 接口地址" hint="CPA 代理服务的基础 URL" />
                                     <div className="relative">
@@ -297,7 +297,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                             </div>
 
                             {/* 代理：地址 + 开关 同一行 */}
-                            <div className="flex items-end gap-2 md:col-span-2">
+                            <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:items-end">
                                 <div className="flex-1">
                                     <LabelWithHint id="proxy-url" label="代理地址" hint="HTTP/HTTPS 代理 URL" />
                                     <div className="relative">

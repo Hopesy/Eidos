@@ -53,7 +53,7 @@ export function AccountsToolbar({
       </div>
 
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-        <div className="relative min-w-[260px]">
+        <div className="relative min-w-0 sm:min-w-[260px]">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-400" />
           <Input
             value={query}

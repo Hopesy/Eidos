@@ -84,7 +84,7 @@ export function HistorySidebar({
   onClearHistory,
 }: HistorySidebarProps) {
   return (
-    <aside className="order-2 w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:h-full lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
+    <aside className="order-2 max-h-[62dvh] w-full overflow-hidden rounded-2xl border border-stone-200/60 bg-gradient-to-b from-white to-stone-50/30 shadow-lg lg:order-none lg:h-full lg:max-h-none lg:min-h-0 dark:border-stone-700 dark:from-stone-900 dark:to-stone-800/30">
       <div className="flex h-full min-h-0 flex-col">
         {/* 头部 */}
         <div className="border-b border-stone-200/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-stone-700 dark:bg-stone-900/80">

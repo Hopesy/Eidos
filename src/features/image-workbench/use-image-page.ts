@@ -250,6 +250,14 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   }, []);
 
   useEffect(() => {
+    if (!window.matchMedia("(max-width: 1023px)").matches) {
+      return;
+    }
+    setHistoryCollapsed(true);
+    setFilesCollapsed(true);
+  }, []);
+
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (hasInitialConversations) {
         primeImageConversations(normalizedInitialConversations);

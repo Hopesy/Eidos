@@ -59,12 +59,12 @@ export function AccountsClient({ initialAccounts, initialSyncStatus }: AccountsC
   } = useAccountsPage({ initialAccounts, initialSyncStatus });
 
   return (
-    <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
+    <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-[22px] border border-stone-200 bg-[#fcfcfb] px-3 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:rounded-[30px] sm:px-5 sm:py-6 lg:px-6 lg:py-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm" />
           <div className="flex-1 -translate-y-[10px]">
-            <h1 className="text-[28px] font-bold tracking-tight text-stone-950">号池管理</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-stone-950 sm:text-[28px]">号池管理</h1>
             <p className="mt-1 text-[13px] leading-relaxed text-stone-500">管理账号池与同步配置</p>
           </div>
         </div>

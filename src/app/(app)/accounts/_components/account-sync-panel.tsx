@@ -77,7 +77,7 @@ export function AccountSyncPanel({
                 ))}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
               <Button
                 variant="outline"
                 className="h-10 rounded-xl border-stone-200 bg-white px-4 text-stone-700"

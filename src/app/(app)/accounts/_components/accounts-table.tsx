@@ -93,9 +93,177 @@ export function AccountsTable({
         </Card>
       ) : null}
 
+      {!(isLoading && accountsCount === 0) ? (
+        <div className="space-y-3 lg:hidden">
+          <div className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                className="h-9 flex-1 rounded-xl px-3 text-xs text-stone-500 hover:bg-stone-100"
+                onClick={() => void onRefreshSelectedAccounts(selectedTokens, "selected")}
+                disabled={selectedTokens.length === 0 || isAnyRefreshRunning}
+              >
+                {refreshingAction === "selected" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+                刷新选中
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-9 flex-1 rounded-xl px-3 text-xs text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                onClick={() => void onDeleteTokens(selectedTokens)}
+                disabled={selectedTokens.length === 0 || isDeleting}
+              >
+                {isDeleting ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                删除选中
+              </Button>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs text-stone-500">
+              <label className="inline-flex items-center gap-2">
+                <Checkbox checked={allCurrentSelected} onCheckedChange={(checked) => onToggleSelectAll(Boolean(checked))} />
+                全选当前列表
+              </label>
+              {selectedIds.length > 0 ? <span>已选择 {selectedIds.length} 项</span> : null}
+            </div>
+          </div>
+
+          {rows.map((account) => {
+            const StatusIcon = statusIconMap[account.status];
+            const imageGenLimit = extractImageGenLimit(account);
+            const imageGenRemaining = imageGenLimit.remaining;
+            const imageGenRestore = formatRelativeTime(imageGenLimit.resetAfter);
+
+            return (
+              <div key={account.id} className="rounded-2xl border border-white/80 bg-white/90 p-3 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    className="mt-1"
+                    checked={selectedIds.includes(account.id)}
+                    onCheckedChange={(checked) => {
+                      onToggleSelectedId(account.id, Boolean(checked));
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="truncate font-mono text-[13px] font-semibold tracking-tight text-stone-800">
+                            {maskToken(account.access_token)}
+                          </span>
+                          <button
+                            type="button"
+                            className="shrink-0 rounded p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+                            onClick={() => {
+                              void navigator.clipboard.writeText(account.access_token);
+                              toast.success("token 已复制");
+                            }}
+                            aria-label="复制 token"
+                          >
+                            <Copy className="size-3.5" />
+                          </button>
+                        </div>
+                        {account.email ? (
+                          <div className="mt-1 truncate text-xs text-stone-500" title={account.email}>
+                            {account.email}
+                          </div>
+                        ) : null}
+                      </div>
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium",
+                          account.status === "正常" && "bg-emerald-50 text-emerald-700",
+                          account.status === "限流" && "bg-amber-50 text-amber-700",
+                          account.status === "异常" && "bg-red-50/60 text-red-400",
+                          account.status === "禁用" && "bg-stone-100 text-stone-400",
+                        )}
+                      >
+                        <StatusIcon className="size-3" />
+                        {account.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-xl bg-stone-50 px-3 py-2">
+                        <div className="text-stone-400">类型</div>
+                        <div className="mt-1 font-medium text-stone-700">{account.type}</div>
+                      </div>
+                      <div className="rounded-xl bg-stone-50 px-3 py-2">
+                        <div className="text-stone-400">图片额度</div>
+                        <div className="mt-1 font-semibold text-stone-800">
+                          {imageGenRemaining == null ? "—" : formatQuota(imageGenRemaining)}
+                          <span className="ml-1 font-normal text-stone-400">/ {formatQuota(account.quota)}</span>
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-stone-50 px-3 py-2">
+                        <div className="text-stone-400">刷新时间</div>
+                        <div className="mt-1 font-mono text-[11px] text-stone-600">{formatTableTime(account.lastRefreshedAt)}</div>
+                      </div>
+                      <div className="rounded-xl bg-stone-50 px-3 py-2">
+                        <div className="text-stone-400">图片重置</div>
+                        <div className="mt-1 font-medium text-stone-700">{imageGenRestore}</div>
+                      </div>
+                    </div>
+
+                    {account.note ? (
+                      <div className="mt-2 line-clamp-2 text-xs text-stone-400" title={account.note}>
+                        {account.note}
+                      </div>
+                    ) : null}
+
+                    <div className="mt-3 flex items-center justify-end gap-1 text-stone-400">
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 transition hover:bg-stone-100 hover:text-stone-700"
+                        onClick={() => onOpenEditDialog(account)}
+                        disabled={isUpdating}
+                        title="编辑"
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 transition hover:bg-sky-50 hover:text-sky-500"
+                        onClick={() => void onRefreshSelectedAccounts([account.access_token], "row", account.access_token)}
+                        disabled={isAnyRefreshRunning}
+                        title="刷新状态"
+                      >
+                        {refreshingRowToken === account.access_token ? (
+                          <LoaderCircle className="size-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-4" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 transition hover:bg-rose-50 hover:text-rose-500"
+                        onClick={() => void onDeleteTokens([account.access_token])}
+                        disabled={isDeleting}
+                        title="删除本地账户"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {!isLoading && rows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/80 bg-white/90 px-6 py-14 text-center shadow-sm">
+              <div className="rounded-xl bg-stone-100 p-3 text-stone-500">
+                <Search className="size-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-stone-700">没有匹配的账户</p>
+                <p className="text-sm text-stone-500">调整筛选条件或搜索关键字后重试。</p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <Card
         className={cn(
-          "overflow-hidden rounded-2xl border-white/80 bg-white/90 shadow-sm",
+          "hidden overflow-hidden rounded-2xl border-white/80 bg-white/90 shadow-sm lg:block",
           isLoading && accountsCount === 0 ? "hidden" : "",
         )}
       >

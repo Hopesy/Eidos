@@ -232,7 +232,7 @@ export function TopNav() {
             </Link>
           </div>
 
-          <nav className="mt-3 grid grid-cols-2 gap-2">
+          <nav className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-2 sm:gap-2">
             {navItems.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
@@ -241,7 +241,7 @@ export function TopNav() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3 transition-all duration-200",
+                    "group relative flex min-w-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl border px-2 py-2.5 text-center transition-all duration-200 sm:flex-row sm:justify-start sm:gap-3 sm:px-3 sm:py-3 sm:text-left",
                     active
                       ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
                       : "border-transparent bg-white/60 text-stone-600 hover:border-white/80 hover:bg-white hover:text-stone-900 dark:bg-stone-800/30 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100",
@@ -250,7 +250,7 @@ export function TopNav() {
                   {active ? <span className="absolute inset-x-3 bottom-0 h-px bg-stone-950/10 dark:bg-stone-100/10" /> : null}
                   <span
                     className={cn(
-                      "flex shrink-0 size-9 items-center justify-center rounded-xl transition-all duration-200",
+                      "flex size-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200",
                       active
                         ? "bg-stone-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)] dark:bg-stone-100 dark:text-stone-900"
                         : "bg-white text-stone-600 group-hover:bg-white group-hover:text-stone-900 dark:bg-stone-800 dark:text-stone-400 dark:group-hover:bg-stone-800 dark:group-hover:text-stone-100",
@@ -258,9 +258,9 @@ export function TopNav() {
                   >
                     <Icon className="size-4" />
                   </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{item.label}</span>
-                    <span className="block truncate text-xs text-stone-500">
+                  <span className="min-w-0 max-w-full">
+                    <span className="block max-w-full truncate text-[11px] font-medium sm:text-sm">{item.label}</span>
+                    <span className="hidden truncate text-xs text-stone-500 sm:block">
                       {item.description}
                     </span>
                   </span>

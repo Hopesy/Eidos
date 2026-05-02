@@ -38,12 +38,12 @@ export function RequestsClient({ initialItems }: RequestsClientProps) {
     } = useRequestsPage(initialItems);
 
     return (
-        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-[30px] border border-stone-200 bg-[#fcfcfb] px-4 py-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
+        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-5 overflow-y-auto rounded-[22px] border border-stone-200 bg-[#fcfcfb] px-3 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:rounded-[30px] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-start gap-4">
                     <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm dark:from-stone-100 dark:to-stone-300" />
                     <div className="flex-1 -translate-y-[10px]">
-                        <h1 className="text-[28px] font-bold tracking-tight text-stone-950 dark:text-stone-50">调用请求</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-stone-950 sm:text-[28px] dark:text-stone-50">调用请求</h1>
                         <p className="mt-1 text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">查看图片生成请求历史与状态</p>
                     </div>
                 </div>
@@ -109,7 +109,102 @@ export function RequestsClient({ initialItems }: RequestsClientProps) {
                 </div>
             </div>
 
-            <Card className="border-stone-200/60 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+            <div className="space-y-3 lg:hidden">
+                {isLoading
+                    ? Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="h-32 animate-pulse rounded-2xl border border-stone-200/60 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900" />
+                    ))
+                    : sortedItems.map((item) => {
+                        const finalStatus = resolveRequestFinalStatus(item);
+                        const finalMeta = getRequestFinalStatusMeta(finalStatus);
+                        return (
+                            <div
+                                key={item.id}
+                                className={`rounded-2xl border p-3 shadow-sm ${
+                                    item.success
+                                        ? "border-stone-200/60 bg-white dark:border-stone-700 dark:bg-stone-900"
+                                        : "border-rose-100 bg-rose-50/70 dark:border-rose-900/30 dark:bg-rose-900/20"
+                                }`}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="text-xs font-medium text-stone-700 dark:text-stone-300">
+                                            {formatRequestTime(item.startedAt)}
+                                        </div>
+                                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                            <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                {item.operation || "—"}
+                                            </span>
+                                            <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                {item.model || "—"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <Badge variant={finalMeta.variant} className="shrink-0 rounded-md px-1.5 py-0.5 text-[10px]">
+                                        {finalMeta.label}
+                                    </Badge>
+                                </div>
+
+                                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                                    <div className="rounded-xl bg-white/70 px-2.5 py-2 dark:bg-stone-800/60">
+                                        <div className="text-stone-400">数量</div>
+                                        <div className="mt-1 font-medium text-stone-700 dark:text-stone-300">{item.count ?? "—"}</div>
+                                    </div>
+                                    <div className="rounded-xl bg-white/70 px-2.5 py-2 dark:bg-stone-800/60">
+                                        <div className="text-stone-400">尝试</div>
+                                        <div className="mt-1 font-medium text-stone-700 dark:text-stone-300">{item.attemptCount ?? "—"}</div>
+                                    </div>
+                                    <div className="rounded-xl bg-white/70 px-2.5 py-2 dark:bg-stone-800/60">
+                                        <div className="text-stone-400">耗时</div>
+                                        <div className="mt-1 font-medium text-stone-700 dark:text-stone-300">
+                                            {item.durationMs != null ? `${(item.durationMs / 1000).toFixed(1)}s` : "—"}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 space-y-1 text-xs">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-stone-400">接口</span>
+                                        <span className="truncate text-right text-stone-600 dark:text-stone-300">{item.endpoint || "—"}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-stone-400">账号</span>
+                                        <span className="truncate text-right text-stone-600 dark:text-stone-300">{item.accountEmail || "—"}</span>
+                                    </div>
+                                </div>
+
+                                {item.error || item.failureKind || item.retryAction || item.stage ? (
+                                    <div className="mt-3 rounded-xl border border-rose-100 bg-white/80 px-3 py-2 text-xs leading-5 text-rose-700 dark:border-rose-900/30 dark:bg-stone-900/60 dark:text-rose-300">
+                                        {item.error ? (
+                                            <div className="line-clamp-3 break-all">{item.error}</div>
+                                        ) : null}
+                                        {item.failureKind || item.retryAction || item.stage ? (
+                                            <div className="mt-1 flex flex-wrap gap-1">
+                                                {item.failureKind ? <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600">{item.failureKind}</span> : null}
+                                                {item.retryAction ? <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] text-blue-700">{item.retryAction}</span> : null}
+                                                {item.stage ? <span className="rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] text-amber-700">{item.stage}</span> : null}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                            </div>
+                        );
+                    })}
+
+                {!isLoading && filteredItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-stone-200/60 bg-white px-6 py-16 text-center shadow-sm dark:border-stone-700 dark:bg-stone-900">
+                        <div className="rounded-2xl bg-stone-100 p-3 text-stone-500 dark:bg-stone-800 dark:text-stone-400">
+                            <Activity className="size-5" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-stone-700 dark:text-stone-300">没有匹配的调用记录</p>
+                            <p className="text-sm text-stone-500 dark:text-stone-400">切换筛选条件，或者先发起一次图片请求。</p>
+                        </div>
+                    </div>
+                ) : null}
+            </div>
+
+            <Card className="hidden border-stone-200/60 bg-white shadow-sm lg:block dark:border-stone-700 dark:bg-stone-900">
                 <CardContent className="p-0">
                     <div className="h-[420px] overflow-y-auto">
                         <div className="overflow-x-auto">

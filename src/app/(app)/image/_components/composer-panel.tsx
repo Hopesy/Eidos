@@ -121,14 +121,14 @@ export function ComposerPanel({
         <div className="shrink-0 border-t border-stone-200/60 bg-white px-3 py-2.5 sm:px-5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
             <div className="mx-auto flex max-w-[980px] flex-col gap-2.5">
                 <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="inline-flex rounded-full bg-stone-100 p-1 shadow-sm ring-1 ring-stone-900/5 dark:bg-stone-800 dark:ring-stone-700">
+                    <div className="inline-flex w-full rounded-full bg-stone-100 p-1 shadow-sm ring-1 ring-stone-900/5 sm:w-auto dark:bg-stone-800 dark:ring-stone-700">
                         {modeOptions.map((item) => (
                             <button
                                 key={item.value}
                                 type="button"
                                 onClick={() => onModeChange(item.value)}
                                 className={cn(
-                                    "flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                                    "flex flex-1 items-center justify-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 sm:flex-none",
                                     mode === item.value
                                         ? "bg-[#20232d] text-white shadow-[0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] dark:bg-stone-100 dark:text-stone-900"
                                         : "text-stone-600 hover:text-stone-900 hover:bg-stone-50 dark:text-stone-400 dark:hover:text-stone-100 dark:hover:bg-stone-700",
@@ -142,9 +142,9 @@ export function ComposerPanel({
                         ))}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                         <Select value={imageModel} onValueChange={(value) => onImageModelChange(value as ImageModel)}>
-                            <SelectTrigger className="h-8 w-[140px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -177,7 +177,7 @@ export function ComposerPanel({
                         {mode === "generate" ? (
                             <>
                                 <Select value={imageSize} onValueChange={(value) => onImageSizeChange(value as ToolbarImageSize)}>
-                                    <SelectTrigger className="h-8 w-[110px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[110px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -198,7 +198,7 @@ export function ComposerPanel({
                                 </Select>
 
                                 <Select value={imageQuality} onValueChange={(value) => onImageQualityChange(value as ImageGenerationQuality)}>
-                                    <SelectTrigger className="h-8 w-[70px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[70px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         {renderQualityOption(
                                             imageQuality,
                                             imageQualityOptions.find((item) => item.value === imageQuality)?.label ?? "Auto",
@@ -217,7 +217,7 @@ export function ComposerPanel({
 
                         {mode === "upscale" ? (
                             <Select value={upscaleQuality} onValueChange={(value) => onUpscaleQualityChange(value as ImageGenerationQuality)}>
-                                <SelectTrigger className="h-8 w-[78px] rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[78px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                     {renderQualityOption(
                                         upscaleQuality,
                                         upscaleQualityOptions.find((item) => item.value === upscaleQuality)?.label ?? "Auto",
@@ -233,7 +233,7 @@ export function ComposerPanel({
                             </Select>
                         ) : null}
 
-                        <div className="flex h-8 items-center gap-2 rounded-lg bg-gradient-to-br from-stone-100 to-stone-50 px-3 shadow-sm ring-1 ring-stone-900/5 dark:from-stone-800 dark:to-stone-700 dark:ring-stone-700">
+                        <div className="flex h-8 items-center justify-between gap-2 rounded-lg bg-gradient-to-br from-stone-100 to-stone-50 px-3 shadow-sm ring-1 ring-stone-900/5 sm:justify-start dark:from-stone-800 dark:to-stone-700 dark:ring-stone-700">
                             <span className="text-xs font-medium text-stone-500 dark:text-stone-400">额度</span>
                             <span className="text-sm font-semibold text-stone-900 dark:text-stone-100">{availableQuota}</span>
                         </div>

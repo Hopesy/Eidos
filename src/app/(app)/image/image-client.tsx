@@ -134,7 +134,7 @@ export function ImageClient({
         />
       ) : null}
 
-      <div className="order-1 flex flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden dark:border-stone-700 dark:bg-stone-900">
+      <div className="order-1 flex min-h-[calc(100dvh-116px)] flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden dark:border-stone-700 dark:bg-stone-900">
         <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6 dark:border-stone-700 dark:bg-stone-900">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -175,7 +175,7 @@ export function ImageClient({
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
           ) : (
-            <div className="mx-auto flex w-full max-w-[980px] flex-col gap-8 px-4 py-8 sm:px-6">
+            <div className="mx-auto flex w-full max-w-[980px] flex-col gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-8">
               {selectedConversationTurns.map((turn) => (
                 <ConversationTurn
                   key={turn.id}

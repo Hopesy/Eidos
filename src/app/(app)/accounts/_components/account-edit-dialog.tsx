@@ -52,7 +52,7 @@ export function AccountEditDialog({
 }: AccountEditDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : null)}>
-      <DialogContent showCloseButton={false} className="rounded-2xl p-6">
+      <DialogContent showCloseButton={false} className="rounded-2xl p-4 sm:p-6">
         <DialogHeader className="gap-2">
           <DialogTitle>编辑账户</DialogTitle>
           <DialogDescription className="text-sm leading-6">手动修改账号状态、类型和额度。</DialogDescription>
