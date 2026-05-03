@@ -142,8 +142,8 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
     } = useSettingsPage({ initialConfig, initialDefaultConfig, saveConfigAction });
 
     return (
-        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-[22px] border border-stone-200 bg-[#fcfcfb] px-3 py-4 shadow-[0_14px_40px_rgba(15,23,42,0.05)] sm:rounded-[30px] sm:px-5 sm:py-6 lg:px-6 lg:py-7 dark:border-stone-700 dark:bg-stone-950">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none sm:rounded-[30px] sm:border sm:border-stone-200 sm:bg-[#fcfcfb] sm:px-5 sm:py-6 sm:shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:px-6 lg:py-7 dark:sm:border-stone-700 dark:sm:bg-stone-950">
+            <div className="hidden sm:flex sm:flex-col sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-start gap-4">
                     <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm dark:from-stone-100 dark:to-stone-300" />
                     <div className="flex-1 -translate-y-[10px]">

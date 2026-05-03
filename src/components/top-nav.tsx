@@ -6,18 +6,21 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   ImageIcon,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   RefreshCcw,
   Settings2,
   Shield,
+  Sun,
 } from "lucide-react";
 
 import { fetchVersionInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UpdateDialog } from "@/components/update-dialog";
 import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "@/components/theme-provider";
+import { UpdateDialog } from "@/components/update-dialog";
 
 const repositoryUrl = "https://github.com/Hopesy/Eidos";
 
@@ -29,11 +32,55 @@ function formatVersionLabel(value: string) {
 }
 
 const navItems = [
-  { href: "/image", label: "图片工作台", description: "生成、编辑与放大", icon: ImageIcon },
-  { href: "/accounts", label: "账号管理", description: "号池、额度与同步", icon: Shield },
-  { href: "/settings", label: "配置管理", description: "模式、接口与后端配置", icon: Settings2 },
-  { href: "/requests", label: "调用请求", description: "查看官方与 CPA 请求方向", icon: Activity },
+  { href: "/image", label: "图片", description: "生成、编辑与放大", pageTitle: "图片工作台", icon: ImageIcon },
+  { href: "/accounts", label: "账号", description: "号池、额度与同步", pageTitle: "号池管理", icon: Shield },
+  { href: "/requests", label: "请求", description: "查看调用状态与结果", pageTitle: "调用请求", icon: Activity },
+  { href: "/settings", label: "设置", description: "模式、接口与后端配置", pageTitle: "配置管理", icon: Settings2 },
 ];
+
+function isNavItemActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function resolveMobileTitle(pathname: string) {
+  const matched = navItems.find((item) => isNavItemActive(pathname, item.href));
+  return matched?.pageTitle ?? "EIDOS";
+}
+
+function resolveMobileSubtitle(pathname: string) {
+  const matched = navItems.find((item) => isNavItemActive(pathname, item.href));
+  return matched?.description ?? "本地图片工作流";
+}
+
+function MobileThemeButton() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!mounted) return;
+        setTheme(isDark ? "light" : "dark");
+      }}
+      className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200/80 bg-white/80 text-stone-600 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700/80 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-stone-100"
+      aria-label={isDark ? "切换到亮色模式" : "切换到暗色模式"}
+      disabled={!mounted}
+    >
+      {mounted ? (
+        isDark ? <Sun className="size-4" /> : <Moon className="size-4" />
+      ) : (
+        <Sun className="size-4" />
+      )}
+    </button>
+  );
+}
 
 type DesktopTopNavProps = {
   pathname: string;
@@ -103,7 +150,7 @@ function DesktopTopNav({
 
         <nav className="mt-4 space-y-1">
           {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isNavItemActive(pathname, item.href);
             const Icon = item.icon;
             return (
               <Link
@@ -114,11 +161,13 @@ function DesktopTopNav({
                   collapsed
                     ? "justify-center rounded-2xl px-0 py-1.5"
                     : "items-center gap-3 overflow-hidden rounded-2xl border px-3 py-3",
-                  !collapsed && (active
-                    ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
-                    : "border-transparent text-stone-600 hover:border-white/80 hover:bg-white/75 hover:text-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100"),
+                  !collapsed && (
+                    active
+                      ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
+                      : "border-transparent text-stone-600 hover:border-white/80 hover:bg-white/75 hover:text-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100"
+                  ),
                 )}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? item.pageTitle : undefined}
               >
                 {!collapsed && active ? (
                   <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-stone-950 dark:bg-stone-100" />
@@ -138,7 +187,7 @@ function DesktopTopNav({
                 </span>
                 {!collapsed ? (
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium">{item.label}</span>
+                    <span className="block truncate text-sm font-medium">{item.pageTitle}</span>
                     <span className="block truncate text-xs text-stone-500">
                       {item.description}
                     </span>
@@ -189,6 +238,185 @@ function DesktopTopNav({
   );
 }
 
+type MobileTopBarProps = {
+  pathname: string;
+  versionLabel: string;
+};
+
+function MobileTopBar({ pathname, versionLabel }: MobileTopBarProps) {
+  const [navOpen, setNavOpen] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  return (
+    <>
+      <header className="sticky top-0 z-40 lg:hidden">
+        <div className="rounded-[18px] border border-stone-200/80 bg-[#f5f5f3]/88 px-4 py-3 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-stone-700/80 dark:bg-stone-950/82">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setNavOpen(true)}
+                  className="inline-flex shrink-0 items-center rounded-full transition hover:opacity-85"
+                  aria-label="打开导航"
+                >
+                  <BrandMark className="size-9" />
+                </button>
+                <Link
+                  href="/image"
+                  className="inline-flex items-center gap-2 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 transition hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+                >
+                  EIDOS
+                </Link>
+              </div>
+              <div className="mt-2 min-w-0">
+                <h1 className="truncate text-[22px] font-semibold tracking-tight text-stone-950 dark:text-stone-50">
+                  {resolveMobileTitle(pathname)}
+                </h1>
+                <p className="truncate text-xs text-stone-500 dark:text-stone-400">
+                  {resolveMobileSubtitle(pathname)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <MobileThemeButton />
+              <button
+                type="button"
+                onClick={() => setShowUpdateDialog(true)}
+                className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200/80 bg-white/80 text-stone-600 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700/80 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-stone-100"
+                aria-label="检查更新"
+                title={versionLabel}
+              >
+                <RefreshCcw className="size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <UpdateDialog
+        open={showUpdateDialog}
+        onClose={() => setShowUpdateDialog(false)}
+        currentVersionLabel={versionLabel}
+      />
+
+      <div
+        className={cn(
+          "fixed inset-0 z-50 lg:hidden",
+          navOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        aria-hidden={!navOpen}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-stone-950/38 backdrop-blur-sm transition-opacity duration-200",
+            navOpen ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() => setNavOpen(false)}
+        />
+        <aside
+          className={cn(
+            "absolute inset-y-0 left-0 flex w-[min(84vw,320px)] max-w-full flex-col border-r border-stone-200/80 bg-[#f5f5f3]/98 p-4 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.45)] backdrop-blur-2xl transition-transform duration-200 dark:border-stone-700/80 dark:bg-stone-950/96",
+            navOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href="/image"
+              className="inline-flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 text-stone-900 dark:text-stone-100"
+              onClick={() => setNavOpen(false)}
+            >
+              <BrandMark className="size-9" />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold tracking-[0.18em]">EIDOS</div>
+                <div className="truncate text-xs text-stone-500 dark:text-stone-400">本地图片工作流</div>
+              </div>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setNavOpen(false)}
+              className="inline-flex size-9 items-center justify-center rounded-full border border-stone-200/80 bg-white/80 text-stone-600 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700/80 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-stone-100"
+              aria-label="关闭导航"
+            >
+              <PanelLeftClose className="size-4" />
+            </button>
+          </div>
+
+          <nav className="mt-5 space-y-2">
+            {navItems.map((item) => {
+              const active = isNavItemActive(pathname, item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setNavOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all duration-200",
+                    active
+                      ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
+                      : "border-transparent text-stone-600 hover:border-white/80 hover:bg-white/80 hover:text-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-2xl",
+                      active
+                        ? "bg-stone-950 text-white dark:bg-stone-100 dark:text-stone-900"
+                        : "bg-white/85 text-stone-600 dark:bg-stone-800/50 dark:text-stone-400",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{item.pageTitle}</span>
+                    <span className="block truncate text-xs text-stone-500">{item.description}</span>
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto space-y-2">
+            <div className="rounded-2xl border border-stone-200/80 bg-white/80 p-2.5 dark:border-stone-700 dark:bg-stone-900/80">
+              <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-stone-400 dark:text-stone-500">
+                当前版本
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUpdateDialog(true);
+                  setNavOpen(false);
+                }}
+                className="mt-1 inline-flex items-center gap-2 text-sm font-medium text-stone-700 transition hover:text-stone-950 dark:text-stone-300 dark:hover:text-stone-100"
+              >
+                <RefreshCcw className="size-3.5" />
+                {versionLabel}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <MobileThemeButton />
+              <a
+                href={repositoryUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-stone-200/80 bg-white/80 px-3 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700/80 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-stone-100"
+              >
+                GitHub
+              </a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </>
+  );
+}
+
 export function TopNav() {
   const pathname = usePathname();
   const isImageRoute = pathname === "/image" || pathname?.startsWith("/image/");
@@ -218,58 +446,7 @@ export function TopNav() {
 
   return (
     <>
-      <header className="lg:hidden">
-        <div className="rounded-[16px] border border-stone-200 bg-[#f0f0ed] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-stone-700 dark:bg-stone-900 dark:shadow-none">
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              href="/image"
-              className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/70 dark:hover:bg-stone-800/50"
-            >
-              <BrandMark className="size-10" />
-              <span className="min-w-0 truncate text-sm font-semibold tracking-[0.18em] text-stone-900 dark:text-stone-100">
-                EIDOS
-              </span>
-            </Link>
-          </div>
-
-          <nav className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-2 sm:gap-2">
-            {navItems.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "group relative flex min-w-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl border px-2 py-2.5 text-center transition-all duration-200 sm:flex-row sm:justify-start sm:gap-3 sm:px-3 sm:py-3 sm:text-left",
-                    active
-                      ? "border-stone-200/90 bg-white text-stone-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:shadow-none"
-                      : "border-transparent bg-white/60 text-stone-600 hover:border-white/80 hover:bg-white hover:text-stone-900 dark:bg-stone-800/30 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:bg-stone-800/50 dark:hover:text-stone-100",
-                  )}
-                >
-                  {active ? <span className="absolute inset-x-3 bottom-0 h-px bg-stone-950/10 dark:bg-stone-100/10" /> : null}
-                  <span
-                    className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-xl transition-all duration-200",
-                      active
-                        ? "bg-stone-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.22)] dark:bg-stone-100 dark:text-stone-900"
-                        : "bg-white text-stone-600 group-hover:bg-white group-hover:text-stone-900 dark:bg-stone-800 dark:text-stone-400 dark:group-hover:bg-stone-800 dark:group-hover:text-stone-100",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="min-w-0 max-w-full">
-                    <span className="block max-w-full truncate text-[11px] font-medium sm:text-sm">{item.label}</span>
-                    <span className="hidden truncate text-xs text-stone-500 sm:block">
-                      {item.description}
-                    </span>
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </header>
+      <MobileTopBar pathname={pathname} versionLabel={versionLabel} />
       <DesktopTopNav
         pathname={pathname}
         defaultCollapsed={isImageRoute}

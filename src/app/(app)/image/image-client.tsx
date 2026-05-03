@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
@@ -37,6 +38,11 @@ export function ImageClient({
   initialRecoverableTasks,
   initialAvailableQuota,
 }: ImageClientProps) {
+  const isDesktopViewport = () =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
+  const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
   const {
     uploadInputRef,
     maskInputRef,
@@ -105,6 +111,12 @@ export function ImageClient({
     downloadImageFile,
   } = useImagePage({ initialConversations, initialRecoverableTasks, initialAvailableQuota });
 
+  useEffect(() => {
+    if (selectedConversationId) {
+      setMobileHistoryOpen(false);
+    }
+  }, [selectedConversationId]);
+
   return (
     <section
       className={cn(
@@ -119,20 +131,64 @@ export function ImageClient({
       )}
     >
       {!historyCollapsed ? (
-        <HistorySidebar
-          conversations={conversations}
-          selectedConversationId={selectedConversationId}
-          isLoadingHistory={isLoadingHistory}
-          onSelect={focusConversation}
-          onDelete={(id) => {
-            void handleDeleteConversation(id);
-          }}
-          onCreateDraft={handleCreateDraft}
-          onClearHistory={() => {
-            void handleClearHistory();
-          }}
-        />
+        <div className="hidden lg:block lg:min-h-0">
+          <HistorySidebar
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            isLoadingHistory={isLoadingHistory}
+            onSelect={focusConversation}
+            onDelete={(id) => {
+              void handleDeleteConversation(id);
+            }}
+            onCreateDraft={handleCreateDraft}
+            onClearHistory={() => {
+              void handleClearHistory();
+            }}
+          />
+        </div>
       ) : null}
+
+      <div
+        className={cn(
+          "fixed inset-0 z-40 lg:hidden",
+          mobileHistoryOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        aria-hidden={!mobileHistoryOpen}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-stone-950/38 backdrop-blur-sm transition-opacity duration-200",
+            mobileHistoryOpen ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() => setMobileHistoryOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-[min(86vw,360px)] max-w-full border-r border-stone-200/80 bg-[#f5f5f3]/98 p-1 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.45)] backdrop-blur-2xl transition-transform duration-200 dark:border-stone-700/80 dark:bg-stone-950/96",
+            mobileHistoryOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <HistorySidebar
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            isLoadingHistory={isLoadingHistory}
+            onSelect={(id) => {
+              setMobileHistoryOpen(false);
+              focusConversation(id);
+            }}
+            onDelete={(id) => {
+              void handleDeleteConversation(id);
+            }}
+            onCreateDraft={() => {
+              setMobileHistoryOpen(false);
+              handleCreateDraft();
+            }}
+            onClearHistory={() => {
+              void handleClearHistory();
+            }}
+          />
+        </div>
+      </div>
 
       <div className="order-1 flex min-h-[calc(100dvh-116px)] flex-col overflow-visible rounded-[18px] border border-stone-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:order-none lg:min-h-0 lg:overflow-hidden dark:border-stone-700 dark:bg-stone-900">
         <div className="shrink-0 border-b border-stone-200/80 bg-white px-4 py-2.5 sm:px-6 dark:border-stone-700 dark:bg-stone-900">
@@ -140,26 +196,40 @@ export function ImageClient({
             <div className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
-                onClick={() => setHistoryCollapsed((current) => !current)}
+                onClick={() => {
+                  if (isDesktopViewport()) {
+                    setHistoryCollapsed((current) => !current);
+                    return;
+                  }
+                  setMobileHistoryOpen(true);
+                }}
                 className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
                 title={historyCollapsed ? "展开历史" : "收起历史"}
               >
                 {historyCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
               </button>
-              <h1 className="shrink-0 text-sm font-medium text-stone-900 dark:text-stone-100">图片工作台</h1>
-              <span className="text-stone-300 dark:text-stone-600">/</span>
-              {selectedConversation?.title ? (
-                <span className="truncate text-xs text-stone-500 dark:text-stone-400">
-                  {selectedConversation.title}
-                </span>
-              ) : (
-                <span className="truncate text-xs text-stone-400 dark:text-stone-500">新会话草稿</span>
-              )}
+              <div className="min-w-0 lg:flex lg:min-w-0 lg:items-center lg:gap-2">
+                <h1 className="hidden shrink-0 text-sm font-medium text-stone-900 dark:text-stone-100 lg:block">图片工作台</h1>
+                <span className="hidden text-stone-300 dark:text-stone-600 lg:block">/</span>
+                {selectedConversation?.title ? (
+                  <span className="truncate text-xs text-stone-500 dark:text-stone-400">
+                    {selectedConversation.title}
+                  </span>
+                ) : (
+                  <span className="truncate text-xs text-stone-400 dark:text-stone-500">新会话草稿</span>
+                )}
+              </div>
             </div>
 
             <button
               type="button"
-              onClick={() => setFilesCollapsed((current) => !current)}
+              onClick={() => {
+                if (isDesktopViewport()) {
+                  setFilesCollapsed((current) => !current);
+                  return;
+                }
+                setMobileFilesOpen(true);
+              }}
               className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-stone-200 text-stone-500 transition hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200"
               title={filesCollapsed ? "展开文件" : "收起文件"}
             >
@@ -170,7 +240,7 @@ export function ImageClient({
 
         <div
           ref={resultsViewportRef}
-          className="hide-scrollbar min-h-0 flex-1 overflow-visible bg-[#fcfcfb] lg:overflow-y-auto dark:bg-stone-950"
+          className="hide-scrollbar min-h-0 flex-1 overflow-visible bg-[#fcfcfb] pb-[220px] lg:pb-0 lg:overflow-y-auto dark:bg-stone-950"
         >
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
@@ -212,7 +282,7 @@ export function ImageClient({
           )}
         </div>
 
-        <div className="shrink-0">
+        <div className="fixed inset-x-1 bottom-[calc(env(safe-area-inset-bottom)+0.25rem)] z-30 shrink-0 lg:static lg:inset-auto">
           <ComposerPanel
             imageModel={imageModel}
             imageModelOptions={imageModelOptions}
@@ -263,13 +333,45 @@ export function ImageClient({
       </div>
 
       {!filesCollapsed ? (
-        <FilesSidebar
-          initialFiles={initialFiles}
-          onOpenImage={(publicPath) => {
-            setPreviewImage(publicPath);
-          }}
-        />
+        <div className="hidden lg:block lg:min-h-0">
+          <FilesSidebar
+            initialFiles={initialFiles}
+            onOpenImage={(publicPath) => {
+              setPreviewImage(publicPath);
+            }}
+          />
+        </div>
       ) : null}
+
+      <div
+        className={cn(
+          "fixed inset-0 z-40 lg:hidden",
+          mobileFilesOpen ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        aria-hidden={!mobileFilesOpen}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-stone-950/38 backdrop-blur-sm transition-opacity duration-200",
+            mobileFilesOpen ? "opacity-100" : "opacity-0",
+          )}
+          onClick={() => setMobileFilesOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-y-0 right-0 w-[min(86vw,360px)] max-w-full border-l border-stone-200/80 bg-[#f5f5f3]/98 p-1 shadow-[0_24px_64px_-24px_rgba(15,23,42,0.45)] backdrop-blur-2xl transition-transform duration-200 dark:border-stone-700/80 dark:bg-stone-950/96",
+            mobileFilesOpen ? "translate-x-0" : "translate-x-full",
+          )}
+        >
+          <FilesSidebar
+            initialFiles={initialFiles}
+            onOpenImage={(publicPath) => {
+              setMobileFilesOpen(false);
+              setPreviewImage(publicPath);
+            }}
+          />
+        </div>
+      </div>
 
       <ImagePreviewModal
         open={previewImage !== null}

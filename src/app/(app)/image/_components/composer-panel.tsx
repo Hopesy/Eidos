@@ -142,9 +142,9 @@ export function ComposerPanel({
                         ))}
                     </div>
 
-                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                    <div className="flex w-full flex-nowrap items-center gap-1 sm:gap-2">
                         <Select value={imageModel} onValueChange={(value) => onImageModelChange(value as ImageModel)}>
-                            <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <SelectTrigger className="h-8 w-[104px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -160,7 +160,7 @@ export function ComposerPanel({
                         </Select>
 
                         {mode === "generate" && !hasGenerateReferences ? (
-                            <div className="flex h-8 items-center gap-1.5 rounded-lg border border-stone-200/80 bg-white px-2.5 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <div className="flex h-8 w-[52px] shrink-0 items-center gap-0.5 rounded-lg border border-stone-200/80 bg-white px-1.5 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 sm:w-auto sm:gap-1.5 sm:px-2.5 dark:border-stone-700 dark:bg-stone-800 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <Hash className="size-3.5 text-stone-400 dark:text-stone-500" />
                                 <Input
                                     type="number"
@@ -169,7 +169,7 @@ export function ComposerPanel({
                                     step="1"
                                     value={imageCount}
                                     onChange={(event) => onImageCountChange(event.target.value)}
-                                    className="h-6 w-[42px] border-0 bg-transparent px-0 text-center text-sm font-semibold text-stone-900 shadow-none focus-visible:ring-0 dark:text-stone-100"
+                                    className="h-6 w-[22px] border-0 bg-transparent px-0 text-center text-[11px] font-semibold text-stone-900 shadow-none focus-visible:ring-0 sm:w-[42px] sm:text-sm dark:text-stone-100"
                                 />
                             </div>
                         ) : null}
@@ -177,7 +177,7 @@ export function ComposerPanel({
                         {mode === "generate" ? (
                             <>
                                 <Select value={imageSize} onValueChange={(value) => onImageSizeChange(value as ToolbarImageSize)}>
-                                    <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[110px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-[78px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[110px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -198,7 +198,7 @@ export function ComposerPanel({
                                 </Select>
 
                                 <Select value={imageQuality} onValueChange={(value) => onImageQualityChange(value as ImageGenerationQuality)}>
-                                    <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[70px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-[56px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[70px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         {renderQualityOption(
                                             imageQuality,
                                             imageQualityOptions.find((item) => item.value === imageQuality)?.label ?? "Auto",
@@ -217,7 +217,7 @@ export function ComposerPanel({
 
                         {mode === "upscale" ? (
                             <Select value={upscaleQuality} onValueChange={(value) => onUpscaleQualityChange(value as ImageGenerationQuality)}>
-                                <SelectTrigger className="h-8 w-full rounded-lg border-stone-200/80 bg-white text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[78px] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                <SelectTrigger className="h-8 w-[58px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[78px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                     {renderQualityOption(
                                         upscaleQuality,
                                         upscaleQualityOptions.find((item) => item.value === upscaleQuality)?.label ?? "Auto",
@@ -233,9 +233,9 @@ export function ComposerPanel({
                             </Select>
                         ) : null}
 
-                        <div className="flex h-8 items-center justify-between gap-2 rounded-lg bg-gradient-to-br from-stone-100 to-stone-50 px-3 shadow-sm ring-1 ring-stone-900/5 sm:justify-start dark:from-stone-800 dark:to-stone-700 dark:ring-stone-700">
-                            <span className="text-xs font-medium text-stone-500 dark:text-stone-400">额度</span>
-                            <span className="text-sm font-semibold text-stone-900 dark:text-stone-100">{availableQuota}</span>
+                        <div className="ml-auto flex h-8 shrink-0 items-center justify-between gap-1 rounded-lg bg-gradient-to-br from-stone-100 to-stone-50 px-2 shadow-sm ring-1 ring-stone-900/5 sm:ml-0 sm:justify-start sm:gap-2 sm:px-3 dark:from-stone-800 dark:to-stone-700 dark:ring-stone-700">
+                            <span className="whitespace-nowrap text-[10px] font-medium text-stone-500 dark:text-stone-400 sm:text-xs">额度</span>
+                            <span className="whitespace-nowrap text-[11px] font-semibold text-stone-900 sm:text-sm dark:text-stone-100">{availableQuota}</span>
                         </div>
                     </div>
                 </div>
