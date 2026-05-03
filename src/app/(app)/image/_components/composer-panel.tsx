@@ -120,15 +120,15 @@ export function ComposerPanel({
     return (
         <div className="shrink-0 border-t border-stone-200/60 bg-white px-3 py-2.5 sm:px-5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
             <div className="mx-auto flex max-w-[980px] flex-col gap-2.5">
-                <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="inline-flex w-full rounded-full bg-stone-100 p-1 shadow-sm ring-1 ring-stone-900/5 sm:w-auto dark:bg-stone-800 dark:ring-stone-700">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <div className="inline-flex w-full shrink-0 rounded-full bg-stone-100 p-1 shadow-sm ring-1 ring-stone-900/5 sm:w-[222px] dark:bg-stone-800 dark:ring-stone-700">
                         {modeOptions.map((item) => (
                             <button
                                 key={item.value}
                                 type="button"
                                 onClick={() => onModeChange(item.value)}
                                 className={cn(
-                                    "flex flex-1 items-center justify-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 sm:flex-none",
+                                    "flex flex-1 items-center justify-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 sm:flex-1",
                                     mode === item.value
                                         ? "bg-[#20232d] text-white shadow-[0_2px_8px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] dark:bg-stone-100 dark:text-stone-900"
                                         : "text-stone-600 hover:text-stone-900 hover:bg-stone-50 dark:text-stone-400 dark:hover:text-stone-100 dark:hover:bg-stone-700",
@@ -142,9 +142,9 @@ export function ComposerPanel({
                         ))}
                     </div>
 
-                    <div className="flex w-full flex-nowrap items-center gap-1 sm:gap-2">
+                    <div className="flex w-full flex-nowrap items-center gap-1 sm:flex-1 sm:flex-wrap sm:justify-end sm:gap-2">
                         <Select value={imageModel} onValueChange={(value) => onImageModelChange(value as ImageModel)}>
-                            <SelectTrigger className="h-8 w-[104px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <SelectTrigger className="h-8 w-[112px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -177,7 +177,7 @@ export function ComposerPanel({
                         {mode === "generate" ? (
                             <>
                                 <Select value={imageSize} onValueChange={(value) => onImageSizeChange(value as ToolbarImageSize)}>
-                                    <SelectTrigger className="h-8 w-[78px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[110px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-[84px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[110px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -198,7 +198,7 @@ export function ComposerPanel({
                                 </Select>
 
                                 <Select value={imageQuality} onValueChange={(value) => onImageQualityChange(value as ImageGenerationQuality)}>
-                                    <SelectTrigger className="h-8 w-[56px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[70px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-[60px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[86px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         {renderQualityOption(
                                             imageQuality,
                                             imageQualityOptions.find((item) => item.value === imageQuality)?.label ?? "Auto",
@@ -217,7 +217,7 @@ export function ComposerPanel({
 
                         {mode === "upscale" ? (
                             <Select value={upscaleQuality} onValueChange={(value) => onUpscaleQualityChange(value as ImageGenerationQuality)}>
-                                <SelectTrigger className="h-8 w-[58px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[78px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                <SelectTrigger className="h-8 w-[62px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 shadow-sm ring-1 ring-stone-900/5 transition-all hover:border-stone-300 hover:shadow focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[92px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                     {renderQualityOption(
                                         upscaleQuality,
                                         upscaleQualityOptions.find((item) => item.value === upscaleQuality)?.label ?? "Auto",
