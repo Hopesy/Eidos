@@ -165,27 +165,26 @@ export function AccountsTable({
                             {account.email}
                           </div>
                         ) : null}
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium",
+                            account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+                            account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                            account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
+                            account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
+                          )}
+                        >
+                          <StatusIcon className="size-3" />
+                          {account.status}
+                        </span>
                         {account.refresh_error ? (
-                          <div
-                            className="mt-1 line-clamp-2 text-[11px] leading-4 text-red-500 dark:text-red-400"
-                            title={account.refresh_error}
-                          >
+                          <span className="max-w-[140px] text-right text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
                             {account.refresh_error}
-                          </div>
+                          </span>
                         ) : null}
                       </div>
-                      <span
-                        className={cn(
-                          "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium",
-                          account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-                          account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-                          account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
-                          account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
-                        )}
-                      >
-                        <StatusIcon className="size-3" />
-                        {account.status}
-                      </span>
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
@@ -321,7 +320,7 @@ export function AccountsTable({
                     <Checkbox checked={allCurrentSelected} onCheckedChange={(checked) => onToggleSelectAll(Boolean(checked))} />
                   </th>
                   <th className="w-72 px-3 py-2 text-left text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">账号 / Token</th>
-                  <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">状态</th>
+                  <th className="w-44 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">状态</th>
                   <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">类型</th>
                   <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">图片额度</th>
                   <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">刷新时间</th>
@@ -377,30 +376,29 @@ export function AccountsTable({
                               {account.note}
                             </span>
                           ) : null}
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-1.5 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                              account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+                              account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+                              account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
+                              account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
+                            )}
+                          >
+                            <StatusIcon className="size-3" />
+                            {account.status}
+                          </span>
                           {account.refresh_error ? (
-                            <span
-                              className="truncate text-[11px] leading-4 text-red-500 dark:text-red-400"
-                              title={account.refresh_error}
-                            >
+                            <span className="max-w-[150px] truncate text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
                               {account.refresh_error}
                             </span>
                           ) : null}
                         </div>
-                      </td>
-
-                      <td className="px-3 py-1.5 text-center whitespace-nowrap">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                            account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-                            account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-                            account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
-                            account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
-                          )}
-                        >
-                          <StatusIcon className="size-3" />
-                          {account.status}
-                        </span>
                       </td>
 
                       <td className="px-3 py-1.5 text-center whitespace-nowrap">

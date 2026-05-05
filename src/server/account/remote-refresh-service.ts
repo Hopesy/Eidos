@@ -138,7 +138,7 @@ function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
 
   if (normalized.includes("/backend-api/me failed: http 401")) {
     return {
-      message: "访问令牌失效，或账号授权已被撤销",
+      message: "访问令牌失效",
       status: "异常",
       quota: 0,
       reason: "auth_invalid",
@@ -165,7 +165,7 @@ function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
 
   if (normalized.includes("/backend-api/conversation/init failed: http 401")) {
     return {
-      message: "会话初始化失败，当前授权已失效",
+      message: "访问令牌失效",
       status: "异常",
       quota: 0,
       reason: "auth_invalid",

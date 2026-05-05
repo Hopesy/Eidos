@@ -169,7 +169,7 @@ describe("account remote refresh service", () => {
 
     assert.equal(refreshed?.status, "异常");
     assert.equal(refreshed?.quota, 0);
-    assert.equal(refreshed?.refresh_error, "访问令牌失效，或账号授权已被撤销");
+    assert.equal(refreshed?.refresh_error, "访问令牌失效");
     assert.equal(refreshed?.refresh_error_reason, "auth_invalid");
     assert.equal(store.record("token-401")?.status, "异常");
     assert.equal(store.record("token-401")?.quota, 0);
@@ -217,7 +217,7 @@ describe("account remote refresh service", () => {
     assert.deepEqual(calls, ["token-a", "token-b"]);
     assert.deepEqual(result.errors, [{
       access_token: "token-b",
-      error: "访问令牌失效，或账号授权已被撤销",
+      error: "访问令牌失效",
       reason: "auth_invalid",
     }]);
     assert.equal(store.record("token-a")?.quota, 9);
@@ -225,7 +225,7 @@ describe("account remote refresh service", () => {
     assert.equal(store.record("token-a")?.last_refreshed_at, "2026-04-30T12:00:00.000Z");
     assert.equal(store.record("token-b")?.status, "异常");
     assert.equal(store.record("token-b")?.quota, 0);
-    assert.equal(store.record("token-b")?.refresh_error, "访问令牌失效，或账号授权已被撤销");
+    assert.equal(store.record("token-b")?.refresh_error, "访问令牌失效");
     assert.equal(store.record("token-b")?.refresh_error_reason, "auth_invalid");
     assert.equal(result.items.find((item) => item.access_token === "token-a")?.quota, 9);
     assert.equal(result.items.find((item) => item.access_token === "token-b")?.status, "异常");
