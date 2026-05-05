@@ -33,6 +33,20 @@ const defaultDependencies = {
   now: () => new Date().toISOString(),
 };
 
+type AccountRefreshFailure = {
+  message: string;
+  status: "正常" | "限流" | "异常";
+  quota?: number;
+  reason:
+    | "auth_invalid"
+    | "account_restricted"
+    | "rate_limited"
+    | "conversation_init_failed"
+    | "network_error"
+    | "request_timeout"
+    | "unknown";
+};
+
 function cleanToken(value: unknown) {
   return String(value || "").trim();
 }
@@ -118,6 +132,95 @@ function extractQuotaAndRestoreAt(limitsProgress: Array<Record<string, unknown>>
   };
 }
 
+function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
+  const message = error instanceof Error ? error.message : String(error || "unknown error");
+  const normalized = cleanToken(message).toLowerCase();
+
+  if (normalized.includes("/backend-api/me failed: http 401")) {
+    return {
+      message: "访问令牌失效，或账号授权已被撤销",
+      status: "异常",
+      quota: 0,
+      reason: "auth_invalid",
+    };
+  }
+
+  if (normalized.includes("/backend-api/me failed: http 403")) {
+    return {
+      message: "账号访问受限，当前无法读取账户信息",
+      status: "异常",
+      quota: 0,
+      reason: "account_restricted",
+    };
+  }
+
+  if (normalized.includes("/backend-api/me failed: http 429")) {
+    return {
+      message: "账号请求过于频繁，或上游已对该账号限流",
+      status: "限流",
+      quota: 0,
+      reason: "rate_limited",
+    };
+  }
+
+  if (normalized.includes("/backend-api/conversation/init failed: http 401")) {
+    return {
+      message: "会话初始化失败，当前授权已失效",
+      status: "异常",
+      quota: 0,
+      reason: "auth_invalid",
+    };
+  }
+
+  if (normalized.includes("/backend-api/conversation/init failed: http 403")) {
+    return {
+      message: "会话初始化被拒绝，账号可能命中风控或访问受限",
+      status: "异常",
+      quota: 0,
+      reason: "conversation_init_failed",
+    };
+  }
+
+  if (normalized.includes("/backend-api/conversation/init failed: http 429")) {
+    return {
+      message: "会话初始化被限流，请稍后重试",
+      status: "限流",
+      quota: 0,
+      reason: "rate_limited",
+    };
+  }
+
+  if (normalized.includes("/backend-api/conversation/init failed: http")) {
+    return {
+      message: "会话初始化失败，上游未正常返回可用会话",
+      status: "异常",
+      reason: "conversation_init_failed",
+    };
+  }
+
+  if (normalized.includes("request timed out") || normalized.includes("timed out") || normalized.includes("timeout")) {
+    return {
+      message: "请求超时，未能在规定时间内完成账号状态刷新",
+      status: "异常",
+      reason: "request_timeout",
+    };
+  }
+
+  if (normalized.includes("network error") || normalized.includes("fetch failed") || normalized.includes("econn") || normalized.includes("enotfound")) {
+    return {
+      message: "网络异常，无法连接上游服务",
+      status: "异常",
+      reason: "network_error",
+    };
+  }
+
+  return {
+    message,
+    status: "异常",
+    reason: "unknown",
+  };
+}
+
 export function createAccountRemoteRefreshService(
   dependencies: AccountRemoteRefreshDependencies,
 ): AccountRemoteRefreshService {
@@ -153,7 +256,11 @@ export function createAccountRemoteRefreshService(
   async function refreshAccountState(accessToken: string): Promise<AccountRecord | null> {
     try {
       const info = await fetchAccountRemoteInfo(accessToken);
-      const result = await runtimeDependencies.updateAccount(accessToken, info);
+      const result = await runtimeDependencies.updateAccount(accessToken, {
+        ...info,
+        refresh_error: null,
+        refresh_error_reason: null,
+      });
       logger.info("account-service", "账号刷新成功", {
         email: info.email,
         type: info.type,
@@ -162,13 +269,18 @@ export function createAccountRemoteRefreshService(
       });
       return result;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("/backend-api/me failed: HTTP 401")) {
-        logger.warn("account-service", "账号 401 异常，标记禁用", { token: accessToken.slice(0, 16) + "..." });
-        return runtimeDependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
-      }
-      logger.error("account-service", "账号刷新失败", { message, token: accessToken.slice(0, 16) + "..." });
-      return null;
+      const failure = resolveRefreshFailure(error);
+      logger.warn("account-service", "账号刷新失败", {
+        reason: failure.reason,
+        message: failure.message,
+        token: accessToken.slice(0, 16) + "...",
+      });
+      return runtimeDependencies.updateAccount(accessToken, {
+        status: failure.status,
+        ...(typeof failure.quota === "number" ? { quota: failure.quota } : {}),
+        refresh_error: failure.message,
+        refresh_error_reason: failure.reason,
+      });
     }
   }
 
@@ -187,6 +299,8 @@ export function createAccountRemoteRefreshService(
         const remoteInfo = await fetchAccountRemoteInfo(accessToken);
         const updated = await runtimeDependencies.updateAccount(accessToken, {
           ...remoteInfo,
+          refresh_error: null,
+          refresh_error_reason: null,
           ...(refreshedAt ? { last_refreshed_at: refreshedAt } : {}),
         });
         if (updated) {
@@ -200,12 +314,18 @@ export function createAccountRemoteRefreshService(
         continue;
       }
       const accessToken = normalizedTokens[index];
-      let message = item.reason instanceof Error ? item.reason.message : String(item.reason);
-      if (message.includes("/backend-api/me failed: HTTP 401")) {
-        await runtimeDependencies.updateAccount(accessToken, { status: "异常", quota: 0 });
-        message = "检测到封号";
-      }
-      errors.push({ access_token: accessToken, error: message });
+      const failure = resolveRefreshFailure(item.reason);
+      await runtimeDependencies.updateAccount(accessToken, {
+        status: failure.status,
+        ...(typeof failure.quota === "number" ? { quota: failure.quota } : {}),
+        refresh_error: failure.message,
+        refresh_error_reason: failure.reason,
+      });
+      errors.push({
+        access_token: accessToken,
+        error: failure.message,
+        reason: failure.reason,
+      });
     }
 
     return {

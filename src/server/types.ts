@@ -37,6 +37,8 @@ export type PublicAccount = {
   lastUsedAt: string | null;
   updatedAt?: string | null;
   lastRefreshedAt?: string | null;
+  refresh_error?: string | null;
+  refresh_error_reason?: string | null;
 };
 
 export type RuntimeConfig = {
@@ -50,4 +52,5 @@ export type RuntimeConfig = {
 export type AccountRefreshError = {
   access_token: string;
   error: string;
+  reason?: string;
 };

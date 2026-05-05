@@ -154,7 +154,7 @@ describe("account remote refresh service", () => {
     });
   });
 
-  it("marks 401 refreshes as abnormal with zero quota", async () => {
+  it("marks access-token 401 refreshes as abnormal with detailed reason", async () => {
     const store = createMemoryDependencies(
       [createAccount({ access_token: "token-401", quota: 5, status: "正常" })],
       {
@@ -169,11 +169,13 @@ describe("account remote refresh service", () => {
 
     assert.equal(refreshed?.status, "异常");
     assert.equal(refreshed?.quota, 0);
+    assert.equal(refreshed?.refresh_error, "访问令牌失效，或账号授权已被撤销");
+    assert.equal(refreshed?.refresh_error_reason, "auth_invalid");
     assert.equal(store.record("token-401")?.status, "异常");
     assert.equal(store.record("token-401")?.quota, 0);
   });
 
-  it("dedupes bulk refreshes, stamps refreshed time, and reports 401 separately", async () => {
+  it("dedupes bulk refreshes, stamps refreshed time, and reports detailed auth failures", async () => {
     const calls: string[] = [];
     const store = createMemoryDependencies(
       [
@@ -213,15 +215,39 @@ describe("account remote refresh service", () => {
 
     assert.equal(result.refreshed, 1);
     assert.deepEqual(calls, ["token-a", "token-b"]);
-    assert.deepEqual(result.errors, [{ access_token: "token-b", error: "检测到封号" }]);
+    assert.deepEqual(result.errors, [{
+      access_token: "token-b",
+      error: "访问令牌失效，或账号授权已被撤销",
+      reason: "auth_invalid",
+    }]);
     assert.equal(store.record("token-a")?.quota, 9);
     assert.equal(store.record("token-a")?.status, "正常");
     assert.equal(store.record("token-a")?.last_refreshed_at, "2026-04-30T12:00:00.000Z");
     assert.equal(store.record("token-b")?.status, "异常");
     assert.equal(store.record("token-b")?.quota, 0);
+    assert.equal(store.record("token-b")?.refresh_error, "访问令牌失效，或账号授权已被撤销");
+    assert.equal(store.record("token-b")?.refresh_error_reason, "auth_invalid");
     assert.equal(result.items.find((item) => item.access_token === "token-a")?.quota, 9);
     assert.equal(result.items.find((item) => item.access_token === "token-b")?.status, "异常");
     assert.equal(result.items.find((item) => item.access_token === "token-b")?.quota, 0);
+  });
+
+  it("classifies conversation init 403 as session initialization failure", async () => {
+    const store = createMemoryDependencies(
+      [createAccount({ access_token: "token-init-403", quota: 5, status: "正常" })],
+      {
+        async fetchRemoteAccountInfo() {
+          throw new Error("/backend-api/conversation/init failed: HTTP 403");
+        },
+      },
+    );
+    const service = createAccountRemoteRefreshService(store.dependencies);
+
+    const refreshed = await service.refreshAccountState("token-init-403");
+
+    assert.equal(refreshed?.status, "异常");
+    assert.equal(refreshed?.refresh_error, "会话初始化被拒绝，账号可能命中风控或访问受限");
+    assert.equal(refreshed?.refresh_error_reason, "conversation_init_failed");
   });
 
   it("returns current items immediately when refresh input is empty", async () => {

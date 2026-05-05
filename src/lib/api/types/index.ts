@@ -51,6 +51,8 @@ export type Account = {
   disabled?: boolean;
   note?: string | null;
   priority?: number;
+  refresh_error?: string | null;
+  refresh_error_reason?: string | null;
   syncStatus?: SyncStatus | null;
   syncOrigin?: string | null;
   lastSyncedAt?: string | null;
@@ -95,7 +97,7 @@ export type AccountImportResponse = {
   imported?: number;
   imported_files?: number;
   refreshed?: number;
-  errors?: Array<{ access_token: string; error: string }>;
+  errors?: Array<{ access_token: string; error: string; reason?: string }>;
   duplicates?: Array<{ name: string; reason: string }>;
   failed?: Array<{ name: string; error: string }>;
 };
@@ -111,6 +113,7 @@ export type AccountQuotaResponse = {
   refresh_requested: boolean;
   refreshed: boolean;
   refresh_error?: string;
+  refresh_error_reason?: string;
 };
 
 export type ImageResponseItem = {

@@ -71,6 +71,8 @@ describe("account admin service", () => {
         last_used_at: " 2026-04-30T10:00:00.000Z ",
         updated_at: "2026-04-30T10:01:00.000Z",
         last_refreshed_at: "2026-04-30T10:02:00.000Z",
+        refresh_error: "访问令牌失效，或账号授权已被撤销",
+        refresh_error_reason: "auth_invalid",
       }),
       createAccount({
         access_token: "token-b",
@@ -99,6 +101,8 @@ describe("account admin service", () => {
         lastUsedAt: "2026-04-30T10:00:00.000Z",
         updatedAt: "2026-04-30T10:01:00.000Z",
         lastRefreshedAt: "2026-04-30T10:02:00.000Z",
+        refresh_error: "访问令牌失效，或账号授权已被撤销",
+        refresh_error_reason: "auth_invalid",
       },
       {
         id: publicId("token-b"),
@@ -116,6 +120,8 @@ describe("account admin service", () => {
         lastUsedAt: null,
         updatedAt: null,
         lastRefreshedAt: null,
+        refresh_error: null,
+        refresh_error_reason: null,
       },
     ]);
   });

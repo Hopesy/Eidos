@@ -69,6 +69,8 @@ function publicAccount(account: AccountRecord): PublicAccount {
     lastUsedAt: account.last_used_at,
     updatedAt: account.updated_at ?? null,
     lastRefreshedAt: account.last_refreshed_at ?? null,
+    refresh_error: cleanToken(account.refresh_error) || null,
+    refresh_error_reason: cleanToken(account.refresh_error_reason) || null,
   };
 }
 

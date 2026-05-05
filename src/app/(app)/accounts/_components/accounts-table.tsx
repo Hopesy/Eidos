@@ -165,6 +165,14 @@ export function AccountsTable({
                             {account.email}
                           </div>
                         ) : null}
+                        {account.refresh_error ? (
+                          <div
+                            className="mt-1 line-clamp-2 text-[11px] leading-4 text-red-500 dark:text-red-400"
+                            title={account.refresh_error}
+                          >
+                            {account.refresh_error}
+                          </div>
+                        ) : null}
                       </div>
                       <span
                         className={cn(
@@ -367,6 +375,14 @@ export function AccountsTable({
                           {account.note ? (
                             <span className="truncate text-[11px] leading-4 text-stone-400 dark:text-stone-500" title={account.note}>
                               {account.note}
+                            </span>
+                          ) : null}
+                          {account.refresh_error ? (
+                            <span
+                              className="truncate text-[11px] leading-4 text-red-500 dark:text-red-400"
+                              title={account.refresh_error}
+                            >
+                              {account.refresh_error}
                             </span>
                           ) : null}
                         </div>

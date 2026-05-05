@@ -18,13 +18,13 @@ type AccountMutationResponse = {
   skipped?: number;
   removed?: number;
   refreshed?: number;
-  errors?: Array<{ access_token: string; error: string }>;
+  errors?: Array<{ access_token: string; error: string; reason?: string }>;
 };
 
 type AccountRefreshResponse = {
   items: Account[];
   refreshed: number;
-  errors: Array<{ access_token: string; error: string }>;
+  errors: Array<{ access_token: string; error: string; reason?: string }>;
 };
 
 type AccountUpdateResponse = {
