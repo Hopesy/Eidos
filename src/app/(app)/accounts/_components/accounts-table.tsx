@@ -180,7 +180,7 @@ export function AccountsTable({
                           {account.status}
                         </span>
                         {account.refresh_error ? (
-                          <span className="max-w-[140px] text-right text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
+                          <span className="block max-w-[128px] truncate text-right text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
                             {account.refresh_error}
                           </span>
                         ) : null}
@@ -313,13 +313,13 @@ export function AccountsTable({
           </div>
 
           <div className="theme-scrollbar max-h-[calc(100vh-375px)] overflow-x-auto overflow-y-auto">
-            <table className="w-full min-w-[1240px] text-left">
+            <table className="w-full min-w-[1160px] table-fixed text-left">
               <thead className="border-b border-stone-100/80 bg-stone-50/60 dark:border-stone-800 dark:bg-stone-800/70">
                 <tr>
                   <th className="w-10 px-3 py-2 text-center">
                     <Checkbox checked={allCurrentSelected} onCheckedChange={(checked) => onToggleSelectAll(Boolean(checked))} />
                   </th>
-                  <th className="w-72 px-3 py-2 text-left text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">账号 / Token</th>
+                  <th className="w-56 px-3 py-2 text-left text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">账号 / Token</th>
                   <th className="w-44 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">状态</th>
                   <th className="w-24 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">类型</th>
                   <th className="w-36 px-3 py-2 text-center text-[11px] font-medium text-stone-400 whitespace-nowrap dark:text-stone-500">图片额度</th>
@@ -350,8 +350,8 @@ export function AccountsTable({
                       </td>
 
                       <td className="px-3 py-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[13px] font-semibold tracking-tight text-stone-800 dark:text-stone-100">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className="min-w-0 truncate font-mono text-[13px] font-semibold tracking-tight text-stone-800 dark:text-stone-100">
                             {maskToken(account.access_token)}
                           </span>
                           <button
@@ -394,7 +394,7 @@ export function AccountsTable({
                             {account.status}
                           </span>
                           {account.refresh_error ? (
-                            <span className="max-w-[150px] truncate text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
+                            <span className="block max-w-[132px] truncate text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
                               {account.refresh_error}
                             </span>
                           ) : null}

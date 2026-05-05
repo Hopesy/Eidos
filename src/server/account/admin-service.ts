@@ -52,6 +52,18 @@ function normalizeAccount(input: Record<string, unknown>): AccountRecord | null 
   };
 }
 
+function normalizeRefreshErrorForDisplay(account: AccountRecord) {
+  const reason = cleanToken(account.refresh_error_reason);
+  const message = cleanToken(account.refresh_error);
+  if (!message) {
+    return null;
+  }
+  if (reason === "auth_invalid" || message.startsWith("访问令牌失效")) {
+    return "访问令牌失效";
+  }
+  return message;
+}
+
 function publicAccount(account: AccountRecord): PublicAccount {
   return {
     id: resolveAccountId(account),
@@ -69,7 +81,7 @@ function publicAccount(account: AccountRecord): PublicAccount {
     lastUsedAt: account.last_used_at,
     updatedAt: account.updated_at ?? null,
     lastRefreshedAt: account.last_refreshed_at ?? null,
-    refresh_error: cleanToken(account.refresh_error) || null,
+    refresh_error: normalizeRefreshErrorForDisplay(account),
     refresh_error_reason: cleanToken(account.refresh_error_reason) || null,
   };
 }
