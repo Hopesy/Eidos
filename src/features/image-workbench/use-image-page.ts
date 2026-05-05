@@ -81,6 +81,7 @@ type UseImagePageOptions = {
   initialConversations?: ImageConversation[];
   initialRecoverableTasks?: RecoverableImageTaskItem[];
   initialAvailableQuota?: string;
+  initialUsesImageApiService?: boolean;
 };
 
 export function useImagePage(options: UseImagePageOptions = {}) {
@@ -157,6 +158,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     imageName: string;
   } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const usesImageApiService = Boolean(options.initialUsesImageApiService);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === selectedConversationId) ?? null,
@@ -680,6 +682,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       retractTurnAfterAbort,
       restoreComposerFromTurn,
       selectedConversationId,
+      usesImageApiService,
       mode,
       imagePrompt,
       imageSources,

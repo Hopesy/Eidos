@@ -65,6 +65,34 @@ describe("chatgpt generated item collection", () => {
     );
   });
 
+  it("short-circuits policy refusals without waiting for poll timeout", async () => {
+    let fetchCalls = 0;
+    const session = {
+      async fetch() {
+        fetchCalls += 1;
+        throw new Error("poll should not be called for policy refusal");
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-refusal","message":{"content":{"content_type":"text","parts":["抱歉，我无法生成涉及性内容或色情暗示的图像。"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    await assert.rejects(
+      () => collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a"),
+      (error) => {
+        assert.ok(error instanceof ImageGenerationError);
+        assert.equal(error.kind, "input_blocked");
+        assert.equal(error.retryAction, "revise_input");
+        assert.equal(error.retryable, false);
+        assert.equal(error.stage, "submit");
+        assert.equal(error.upstreamConversationId, "conv-refusal");
+        assert.equal(fetchCalls, 0);
+        return true;
+      },
+    );
+  });
+
   it("preserves the first concrete download failure in the aggregate error", async () => {
     let attempts = 0;
     const session = {

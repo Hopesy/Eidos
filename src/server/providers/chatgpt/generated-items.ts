@@ -154,6 +154,20 @@ export async function collectGeneratedItems(
     fileCount: fileIds.length,
     textPreview: parsed.text.slice(0, 200),
   });
+  const textReply = parsed.text?.trim();
+  if (conversationId && fileIds.length === 0 && textReply) {
+    const nextError = buildNoImageReturnedError(textReply);
+    nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;
+    if (!nextError.retryable) {
+      logger.warn("openai-client", "generate-image:no-file-ids-short-circuit", {
+        conversationId,
+        token: maskAccessToken(accessToken),
+        ...getImageErrorMeta(nextError),
+        textPreview: textReply.slice(0, 240),
+      });
+      throw nextError;
+    }
+  }
   if (conversationId && fileIds.length === 0) {
     fileIds = await pollImageIds(session, accessToken, deviceId, conversationId);
   }
@@ -163,7 +177,6 @@ export async function collectGeneratedItems(
       textPreview: parsed.text.slice(0, 240),
       token: maskAccessToken(accessToken),
     });
-    const textReply = parsed.text?.trim();
     if (textReply) {
       const nextError = buildNoImageReturnedError(textReply);
       nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;

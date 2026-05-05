@@ -11,6 +11,7 @@ import {
   buildConversationTitle,
   buildSourceReference,
   countFailures,
+  createResultImage,
   createConversationTurn,
   createLoadingImages,
   dataUrlToFile,
@@ -20,6 +21,83 @@ import {
   makeId,
   mergeResultImages,
 } from "./utils";
+
+function clearTurnFailureMeta() {
+  return {
+    failureKind: undefined,
+    retryAction: undefined,
+    retryable: undefined,
+    stage: undefined,
+    upstreamConversationId: undefined,
+    upstreamResponseId: undefined,
+    imageGenerationCallId: undefined,
+    sourceAccountId: undefined,
+    fileIds: undefined,
+  };
+}
+
+function patchTurnImages(turn: ReturnType<typeof createConversationTurn>, images: StoredImage[], durationMs?: number) {
+  const failedCount = countFailures(images);
+  const hasLoading = images.some((image) => image.status === "loading");
+  return {
+    ...turn,
+    images,
+    status: hasLoading ? "generating" as const : failedCount > 0 ? "error" as const : "success" as const,
+    error: hasLoading ? undefined : failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
+    durationMs,
+    ...clearTurnFailureMeta(),
+  };
+}
+
+function patchSingleTurnImage(
+  turn: ReturnType<typeof createConversationTurn>,
+  slotIndex: number,
+  nextImage: StoredImage,
+  durationMs: number,
+) {
+  const nextImages = turn.images.map((image, index) => (index === slotIndex ? nextImage : image));
+  return patchTurnImages(turn, nextImages, durationMs);
+}
+
+function patchSingleTurnFailure(
+  turn: ReturnType<typeof createConversationTurn>,
+  slotIndex: number,
+  message: string,
+  failureMeta: ReturnType<typeof extractRequestFailureMeta>,
+  durationMs: number,
+) {
+  const currentImage = turn.images[slotIndex];
+  if (!currentImage) {
+    return turn;
+  }
+  return patchSingleTurnImage(
+    turn,
+    slotIndex,
+    {
+      ...currentImage,
+      status: "error" as const,
+      error: message,
+      failureKind: failureMeta.failureKind,
+      retryAction: failureMeta.retryAction,
+      retryable: failureMeta.retryable,
+      stage: failureMeta.stage,
+      upstreamConversationId: failureMeta.upstreamConversationId,
+      upstreamResponseId: failureMeta.upstreamResponseId,
+      imageGenerationCallId: failureMeta.imageGenerationCallId,
+      sourceAccountId: failureMeta.sourceAccountId,
+      fileIds: failureMeta.fileIds,
+    },
+    durationMs,
+  );
+}
+
+function isPromptRevisionFailure(failureMeta: ReturnType<typeof extractRequestFailureMeta>) {
+  return failureMeta.failureKind === "input_blocked" && failureMeta.retryAction === "revise_input";
+}
+
+function isSourceInvalidFailure(failureMeta: ReturnType<typeof extractRequestFailureMeta>) {
+  return failureMeta.failureKind === "source_invalid";
+}
 export async function runSubmit(ctx: SubmitContext) {
   const {
     selectedConversationId,
@@ -71,6 +149,7 @@ export async function runSubmit(ctx: SubmitContext) {
     createdAt: now,
     status: "generating",
   });
+  const draftLoadingImages = draftTurn.images;
 
   const startedAt = Date.now();
   const signal = beginRequest(ctx, {
@@ -150,6 +229,152 @@ export async function runSubmit(ctx: SubmitContext) {
         });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
       } else {
+        if (parsedCount > 1) {
+          const slotCount = parsedCount;
+          const slotConcurrency = ctx.usesImageApiService ? slotCount : 1;
+          let succeededCount = 0;
+          let failedCount = 0;
+          let nextSlotIndex = 0;
+          let restoredComposer = false;
+          let stopDispatch = false;
+          const settledSlotIndexes = new Set<number>();
+
+          const handlePromptFailure = async () => {
+            stopDispatch = true;
+            restoredComposer = true;
+            ctx.requestAbortControllerRef.current?.abort();
+            const conversationStillExists = await ctx.retractTurnAfterAbort(conversationId, turnId);
+            ctx.restoreComposerFromTurn(conversationStillExists ? conversationId : null, draftTurn, "请修改提示词后重试");
+          };
+
+          const handleSlot = async () => {
+            while (!stopDispatch && !signal.aborted) {
+              const slotIndex = nextSlotIndex;
+              nextSlotIndex += 1;
+              if (slotIndex >= slotCount) {
+                return;
+              }
+
+              try {
+                const data = await generateImage(prompt, imageModel, 1, {
+                  size: resolveImageGenerationSize(imageSize, imageQuality),
+                  quality: imageQuality,
+                  signal,
+                });
+                const resultImage = createResultImage(
+                  draftLoadingImages[slotIndex]?.id || `${turnId}-${slotIndex}`,
+                  data.data?.[0],
+                );
+                settledSlotIndexes.add(slotIndex);
+                if (resultImage.status === "success") {
+                  succeededCount += 1;
+                } else {
+                  failedCount += 1;
+                }
+                await ctx.updateConversation(conversationId, (current) => ({
+                  ...current,
+                  turns: (current.turns ?? []).map((turn) =>
+                    turn.id === turnId
+                      ? patchSingleTurnImage(turn, slotIndex, resultImage, Date.now() - startedAt)
+                      : turn,
+                  ),
+                }));
+              } catch (error) {
+                if (isCanceledRequestError(error)) {
+                  if (restoredComposer || stopDispatch) {
+                    return;
+                  }
+                  throw error;
+                }
+                const failureMeta = extractRequestFailureMeta(error);
+                const message = humanizeError(error);
+                settledSlotIndexes.add(slotIndex);
+                if (isPromptRevisionFailure(failureMeta) && succeededCount === 0) {
+                  await handlePromptFailure();
+                  return;
+                }
+                failedCount += 1;
+                await ctx.updateConversation(conversationId, (current) => ({
+                  ...current,
+                  turns: (current.turns ?? []).map((turn) =>
+                    turn.id === turnId
+                      ? patchSingleTurnFailure(turn, slotIndex, message, failureMeta, Date.now() - startedAt)
+                      : turn,
+                  ),
+                }));
+                if (!ctx.usesImageApiService && (isPromptRevisionFailure(failureMeta) || isSourceInvalidFailure(failureMeta))) {
+                  stopDispatch = true;
+                  const remainingFailedCount = draftLoadingImages.length - settledSlotIndexes.size;
+                  failedCount += Math.max(0, remainingFailedCount);
+                  await ctx.updateConversation(conversationId, (current) => ({
+                    ...current,
+                    turns: (current.turns ?? []).map((turn) => {
+                      if (turn.id !== turnId) {
+                        return turn;
+                      }
+                      const nextImages = turn.images.map((image, index) => {
+                        if (settledSlotIndexes.has(index) || image.status !== "loading") {
+                          return image;
+                        }
+                        return {
+                          ...image,
+                          status: "error" as const,
+                          error: message,
+                          failureKind: failureMeta.failureKind,
+                          retryAction: failureMeta.retryAction,
+                          retryable: failureMeta.retryable,
+                          stage: failureMeta.stage,
+                          upstreamConversationId: failureMeta.upstreamConversationId,
+                          upstreamResponseId: failureMeta.upstreamResponseId,
+                          imageGenerationCallId: failureMeta.imageGenerationCallId,
+                          sourceAccountId: failureMeta.sourceAccountId,
+                          fileIds: failureMeta.fileIds,
+                        };
+                      });
+                      return patchTurnImages(turn, nextImages, Date.now() - startedAt);
+                    }),
+                  }));
+                  return;
+                }
+              }
+            }
+          };
+
+          await Promise.all(
+            Array.from({ length: slotConcurrency }, () => handleSlot()),
+          );
+
+          if (restoredComposer) {
+            return;
+          }
+
+          const durationMs = Date.now() - startedAt;
+          await ctx.updateConversation(conversationId, (current) => ({
+            ...current,
+            turns: (current.turns ?? []).map((turn) => {
+              if (turn.id !== turnId) {
+                return turn;
+              }
+              return patchTurnImages(turn, turn.images, durationMs);
+            }),
+          }));
+
+          ctx.resetComposer("generate", {
+            preserveImageSize: true,
+            preserveImageQuality: true,
+          });
+          if (failedCount > 0) {
+            toast.error(
+              succeededCount > 0
+                ? `已返回结果，但有 ${failedCount} 张处理失败`
+                : `共 ${failedCount} 张处理失败`,
+            );
+          } else {
+            toast.success("图片已生成");
+          }
+          return;
+        }
+
         const data = await generateImage(prompt, imageModel, parsedCount, {
           size: resolveImageGenerationSize(imageSize, imageQuality),
           quality: imageQuality,

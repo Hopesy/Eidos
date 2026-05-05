@@ -156,6 +156,8 @@ export function applyTurnFailure(
           upstreamConversationId: failureMeta.upstreamConversationId,
           upstreamResponseId: failureMeta.upstreamResponseId,
           imageGenerationCallId: failureMeta.imageGenerationCallId,
+          sourceAccountId: failureMeta.sourceAccountId,
+          fileIds: failureMeta.fileIds,
         }
         : image,
     ),

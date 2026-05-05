@@ -62,11 +62,12 @@ const modeLabelMap: Record<ImageMode, string> = {
 const RESULT_MEDIA_CARD_WIDTH = "w-[270px] max-w-full shrink-0";
 const RESULT_MEDIA_VIEWPORT_HEIGHT = "aspect-square";
 
-function buildRetryButtonLabel(turn: ImageConversationTurn) {
-    if (turn.retryAction === "resume_polling") {
+function buildRetryButtonLabel(turn: ImageConversationTurn, image?: StoredImage) {
+    const retryAction = image?.retryAction || turn.retryAction;
+    if (retryAction === "resume_polling") {
         return "继续等待";
     }
-    if (turn.retryAction === "retry_download") {
+    if (retryAction === "retry_download") {
         return "重试下载";
     }
     return "重试";
@@ -246,7 +247,7 @@ export function ConversationTurn({
                             const errorMessage = image.error || turn.error || "未知错误";
                             const isRetryingCurrentImage = retryingImageId === image.id;
                             const isCurrentImageProcessing = isProcessing || image.status === "loading";
-                            const retryLabel = buildRetryButtonLabel(turn);
+                            const retryLabel = buildRetryButtonLabel(turn, image);
                             const imageDataUrl = buildImageDataUrl(image);
                             return (
                             <div
@@ -353,8 +354,13 @@ export function ConversationTurn({
                                     </>
                                 ) : shouldShowErrorState ? (
                                     /* ── 错误态 ── */
-                                    <div className="flex w-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
-                                        <div className={cn("flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center", RESULT_MEDIA_VIEWPORT_HEIGHT)}>
+                                    <div
+                                        className={cn(
+                                            "flex w-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900",
+                                            RESULT_MEDIA_VIEWPORT_HEIGHT,
+                                        )}
+                                    >
+                                        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pt-8 text-center">
                                             <div className="flex size-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/30">
                                                 <AlertCircle className="size-5 text-rose-500 dark:text-rose-400" />
                                             </div>
@@ -365,7 +371,7 @@ export function ConversationTurn({
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="border-t border-stone-200 px-3 py-2.5 dark:border-stone-700">
+                                        <div className="mt-auto px-3 pb-4 pt-3">
                                             <button
                                                 type="button"
                                                 className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-stone-100"

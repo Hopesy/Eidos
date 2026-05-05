@@ -54,6 +54,8 @@ export type StoredImage = {
   upstreamConversationId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
+  sourceAccountId?: string;
+  fileIds?: string[];
 };
 
 export type ImageConversationStatus = "generating" | "success" | "error";

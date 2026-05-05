@@ -90,6 +90,7 @@ export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "up
 
 export type SubmitContext = SubmissionContext & {
   selectedConversationId: string | null;
+  usesImageApiService: boolean;
   mode: ImageMode;
   imagePrompt: string;
   imageSources: StoredSourceImage[];

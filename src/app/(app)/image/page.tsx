@@ -1,6 +1,7 @@
 import { ImageClient } from "./image-client";
 
 import { listAccounts } from "@/server/account-service";
+import { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
 import { listImageConversationRecords } from "@/server/repositories/image/conversation-repository";
 import { listImageFiles } from "@/server/repositories/image/file-repository";
 import { listRecoverableImageUpstreamTasks } from "@/server/repositories/image/upstream-task-repository";
@@ -19,6 +20,7 @@ export default async function ImagePage() {
     listImageFiles(),
     listAccounts(),
   ]);
+  const initialUsesImageApiService = Boolean(getImageApiServiceConfig());
 
   return (
     <ImageClient
@@ -26,6 +28,7 @@ export default async function ImagePage() {
       initialFiles={initialFiles}
       initialRecoverableTasks={listRecoverableImageUpstreamTasks(30)}
       initialAvailableQuota={formatAvailableQuota(accounts)}
+      initialUsesImageApiService={initialUsesImageApiService}
     />
   );
 }

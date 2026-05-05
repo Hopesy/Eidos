@@ -30,6 +30,7 @@ type ImageClientProps = {
   initialFiles: ImageFileListItem[];
   initialRecoverableTasks: RecoverableImageTaskItem[];
   initialAvailableQuota: string;
+  initialUsesImageApiService: boolean;
 };
 
 export function ImageClient({
@@ -37,6 +38,7 @@ export function ImageClient({
   initialFiles,
   initialRecoverableTasks,
   initialAvailableQuota,
+  initialUsesImageApiService,
 }: ImageClientProps) {
   const isDesktopViewport = () =>
     typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
@@ -109,7 +111,12 @@ export function ImageClient({
     handleCopyTurnPrompt,
     openImageInNewTab,
     downloadImageFile,
-  } = useImagePage({ initialConversations, initialRecoverableTasks, initialAvailableQuota });
+  } = useImagePage({
+    initialConversations,
+    initialRecoverableTasks,
+    initialAvailableQuota,
+    initialUsesImageApiService,
+  });
 
   useEffect(() => {
     if (selectedConversationId) {

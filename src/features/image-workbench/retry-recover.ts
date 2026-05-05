@@ -117,6 +117,15 @@ export async function runRetryTurn(
   turn: ImageConversationTurn,
   imageId?: string,
 ) {
+  const targetImage = imageId != null
+    ? turn.images.find((image) => image.id === imageId) ?? null
+    : null;
+  const effectiveRetryAction = targetImage?.retryAction ?? turn.retryAction;
+  const effectiveUpstreamConversationId = targetImage?.upstreamConversationId ?? turn.upstreamConversationId;
+  const effectiveUpstreamResponseId = targetImage?.upstreamResponseId ?? turn.upstreamResponseId;
+  const effectiveImageGenerationCallId = targetImage?.imageGenerationCallId ?? turn.imageGenerationCallId;
+  const effectiveSourceAccountId = targetImage?.sourceAccountId ?? turn.sourceAccountId;
+  const effectiveFileIds = targetImage?.fileIds ?? turn.fileIds;
   const prompt = turn.prompt?.trim() ?? "";
   const turnMode = turn.mode || "generate";
   const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];
@@ -126,8 +135,9 @@ export async function runRetryTurn(
   const turnImageSize = turn.imageSize || "auto";
   const turnImageQuality = turn.imageQuality || "auto";
   const isSharedRecoverableRetry =
-    (turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") &&
-    Boolean(turn.upstreamConversationId) &&
+    !targetImage &&
+    (effectiveRetryAction === "resume_polling" || effectiveRetryAction === "retry_download") &&
+    Boolean(effectiveUpstreamConversationId) &&
     turn.images.length === 1 &&
     Math.max(1, Number(turn.count) || 1) > 1 &&
     turn.images[0]?.status === "error";
@@ -194,13 +204,13 @@ export async function runRetryTurn(
     }));
 
     let resultPayloadItems: Parameters<typeof patchRetriedImages>[2] = [];
-    if ((turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") && turn.upstreamConversationId) {
+    if ((effectiveRetryAction === "resume_polling" || effectiveRetryAction === "retry_download") && effectiveUpstreamConversationId) {
       const data = await recoverImageTask({
-        conversationId: turn.upstreamConversationId,
-        sourceAccountId: turn.sourceAccountId,
+        conversationId: effectiveUpstreamConversationId,
+        sourceAccountId: effectiveSourceAccountId,
         revisedPrompt: prompt,
-        fileIds: turn.fileIds,
-        waitMs: turn.retryAction === "resume_polling" ? 60000 : 15000,
+        fileIds: effectiveFileIds,
+        waitMs: effectiveRetryAction === "resume_polling" ? 60000 : 15000,
         model: turn.model,
         mode: turnMode,
         signal,
@@ -283,10 +293,10 @@ export async function runRetryTurn(
             retryAction: sharedResult.failedCount > 0 ? "retry_download" : undefined,
             retryable: sharedResult.failedCount > 0 ? true : undefined,
             stage: sharedResult.failedCount > 0 ? "download" : undefined,
-            upstreamConversationId: sharedResult.failedCount > 0 ? item.upstreamConversationId : undefined,
-            upstreamResponseId: sharedResult.failedCount > 0 ? item.upstreamResponseId : undefined,
-            imageGenerationCallId: sharedResult.failedCount > 0 ? item.imageGenerationCallId : undefined,
-            sourceAccountId: sharedResult.failedCount > 0 ? item.sourceAccountId : undefined,
+            upstreamConversationId: sharedResult.failedCount > 0 ? effectiveUpstreamConversationId : undefined,
+            upstreamResponseId: sharedResult.failedCount > 0 ? effectiveUpstreamResponseId : undefined,
+            imageGenerationCallId: sharedResult.failedCount > 0 ? effectiveImageGenerationCallId : undefined,
+            sourceAccountId: sharedResult.failedCount > 0 ? effectiveSourceAccountId : undefined,
             fileIds: sharedResult.failedCount > 0 ? sharedResult.remainingFileIds : undefined,
           };
         }
