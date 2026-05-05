@@ -9,10 +9,12 @@ import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSucc
 import {
   buildSourceReference,
   countFailures,
+  createResultImage,
   dataUrlToFile,
   extractRequestFailureMeta,
   humanizeError,
   isCanceledRequestError,
+  mergeResultImages,
   patchRetriedImages,
 } from "./utils";
 
@@ -31,6 +33,48 @@ function keepGeneratingWhileAnyImageLoads(turn: ImageConversationTurn) {
     ...turn,
     status: "generating" as const,
     error: undefined,
+  };
+}
+
+export function buildSharedRecoverableRetryResult(
+  turn: ImageConversationTurn,
+  resultPayloadItems: Parameters<typeof patchRetriedImages>[2],
+) {
+  const expectedCount = Math.max(1, Number(turn.count) || 1);
+  const knownFileIds = Array.isArray(turn.fileIds) ? turn.fileIds.map((item) => String(item || "").trim()).filter(Boolean) : [];
+  const returnedFileIds = new Set(
+    resultPayloadItems.map((item) => String(item.file_id || "").trim()).filter(Boolean),
+  );
+  const remainingFileIds = knownFileIds.length > 0
+    ? knownFileIds.filter((fileId) => !returnedFileIds.has(fileId))
+    : [];
+
+  if (remainingFileIds.length === 0) {
+    const images = mergeResultImages(turn.id, resultPayloadItems, expectedCount);
+    return {
+      images,
+      failedCount: countFailures(images),
+      remainingFileIds: [] as string[],
+    };
+  }
+
+  const successImages = resultPayloadItems.map((item, index) => createResultImage(`${turn.id}-${index}`, item));
+  return {
+    images: [
+      ...successImages,
+      {
+        id: `${turn.id}-shared-retry-error`,
+        status: "error" as const,
+        error: "图片结果已就绪，但下载失败。",
+        failureKind: "result_fetch_failed",
+        retryAction: "retry_download",
+        retryable: true,
+        stage: "download",
+        upstreamConversationId: turn.upstreamConversationId,
+      },
+    ],
+    failedCount: remainingFileIds.length,
+    remainingFileIds,
   };
 }
 
@@ -53,6 +97,20 @@ function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, ne
   };
 }
 
+async function updateConversationBestEffort(
+  ctx: RetryTurnContext,
+  conversationId: string,
+  updater: Parameters<RetryTurnContext["updateConversation"]>[1],
+) {
+  try {
+    await ctx.updateConversation(conversationId, updater);
+  } catch (error) {
+    console.error("failed to persist retry turn state", error);
+    const message = error instanceof Error ? error.message : "保存重试状态失败";
+    toast.error(message);
+  }
+}
+
 export async function runRetryTurn(
   ctx: RetryTurnContext,
   conversationId: string,
@@ -67,11 +125,19 @@ export async function runRetryTurn(
   const turnUpscaleQuality = turnMode === "upscale" ? resolveUpscaleQuality(turn.imageQuality, turn.scale) : undefined;
   const turnImageSize = turn.imageSize || "auto";
   const turnImageQuality = turn.imageQuality || "auto";
+  const isSharedRecoverableRetry =
+    (turn.retryAction === "resume_polling" || turn.retryAction === "retry_download") &&
+    Boolean(turn.upstreamConversationId) &&
+    turn.images.length === 1 &&
+    Math.max(1, Number(turn.count) || 1) > 1 &&
+    turn.images[0]?.status === "error";
   const failedIndexes = turn.images
     .map((image, index) => (image.status === "error" ? index : -1))
     .filter((index) => index >= 0);
   const retryIndexes =
-    imageId != null
+    isSharedRecoverableRetry
+      ? failedIndexes
+      : imageId != null
       ? turn.images
         .map((image, index) => (image.id === imageId ? index : -1))
         .filter((index) => index >= 0)
@@ -203,6 +269,28 @@ export async function runRetryTurn(
           return item;
         }
 
+        if (isSharedRecoverableRetry) {
+          const sharedResult = buildSharedRecoverableRetryResult(item, resultPayloadItems);
+          failedCount = sharedResult.failedCount;
+          retriedFailedCount = sharedResult.failedCount;
+          return {
+            ...item,
+            images: sharedResult.images,
+            status: sharedResult.failedCount > 0 ? "error" as const : "success" as const,
+            error: sharedResult.failedCount > 0 ? `其中 ${sharedResult.failedCount} 张处理失败` : undefined,
+            durationMs,
+            failureKind: sharedResult.failedCount > 0 ? "result_fetch_failed" : undefined,
+            retryAction: sharedResult.failedCount > 0 ? "retry_download" : undefined,
+            retryable: sharedResult.failedCount > 0 ? true : undefined,
+            stage: sharedResult.failedCount > 0 ? "download" : undefined,
+            upstreamConversationId: sharedResult.failedCount > 0 ? item.upstreamConversationId : undefined,
+            upstreamResponseId: sharedResult.failedCount > 0 ? item.upstreamResponseId : undefined,
+            imageGenerationCallId: sharedResult.failedCount > 0 ? item.imageGenerationCallId : undefined,
+            sourceAccountId: sharedResult.failedCount > 0 ? item.sourceAccountId : undefined,
+            fileIds: sharedResult.failedCount > 0 ? sharedResult.remainingFileIds : undefined,
+          };
+        }
+
         const resultItems = patchRetriedImages(item.images, retryIndexes, resultPayloadItems);
         failedCount = countFailures(resultItems);
         retriedFailedCount = retryIndexes.filter((index) => resultItems[index]?.status === "error").length;
@@ -222,7 +310,7 @@ export async function runRetryTurn(
     }
   } catch (error) {
     if (isCanceledRequestError(error)) {
-      await ctx.updateConversation(conversationId, (current) => ({
+      await updateConversationBestEffort(ctx, conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((item) => {
           if (item.id !== turnId) {
@@ -236,7 +324,7 @@ export async function runRetryTurn(
     }
     const message = humanizeError(error);
     const failureMeta = extractRequestFailureMeta(error);
-    await ctx.updateConversation(conversationId, (current) => ({
+    await updateConversationBestEffort(ctx, conversationId, (current) => ({
       ...current,
       turns: (current.turns ?? []).map((item) => {
         if (item.id !== turnId) {

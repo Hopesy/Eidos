@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createAccountAdminService } from "../src/server/account-admin-service.ts";
-import type { AccountAdminStoreDependencies } from "../src/server/account-admin-service.ts";
+import { createAccountAdminService } from "../src/server/account/admin-service.ts";
+import type { AccountAdminStoreDependencies } from "../src/server/account/admin-service.ts";
 import type { AccountRecord } from "../src/server/types.ts";
 
 function cloneAccounts(accounts: AccountRecord[]) {
@@ -159,6 +159,22 @@ describe("account admin service", () => {
         success: 0,
       },
     ]);
+  });
+
+  it("finds stored accounts by derived public id", async () => {
+    const store = createMemoryStore([
+      createAccount({
+        access_token: "token-a",
+        email: "user-a@example.com",
+      }),
+    ]);
+    const service = createAccountAdminService(store.dependencies);
+
+    const account = await service.getAccountById(publicId("token-a"));
+
+    assert.equal(account?.id, publicId("token-a"));
+    assert.equal(account?.access_token, "token-a");
+    assert.equal(account?.email, "user-a@example.com");
   });
 
   it("deletes requested tokens and reports removed count", async () => {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  buildImageGenerationQualityInstruction,
   buildUpscalePrompt,
   getUpscaleQualityLabel,
   resolveImageGenerationSize,
@@ -18,9 +19,22 @@ describe("image generation policies", () => {
     assert.equal(resolveImageGenerationSize("9:16", "high"), "2160x3840");
   });
 
-  it("keeps auto when either ratio or quality is auto", () => {
-    assert.equal(resolveImageGenerationSize("auto", "high"), "auto");
+  it("uses square resolution defaults when only quality is selected", () => {
+    assert.equal(resolveImageGenerationSize("auto", "low"), "1024x1024");
+    assert.equal(resolveImageGenerationSize("auto", "medium"), "2048x2048");
+    assert.equal(resolveImageGenerationSize("auto", "high"), "4096x4096");
+  });
+
+  it("keeps auto when quality is auto", () => {
+    assert.equal(resolveImageGenerationSize("auto", "auto"), "auto");
     assert.equal(resolveImageGenerationSize("16:9", "auto"), "auto");
+  });
+
+  it("builds generation quality instructions with resolution bands", () => {
+    assert.match(buildImageGenerationQualityInstruction("low"), /1K/);
+    assert.match(buildImageGenerationQualityInstruction("medium"), /2K/);
+    assert.match(buildImageGenerationQualityInstruction("high"), /4K/);
+    assert.equal(buildImageGenerationQualityInstruction("auto"), "");
   });
 
   it("maps generated sizes back to UI ratio choices", () => {

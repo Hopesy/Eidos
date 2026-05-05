@@ -223,7 +223,7 @@ export function RequestsClient({ initialItems }: RequestsClientProps) {
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">账号</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">耗时</th>
                                         <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">结果</th>
-                                        <th className="px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">错误</th>
+                                        <th className="whitespace-nowrap px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500">错误</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -288,44 +288,44 @@ export function RequestsClient({ initialItems }: RequestsClientProps) {
                                                         {item.success ? "成功" : "失败"}
                                                     </Badge>
                                                 </td>
-                                                <td className="px-3 py-2">
+                                                <td className="whitespace-nowrap px-3 py-2">
                                                     {item.error || item.failureKind || item.retryAction || item.stage || item.upstreamConversationId || item.upstreamResponseId ? (
-                                                        <div className={`max-w-[320px] space-y-1.5 rounded-lg border px-2 py-1.5 text-[10px] leading-4 ${item.success ? "border-stone-200 bg-stone-50 text-stone-500" : "border-rose-200 bg-white text-rose-700"}`}>
+                                                        <div className={`flex max-w-[320px] items-center gap-1.5 overflow-hidden rounded-lg border px-2 py-1.5 text-[10px] leading-4 whitespace-nowrap ${item.success ? "border-stone-200 bg-stone-50 text-stone-500" : "border-rose-200 bg-white text-rose-700"}`}>
                                                             {item.error ? (
-                                                                <div className="flex items-start gap-1.5" title={item.error}>
-                                                                    {!item.success ? <AlertCircle className="mt-0.5 size-3 shrink-0" /> : null}
-                                                                    <span className="line-clamp-2 break-all">{item.error}</span>
+                                                                <div className="flex min-w-0 items-center gap-1.5" title={item.error}>
+                                                                    {!item.success ? <AlertCircle className="size-3 shrink-0" /> : null}
+                                                                    <span className="truncate">{item.error}</span>
                                                                 </div>
                                                             ) : null}
                                                             {item.failureKind || item.retryAction || item.stage ? (
-                                                                <div className="flex flex-wrap gap-1">
+                                                                <div className="flex shrink-0 flex-nowrap gap-1">
                                                                     {item.failureKind ? (
-                                                                        <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                                        <span className="max-w-[92px] truncate rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-300" title={item.failureKind}>
                                                                             {item.failureKind}
                                                                         </span>
                                                                     ) : null}
                                                                     {item.retryAction ? (
-                                                                        <span className="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                                                        <span className="max-w-[92px] truncate rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" title={item.retryAction}>
                                                                             {item.retryAction}
                                                                         </span>
                                                                     ) : null}
                                                                     {item.stage ? (
-                                                                        <span className="rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                                                                        <span className="max-w-[92px] truncate rounded bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" title={item.stage}>
                                                                             {item.stage}
                                                                         </span>
                                                                     ) : null}
                                                                 </div>
                                                             ) : null}
                                                             {item.upstreamConversationId || item.upstreamResponseId ? (
-                                                                <div className="space-y-0.5 text-[10px] text-stone-500 dark:text-stone-400">
+                                                                <div className="flex min-w-0 shrink text-[10px] text-stone-500 dark:text-stone-400">
                                                                     {item.upstreamConversationId ? (
-                                                                        <div className="break-all">
+                                                                        <div className="min-w-0 max-w-[120px] truncate" title={item.upstreamConversationId}>
                                                                             <span className="mr-1 text-stone-400">conv</span>
                                                                             <span className="font-mono">{item.upstreamConversationId}</span>
                                                                         </div>
                                                                     ) : null}
                                                                     {item.upstreamResponseId ? (
-                                                                        <div className="break-all">
+                                                                        <div className="min-w-0 max-w-[120px] truncate" title={item.upstreamResponseId}>
                                                                             <span className="mr-1 text-stone-400">resp</span>
                                                                             <span className="font-mono">{item.upstreamResponseId}</span>
                                                                         </div>

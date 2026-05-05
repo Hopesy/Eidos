@@ -207,4 +207,43 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .theme-scrollbar {
+    color-scheme: light;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(214, 211, 209, 0.85) transparent;
+  }
+
+  .theme-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .theme-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .theme-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-color: rgba(214, 211, 209, 0.85);
+    background-clip: content-box;
+  }
+
+  .theme-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(168, 162, 158, 0.9);
+  }
+
+  .dark .theme-scrollbar {
+    color-scheme: dark;
+    scrollbar-color: rgba(68, 64, 60, 0.95) transparent;
+  }
+
+  .dark .theme-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(68, 64, 60, 0.95);
+  }
+
+  .dark .theme-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(87, 83, 78, 0.95);
+  }
 }

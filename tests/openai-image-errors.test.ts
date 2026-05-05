@@ -9,7 +9,7 @@ import {
   isAccountBlockedMessage,
   isInputBlockedMessage,
   normalizeUpstreamErrorMessage,
-} from "../src/server/providers/openai-image-errors.ts";
+} from "../src/server/providers/openai/image-errors.ts";
 
 describe("openai image error policy", () => {
   it("normalizes structured upstream content policy errors", () => {

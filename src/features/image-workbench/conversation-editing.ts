@@ -7,6 +7,10 @@ import { resolveImageRatioFromSize, resolveUpscaleQuality, type ImageRatioOption
 import type { ActiveRequestMeta, EditorTarget, PendingAbortAction } from "./submission";
 import { cloneSourceImagesForComposer, type ActiveRequestState } from "./utils";
 
+const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "1:1";
+const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
+const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "medium";
+
 type UpdateConversationFn = (
   conversationId: string,
   updater: (current: ImageConversation) => ImageConversation,
@@ -43,6 +47,42 @@ type ConversationEditingContext = {
   openDraftConversation: () => void;
   updateConversation: UpdateConversationFn;
 };
+
+type ToolbarStateContext = Pick<
+  ConversationEditingContext,
+  "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setUpscaleQuality"
+>;
+
+export function getLatestConversationTurn(conversation: ImageConversation | null): ImageConversationTurn | null {
+  const turns = conversation?.turns ?? [];
+  return turns.length > 0 ? turns[turns.length - 1] : null;
+}
+
+export function applyComposerToolbarStateFromTurn(
+  ctx: ToolbarStateContext,
+  turn: ImageConversationTurn,
+) {
+  ctx.setMode(turn.mode);
+  ctx.setImageModel(turn.model);
+  ctx.setImageCount(String(Math.max(1, Number(turn.count) || 1)));
+
+  if (turn.mode === "generate") {
+    ctx.setImageSize(resolveImageRatioFromSize(turn.imageSize));
+    ctx.setImageQuality(turn.imageQuality ?? DEFAULT_IMAGE_QUALITY);
+    ctx.setUpscaleQuality(DEFAULT_UPSCALE_QUALITY);
+    return;
+  }
+
+  ctx.setImageSize(DEFAULT_GENERATE_IMAGE_RATIO);
+  ctx.setImageQuality(DEFAULT_IMAGE_QUALITY);
+
+  if (turn.mode === "upscale") {
+    ctx.setUpscaleQuality(resolveUpscaleQuality(turn.imageQuality, turn.scale));
+    return;
+  }
+
+  ctx.setUpscaleQuality(DEFAULT_UPSCALE_QUALITY);
+}
 
 export async function retractTurnAfterAbort(
   ctx: Pick<ConversationEditingContext, "mountedRef" | "draftSelectionRef" | "setConversations" | "setSelectedConversationId" | "setCachedWorkspaceState" | "updateConversation">,
@@ -122,18 +162,7 @@ export function restoreComposerFromTurn(
     ctx.openDraftConversation();
   }
 
-  ctx.setMode(turn.mode);
-  ctx.setImageModel(turn.model);
-  ctx.setImageCount(String(Math.max(1, Number(turn.count) || 1)));
-
-  if (turn.mode === "generate") {
-    ctx.setImageSize(resolveImageRatioFromSize(turn.imageSize));
-    ctx.setImageQuality(turn.imageQuality ?? "medium");
-  }
-
-  if (turn.mode === "upscale") {
-    ctx.setUpscaleQuality(resolveUpscaleQuality(turn.imageQuality, turn.scale));
-  }
+  applyComposerToolbarStateFromTurn(ctx, turn);
 
   ctx.setReuseLatestResultForGenerate(false);
   ctx.setSourceImages(cloneSourceImagesForComposer(turn.sourceImages ?? []));

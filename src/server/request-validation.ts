@@ -17,7 +17,29 @@ export const syncDirectionBodySchema = z.object({
 });
 
 export const imageQualitySchema = z.enum(["auto", "low", "medium", "high"]);
-export const imageSizeSchema = z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "256x256", "512x512", "1792x1024", "1024x1792"]);
+export const imageSizeSchema = z.enum([
+  "auto",
+  "1024x1024",
+  "1536x1024",
+  "1024x1536",
+  "1920x1088",
+  "2048x2048",
+  "3072x2048",
+  "2048x3072",
+  "2560x1440",
+  "3840x2160",
+  "4096x4096",
+  "6144x4096",
+  "4096x6144",
+  "1088x1920",
+  "1440x2560",
+  "2160x3840",
+  // Keep accepting legacy OpenAI v1 image sizes from older callers.
+  "256x256",
+  "512x512",
+  "1792x1024",
+  "1024x1792",
+]);
 
 export const imageGenerationBodySchema = z.object({
   prompt: z.string().trim().min(1, "prompt is required"),
@@ -53,8 +75,15 @@ export const recordBodySchema = z.record(z.string(), z.unknown());
 export async function parseJsonBody<T>(request: Request, schema: z.ZodType<T>) {
   let payload: unknown;
   try {
-    payload = await request.json();
-  } catch {
+    const bodyText = await request.text();
+    if (!bodyText.trim()) {
+      throw new ApiError(400, "empty json body");
+    }
+    payload = JSON.parse(bodyText);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw new ApiError(400, "invalid json body");
   }
 

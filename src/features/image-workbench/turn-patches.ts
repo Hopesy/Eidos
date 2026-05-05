@@ -30,6 +30,23 @@ function shouldPatchImage(index: number, retryIndexes?: number[]) {
   return !retryIndexes || retryIndexes.includes(index);
 }
 
+function shouldCollapseSharedRecoverableFailure(
+  turn: ImageConversationTurn,
+  failureMeta: RequestFailureMeta,
+  retryIndexes?: number[],
+) {
+  if (retryIndexes && retryIndexes.length > 0) {
+    return false;
+  }
+  if (turn.images.length <= 1) {
+    return false;
+  }
+  if (failureMeta.retryAction !== "resume_polling" && failureMeta.retryAction !== "retry_download") {
+    return false;
+  }
+  return !turn.images.some((image) => image.status === "success");
+}
+
 export function applyTurnGenerating(turn: ImageConversationTurn, images: StoredImage[]) {
   return {
     ...turn,
@@ -82,6 +99,37 @@ export function applyTurnFailure(
   failureMeta: RequestFailureMeta,
   retryIndexes?: number[],
 ) {
+  if (shouldCollapseSharedRecoverableFailure(turn, failureMeta, retryIndexes)) {
+    return {
+      ...turn,
+      status: "error" as const,
+      error: message,
+      failureKind: failureMeta.failureKind,
+      retryAction: failureMeta.retryAction,
+      retryable: failureMeta.retryable,
+      stage: failureMeta.stage,
+      upstreamConversationId: failureMeta.upstreamConversationId,
+      upstreamResponseId: failureMeta.upstreamResponseId,
+      imageGenerationCallId: failureMeta.imageGenerationCallId,
+      sourceAccountId: failureMeta.sourceAccountId,
+      fileIds: failureMeta.fileIds,
+      images: [
+        {
+          id: turn.images[0]?.id || `${turn.id}-shared-error`,
+          status: "error" as const,
+          error: message,
+          failureKind: failureMeta.failureKind,
+          retryAction: failureMeta.retryAction,
+          retryable: failureMeta.retryable,
+          stage: failureMeta.stage,
+          upstreamConversationId: failureMeta.upstreamConversationId,
+          upstreamResponseId: failureMeta.upstreamResponseId,
+          imageGenerationCallId: failureMeta.imageGenerationCallId,
+        },
+      ],
+    };
+  }
+
   return {
     ...turn,
     status: "error" as const,

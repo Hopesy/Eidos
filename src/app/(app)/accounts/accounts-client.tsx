@@ -59,13 +59,13 @@ export function AccountsClient({ initialAccounts, initialSyncStatus }: AccountsC
   } = useAccountsPage({ initialAccounts, initialSyncStatus });
 
   return (
-    <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none sm:rounded-[30px] sm:border sm:border-stone-200 sm:bg-[#fcfcfb] sm:px-5 sm:py-6 sm:shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:px-6 lg:py-7">
+    <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-4 overflow-y-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none sm:rounded-[30px] sm:border sm:border-stone-200 sm:bg-[#fcfcfb] sm:px-5 sm:py-6 sm:shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:px-6 lg:py-7 dark:sm:border-stone-700 dark:sm:bg-stone-950">
       <div className="hidden sm:flex sm:flex-col sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
-          <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm" />
+          <div className="relative h-14 w-1.5 rounded-full bg-gradient-to-b from-stone-900 to-stone-700 shadow-sm dark:from-stone-100 dark:to-stone-300" />
           <div className="flex-1 -translate-y-[10px]">
-            <h1 className="text-2xl font-bold tracking-tight text-stone-950 sm:text-[28px]">号池管理</h1>
-            <p className="mt-1 text-[13px] leading-relaxed text-stone-500">管理账号池与同步配置</p>
+            <h1 className="text-2xl font-bold tracking-tight text-stone-950 sm:text-[28px] dark:text-stone-50">号池管理</h1>
+            <p className="mt-1 text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">管理账号池与同步配置</p>
           </div>
         </div>
       </div>

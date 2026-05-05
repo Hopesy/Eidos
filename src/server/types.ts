@@ -2,6 +2,7 @@ export type AccountType = "Free" | "Plus" | "Pro" | "Team";
 export type AccountStatus = "正常" | "限流" | "异常" | "禁用";
 
 export type AccountRecord = {
+  id?: string;
   access_token: string;
   type: AccountType;
   status: AccountStatus;

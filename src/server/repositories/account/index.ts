@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-
+import { createAccountId } from "@/server/account-id";
 import { getDb, withTransaction } from "@/server/db";
 import type { AccountRecord } from "@/server/types";
 
@@ -30,10 +29,6 @@ function cleanString(value: unknown) {
 function cleanNullableString(value: unknown) {
   const normalized = cleanString(value);
   return normalized || null;
-}
-
-function createAccountId(accessToken: string) {
-  return createHash("sha1").update(accessToken).digest("hex").slice(0, 16);
 }
 
 function parseAccount(row: Record<string, unknown>): AccountRecord | null {

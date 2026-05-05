@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import { resolveAccountId } from "@/server/account-id";
 import { logger } from "@/server/logger";
 import { uploadChatGptConversationFile, type UploadedMultimodalFile } from "@/server/providers/chatgpt/file-upload-adapter";
 import { collectGeneratedItems, recoverGeneratedItems } from "@/server/providers/chatgpt/generated-items";
@@ -22,6 +23,7 @@ import {
 import { getProofToken } from "@/server/providers/openai/proof";
 import type { ImageGenerationOptions } from "@/server/providers/openai/api-service-shared";
 import type { AccountRecord } from "@/server/types";
+import { buildImageGenerationQualityInstruction } from "@/shared/image-generation";
 
 type ConversationInput = {
   prompt: string;
@@ -38,12 +40,9 @@ function buildImagePromptWithOptions(prompt: string, options?: ImageGenerationOp
     instructions.push(`输出分辨率使用 ${size}。`);
   }
 
-  if (quality === "medium") {
-    instructions.push("请以中高细节和清晰画质完成最终渲染。");
-  } else if (quality === "high") {
-    instructions.push("请以极高细节、超清画质完成最终渲染。");
-  } else if (quality === "low") {
-    instructions.push("请以低耗时预览画质快速出图。");
+  const qualityInstruction = buildImageGenerationQualityInstruction(quality);
+  if (qualityInstruction) {
+    instructions.push(qualityInstruction);
   }
 
   if (instructions.length === 0) {
@@ -334,15 +333,16 @@ export async function recoverImageResult(
   const session = createChatGptSession(fingerprint);
   const deviceId = await bootstrapChatGptSession(session, fingerprint);
   const result = await recoverGeneratedItems(session, normalizedToken, deviceId, recovery);
+  const sourceAccountId = resolveAccountId(account);
   result.data = result.data.map((item) => ({
     ...item,
-    source_account_id: cleanToken(account?.id) || undefined,
+    source_account_id: sourceAccountId || undefined,
   }));
   logger.info("openai-client", "recover-image:done", {
     requestedModel,
     conversationId: recovery.conversationId,
     count: result.data.length,
-    sourceAccountId: cleanToken(account?.id) || null,
+    sourceAccountId: sourceAccountId || null,
   });
   return result;
 }

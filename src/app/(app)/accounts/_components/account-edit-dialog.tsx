@@ -59,9 +59,9 @@ export function AccountEditDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">状态</label>
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">状态</label>
             <Select value={editStatus} onValueChange={(value) => onEditStatusChange(value as AccountStatus)}>
-              <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
+              <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -76,9 +76,9 @@ export function AccountEditDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">类型</label>
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">类型</label>
             <Select value={editType} onValueChange={(value) => onEditTypeChange(value as AccountType)}>
-              <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white">
+              <SelectTrigger className="h-11 rounded-xl border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -93,25 +93,25 @@ export function AccountEditDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">额度</label>
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">额度</label>
             <Input
               value={editQuota}
               onChange={(event) => onEditQuotaChange(event.target.value)}
-              className="h-11 rounded-xl border-stone-200 bg-white"
+              className="h-11 rounded-xl border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800"
             />
           </div>
         </div>
         <DialogFooter className="pt-2">
           <Button
             variant="secondary"
-            className="h-10 rounded-xl bg-stone-100 px-5 text-stone-700 hover:bg-stone-200"
+            className="h-10 rounded-xl bg-stone-100 px-5 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
             onClick={onClose}
             disabled={isUpdating}
           >
             取消
           </Button>
           <Button
-            className="h-10 rounded-xl bg-stone-950 px-5 text-white hover:bg-stone-800"
+            className="h-10 rounded-xl bg-stone-950 px-5 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
             onClick={() => void onSave()}
             disabled={isUpdating}
           >

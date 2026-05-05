@@ -15,6 +15,19 @@ export function getUpscaleQualityLabel(quality: ImageGenerationQuality) {
   }
 }
 
+export function buildImageGenerationQualityInstruction(quality: ImageGenerationQuality) {
+  switch (quality) {
+    case "low":
+      return "请以低耗时预览画质快速出图，分辨率按 1K 档位控制。";
+    case "medium":
+      return "请以中高细节和清晰画质完成最终渲染，分辨率按 2K 档位控制。";
+    case "high":
+      return "请以极高细节、超清画质完成最终渲染，分辨率按 4K 档位控制。";
+    default:
+      return "";
+  }
+}
+
 export function resolveUpscaleQuality(rawQuality?: unknown, rawLegacyScale?: unknown): ImageGenerationQuality {
   const quality = String(rawQuality || "").trim().toLowerCase();
   if (quality === "auto" || quality === "low" || quality === "medium" || quality === "high") {
@@ -38,7 +51,20 @@ export function resolveImageGenerationSize(
   ratio: ImageRatioOption,
   quality: ImageGenerationQuality,
 ): ImageGenerationSize {
-  if (ratio === "auto" || quality === "auto") {
+  if (ratio === "auto") {
+    switch (quality) {
+      case "low":
+        return "1024x1024";
+      case "medium":
+        return "2048x2048";
+      case "high":
+        return "4096x4096";
+      default:
+        return "auto";
+    }
+  }
+
+  if (quality === "auto") {
     return "auto";
   }
 

@@ -61,7 +61,14 @@ export type SubmissionContext = {
   focusConversation: (conversationId: string) => void;
   updateConversation: UpdateConversationFn;
   persistConversation: PersistConversationFn;
-  resetComposer: (nextMode?: ImageMode, options?: { preserveImageSize?: boolean }) => void;
+  resetComposer: (
+    nextMode?: ImageMode,
+    options?: {
+      preserveImageSize?: boolean;
+      preserveImageQuality?: boolean;
+      preserveUpscaleQuality?: boolean;
+    },
+  ) => void;
   retractTurnAfterAbort: (conversationId: string, turnId: string) => Promise<boolean>;
   restoreComposerFromTurn: RestoreComposerFn;
 };

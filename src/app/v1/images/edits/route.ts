@@ -10,6 +10,7 @@ import {
     ImageGenerationError,
 } from "@/server/providers/openai-client";
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import { resolveImageGenerationSize } from "@/shared/image-generation";
 
 export const runtime = "nodejs";
 
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
         if (images.length === 0) {
             throw new ApiError(400, "edit image is required");
         }
+        size = size === "auto" ? resolveImageGenerationSize("auto", quality) : size;
 
         logger.info("images.edits.route", "request:start", {
             model,

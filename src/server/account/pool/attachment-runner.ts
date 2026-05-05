@@ -1,4 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import { resolveAccountId } from "@/server/account-id";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
@@ -10,7 +11,7 @@ import {
 import { addRequestLog } from "@/server/repositories/request-log";
 
 import type { AccountPoolImageRunnerDependencies } from "./image-runner-types";
-import { cleanToken, isRetryableImageError } from "./image-runner-shared";
+import { isRetryableImageError } from "./image-runner-shared";
 
 export async function runAttachmentTaskWithPool(
   dependencies: AccountPoolImageRunnerDependencies,
@@ -52,6 +53,7 @@ export async function runAttachmentTaskWithPool(
     }
 
     const account = await dependencies.getAccount(requestToken);
+    const sourceAccountId = resolveAccountId(account);
     const tokenHint = requestToken.slice(0, 16) + "...";
     if (account) {
       lastAccountEmail = account.email ?? undefined;
@@ -65,7 +67,7 @@ export async function runAttachmentTaskWithPool(
       };
       result.data = result.data.map((item) => ({
         ...item,
-        source_account_id: cleanToken(account?.id),
+        source_account_id: sourceAccountId,
       }));
 
       result.data = await persistImageResponseItems(result.data, {
@@ -107,7 +109,7 @@ export async function runAttachmentTaskWithPool(
       lastErrors.push(message);
       lastImageError = error instanceof ImageGenerationError ? error : lastImageError;
       if (error instanceof ImageGenerationError) {
-        error.sourceAccountId = cleanToken(account?.id);
+        error.sourceAccountId = sourceAccountId;
       }
       logger.error("account-service", `${requestMeta.operation} 请求失败`, {
         token: tokenHint,
@@ -152,7 +154,7 @@ export async function runAttachmentTaskWithPool(
     }
   }
 
-  const detail = lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts";
+  const detail = lastImageError?.message || (lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts");
   addRequestLog({
     startedAt,
     finishedAt: new Date().toISOString(),

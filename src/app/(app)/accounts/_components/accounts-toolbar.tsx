@@ -46,8 +46,8 @@ export function AccountsToolbar({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex items-center gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">账户列表</h2>
-        <Badge variant="secondary" className="rounded-lg bg-stone-200 px-2 py-0.5 text-stone-700">
+        <h2 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">账户列表</h2>
+        <Badge variant="secondary" className="rounded-lg bg-stone-200 px-2 py-0.5 text-stone-700 dark:bg-stone-800 dark:text-stone-300">
           {filteredCount}
         </Badge>
       </div>
@@ -61,7 +61,7 @@ export function AccountsToolbar({
               onQueryChange(event.target.value);
             }}
             placeholder="搜索邮箱 / 文件名 / 备注"
-            className="h-10 rounded-xl border-stone-200 bg-white/85 pl-10"
+            className="h-10 rounded-xl border-stone-200 bg-white/85 pl-10 dark:border-stone-700 dark:bg-stone-800/80"
           />
         </div>
         <Select
@@ -70,7 +70,7 @@ export function AccountsToolbar({
             onTypeFilterChange(value as AccountTypeFilter);
           }}
         >
-          <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
+          <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px] dark:border-stone-700 dark:bg-stone-800/80">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -87,7 +87,7 @@ export function AccountsToolbar({
             onStatusFilterChange(value as AccountStatusFilter);
           }}
         >
-          <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px]">
+          <SelectTrigger className="h-10 w-full rounded-xl border-stone-200 bg-white/85 lg:w-[150px] dark:border-stone-700 dark:bg-stone-800/80">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -99,7 +99,7 @@ export function AccountsToolbar({
           </SelectContent>
         </Select>
         <Button
-          className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800"
+          className="h-10 rounded-xl bg-stone-950 px-4 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
           onClick={() => importInputRef.current?.click()}
           disabled={isImporting}
         >

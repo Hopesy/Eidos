@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-
+import { createAccountId, resolveAccountId } from "@/server/account-id";
 import { normalizeAccountType } from "@/server/account/type-policy";
 import { updateAccounts, readAccounts } from "@/server/repositories/account";
 import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
@@ -34,6 +33,7 @@ function normalizeAccount(input: Record<string, unknown>): AccountRecord | null 
 
   return {
     ...input,
+    id: cleanToken(input.id) || createAccountId(accessToken),
     access_token: accessToken,
     type,
     status: ["正常", "限流", "异常", "禁用"].includes(status) ? status : "正常",
@@ -54,7 +54,7 @@ function normalizeAccount(input: Record<string, unknown>): AccountRecord | null 
 
 function publicAccount(account: AccountRecord): PublicAccount {
   return {
-    id: createHash("sha1").update(account.access_token).digest("hex").slice(0, 16),
+    id: resolveAccountId(account),
     access_token: account.access_token,
     type: account.type,
     status: account.status,
@@ -115,7 +115,7 @@ export function createAccountAdminService(dependencies: AccountAdminStoreDepende
     if (!normalized) {
       return null;
     }
-    return (await listRecords()).find((item) => cleanToken(item.id) === normalized) ?? null;
+    return (await listRecords()).find((item) => resolveAccountId(item) === normalized) ?? null;
   }
 
   async function listAccounts() {

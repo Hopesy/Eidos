@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { describe, it } from "node:test";
 
+import { createAccountId } from "../src/server/account-id.ts";
 import {
   createAccountRemoteRefreshService,
   type AccountRemoteRefreshDependencies,
-} from "../src/server/account-remote-refresh-service.ts";
+} from "../src/server/account/remote-refresh-service.ts";
 import type { AccountRecord, PublicAccount } from "../src/server/types.ts";
 
 function createAccount(overrides: Partial<AccountRecord> & { access_token: string }): AccountRecord {
@@ -42,7 +42,7 @@ function createJwtPlanToken(planType: string) {
 
 function toPublicAccount(record: AccountRecord): PublicAccount {
   return {
-    id: createHash("sha1").update(record.access_token).digest("hex").slice(0, 16),
+    id: createAccountId(record.access_token),
     access_token: record.access_token,
     type: record.type,
     status: record.status,

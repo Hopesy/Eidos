@@ -1,6 +1,5 @@
-import { createHash } from "node:crypto";
-
 import type { SyncRunResult, SyncStatusResponse } from "@/lib/api";
+import { createAccountId } from "@/server/account-id";
 
 export type SavedCpaConfigShape = {
   sync?: {
@@ -57,7 +56,7 @@ export function normalizeToken(value: unknown) {
 }
 
 export function buildAccountName(accessToken: string) {
-  return `${createHash("sha1").update(accessToken).digest("hex").slice(0, 16)}.json`;
+  return `${createAccountId(accessToken)}.json`;
 }
 
 export function isLocalDisabled(account: CpaLocalAccount) {

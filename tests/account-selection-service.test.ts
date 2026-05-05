@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createAccountSelector } from "../src/server/account-selection-service.ts";
+import { createAccountSelector } from "../src/server/account/selection-service.ts";
 import type { AccountRecord } from "../src/server/types.ts";
 
 function createAccount(overrides: Partial<AccountRecord> & { access_token: string }): AccountRecord {

@@ -1,4 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import { resolveAccountId } from "@/server/account-id";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
@@ -10,7 +11,7 @@ import {
 import { addRequestLog } from "@/server/repositories/request-log";
 
 import type { AccountPoolImageRunnerDependencies } from "./image-runner-types";
-import { cleanToken, isRetryableImageError } from "./image-runner-shared";
+import { isRetryableImageError } from "./image-runner-shared";
 
 export async function runGenerateTaskWithPool(
   dependencies: AccountPoolImageRunnerDependencies,
@@ -61,6 +62,7 @@ export async function runGenerateTaskWithPool(
       const tokenHint = requestToken.slice(0, 16) + "...";
       logger.info("account-service", `第 ${requestIndex} 次请求：使用 token`, { token: tokenHint, model });
       const account = await dependencies.getAccount(requestToken);
+      const sourceAccountId = resolveAccountId(account);
 
       try {
         if (account) {
@@ -73,7 +75,7 @@ export async function runGenerateTaskWithPool(
         }) as { created: number; data: Array<Record<string, unknown>> };
         result.data = result.data.map((item) => ({
           ...item,
-          source_account_id: cleanToken(account?.id),
+          source_account_id: sourceAccountId,
         }));
         result.data = await persistImageResponseItems(result.data, {
           route,
@@ -102,7 +104,7 @@ export async function runGenerateTaskWithPool(
         lastErrors.push(message);
         lastImageError = error instanceof ImageGenerationError ? error : lastImageError;
         if (error instanceof ImageGenerationError) {
-          error.sourceAccountId = cleanToken(account?.id);
+          error.sourceAccountId = sourceAccountId;
         }
         logger.error("account-service", `第 ${requestIndex} 次请求：失败`, {
           token: tokenHint,
@@ -139,7 +141,7 @@ export async function runGenerateTaskWithPool(
   const durationMs = Date.now() - startTime;
 
   if (data.length === 0) {
-    const detail = lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts";
+    const detail = lastImageError?.message || (lastErrors.length > 0 ? lastErrors[lastErrors.length - 1] : "no available accounts");
     const errMsg = `image generation failed: ${detail}`;
     logger.error("account-service", "图片生成全部失败", { model, count, detail, elapsedMs: durationMs });
     addRequestLog({

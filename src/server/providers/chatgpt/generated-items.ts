@@ -1,6 +1,7 @@
 import { logger } from "@/server/logger";
 import {
   createImageError,
+  getImageErrorMeta,
 } from "@/server/providers/openai/image-errors";
 
 import {
@@ -25,16 +26,30 @@ type GeneratedDownloadItem = {
   conversation_id: string | undefined;
 };
 
-async function downloadGeneratedItems(
+type GeneratedDownloadFailure = {
+  fileId: string;
+  message: string;
+  meta: ReturnType<typeof getImageErrorMeta>;
+};
+
+const MAX_DOWNLOAD_RETRIES = 3;
+
+function getFailureMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error || "unknown download error");
+}
+
+async function downloadGeneratedItemWithRetry(
   session: ChatGptResultSession,
   accessToken: string,
   deviceId: string,
   conversationId: string,
-  fileIds: string[],
+  fileId: string,
   revisedPrompt?: string,
 ) {
-  const downloadResults = await Promise.allSettled(
-    fileIds.map(async (fileId) => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= MAX_DOWNLOAD_RETRIES; attempt += 1) {
+    try {
       const url = await fetchDownloadUrl(session, accessToken, deviceId, conversationId, fileId);
       if (!url) {
         throw createImageError(`failed to get download url for file ${fileId}`, {
@@ -52,6 +67,7 @@ async function downloadGeneratedItems(
         fileId,
         base64Length: b64.length,
         token: maskAccessToken(accessToken),
+        attempt: attempt + 1,
       });
       return {
         b64_json: b64,
@@ -59,12 +75,68 @@ async function downloadGeneratedItems(
         file_id: fileId,
         conversation_id: conversationId || undefined,
       };
-    }),
+    } catch (error) {
+      lastError = error;
+      const message = getFailureMessage(error);
+      const errorMeta = getImageErrorMeta(error);
+      if (attempt < MAX_DOWNLOAD_RETRIES) {
+        logger.warn("openai-client", "generate-image:file-download-retry", {
+          conversationId,
+          fileId,
+          attempt: attempt + 1,
+          nextAttempt: attempt + 2,
+          error: message.slice(0, 300),
+          token: maskAccessToken(accessToken),
+          ...errorMeta,
+        });
+        continue;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+async function downloadGeneratedItems(
+  session: ChatGptResultSession,
+  accessToken: string,
+  deviceId: string,
+  conversationId: string,
+  fileIds: string[],
+  revisedPrompt?: string,
+) {
+  const downloadResults = await Promise.allSettled(
+    fileIds.map((fileId) =>
+      downloadGeneratedItemWithRetry(session, accessToken, deviceId, conversationId, fileId, revisedPrompt),
+    ),
   );
 
-  return downloadResults
+  const failures: GeneratedDownloadFailure[] = [];
+  const items = downloadResults
     .filter((r): r is PromiseFulfilledResult<GeneratedDownloadItem> => r.status === "fulfilled")
     .map((r) => r.value);
+
+  downloadResults.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      return;
+    }
+    const fileId = fileIds[index] ?? "";
+    const failure = {
+      fileId,
+      message: getFailureMessage(result.reason),
+      meta: getImageErrorMeta(result.reason),
+    };
+    failures.push(failure);
+    logger.warn("openai-client", "generate-image:file-download-failed", {
+      conversationId,
+      fileId,
+      error: failure.message.slice(0, 300),
+      token: maskAccessToken(accessToken),
+      ...failure.meta,
+    });
+  });
+
+  return { items, failures };
 }
 
 export async function collectGeneratedItems(
@@ -106,7 +178,7 @@ export async function collectGeneratedItems(
     });
   }
 
-  const successItems = await downloadGeneratedItems(
+  const { items: successItems, failures } = await downloadGeneratedItems(
     session,
     accessToken,
     deviceId,
@@ -123,7 +195,8 @@ export async function collectGeneratedItems(
   });
 
   if (successItems.length === 0) {
-    throw createImageError("failed to download any images", {
+    const detail = failures[0]?.message;
+    throw createImageError(detail ? `failed to download any images: ${detail}` : "failed to download any images", {
       kind: "result_fetch_failed",
       retryAction: "retry_download",
       retryable: true,
@@ -182,7 +255,7 @@ export async function recoverGeneratedItems(
     });
   }
 
-  const successItems = await downloadGeneratedItems(
+  const { items: successItems, failures } = await downloadGeneratedItems(
     session,
     accessToken,
     deviceId,
@@ -192,7 +265,8 @@ export async function recoverGeneratedItems(
   );
 
   if (successItems.length === 0) {
-    throw createImageError("failed to download any images", {
+    const detail = failures[0]?.message;
+    throw createImageError(detail ? `failed to download any images: ${detail}` : "failed to download any images", {
       kind: "result_fetch_failed",
       retryAction: "retry_download",
       retryable: true,

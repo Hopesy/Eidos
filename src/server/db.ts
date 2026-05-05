@@ -1,6 +1,7 @@
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+
+import { createAccountId } from "@/server/account-id";
 
 type Database = import("node:sqlite").DatabaseSync;
 type DatabaseSyncConstructor = typeof import("node:sqlite").DatabaseSync;
@@ -253,10 +254,6 @@ function migrateAccountsJsonIfNeeded(database: Database) {
     database.exec("ROLLBACK");
     throw error;
   }
-}
-
-function createAccountId(accessToken: string) {
-  return createHash("sha1").update(accessToken).digest("hex").slice(0, 16);
 }
 
 function cleanString(value: unknown) {

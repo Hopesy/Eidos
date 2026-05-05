@@ -7,6 +7,10 @@ import type { ImageRatioOption } from "@/shared/image-generation";
 import type { EditorTarget } from "./submission";
 import { buildImageDataUrl, createSourceImageFromResult, fileToDataUrl, makeId } from "./utils";
 
+const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "1:1";
+const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
+const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "medium";
+
 export type PromptExample = {
   model: ImageModel;
   count: number;
@@ -15,6 +19,8 @@ export type PromptExample = {
 
 type ResetComposerOptions = {
   preserveImageSize?: boolean;
+  preserveImageQuality?: boolean;
+  preserveUpscaleQuality?: boolean;
 };
 
 type ComposerContext = {
@@ -47,10 +53,14 @@ export function resetComposer(
   ctx.setImagePrompt("");
   ctx.setImageCount("1");
   if (!options.preserveImageSize) {
-    ctx.setImageSize("auto");
+    ctx.setImageSize(DEFAULT_GENERATE_IMAGE_RATIO);
   }
-  ctx.setImageQuality("medium");
-  ctx.setUpscaleQuality("medium");
+  if (!options.preserveImageQuality) {
+    ctx.setImageQuality(DEFAULT_IMAGE_QUALITY);
+  }
+  if (!options.preserveUpscaleQuality) {
+    ctx.setUpscaleQuality(DEFAULT_UPSCALE_QUALITY);
+  }
   ctx.setReuseLatestResultForGenerate(true);
   ctx.setSourceImages([]);
 }
@@ -118,7 +128,7 @@ export function applyPromptExample(ctx: ComposerContext, example: PromptExample)
   handleModeChange(ctx, "generate");
   ctx.setImageModel(example.model);
   ctx.setImageCount(String(example.count));
-  ctx.setImageSize("auto");
+  ctx.setImageSize(DEFAULT_GENERATE_IMAGE_RATIO);
   ctx.setImageQuality("high");
   ctx.setImagePrompt(example.prompt);
   ctx.openDraftConversation();

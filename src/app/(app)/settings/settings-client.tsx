@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 import {
     CircleHelp,
+    Eye,
+    EyeOff,
     LoaderCircle,
     RefreshCcw,
     Save,
@@ -27,7 +30,7 @@ function HintTooltip({ text }: { text: string }) {
     return (
         <span className="relative inline-flex items-center group">
             <CircleHelp
-                className="size-4 text-stone-400 transition-colors hover:text-stone-600"
+                className="size-4 text-stone-400 transition-colors hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
                 aria-hidden="true"
             />
             <span className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-stone-200 bg-white px-3 py-2 text-xs leading-6 text-stone-600 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.35)] group-hover:block group-focus-within:block sm:left-1/2 sm:right-auto sm:-translate-x-1/2 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
@@ -130,6 +133,7 @@ type SettingsClientProps = {
 };
 
 export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfigAction }: SettingsClientProps) {
+    const [showChatgptApiKey, setShowChatgptApiKey] = useState(false);
     const {
         config,
         loading,
@@ -177,7 +181,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
             {loading ? (
                 <div className="flex flex-col gap-2.5">
                     {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-48 animate-pulse rounded-[28px] bg-stone-100" />
+                        <div key={i} className="h-48 animate-pulse rounded-[28px] bg-stone-100 dark:bg-stone-800" />
                     ))}
                 </div>
                 ) : (
@@ -189,14 +193,14 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                     <div className="relative">
                                         <Input
                                             id="chatgpt-base-url"
-                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[104px] shadow-none"
+                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[104px] shadow-none dark:border-stone-700 dark:bg-stone-800"
                                             value={config.chatgpt?.baseUrl ?? ""}
                                             onChange={(e) => setSection("chatgpt", { baseUrl: e.target.value })}
                                             placeholder="https://api.openai.com/v1"
                                         />
                                         <label
                                             htmlFor="chatgpt-enabled"
-                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700"
+                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
                                         >
                                             <Checkbox
                                                 id="chatgpt-enabled"
@@ -209,14 +213,28 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 </div>
                                 <div className="flex-1">
                                     <LabelWithHint id="chatgpt-api-key" label="图像 API Key" hint="启用后所有图片请求都只走这里配置的 API，不再回退账号池" />
-                                    <Input
-                                        id="chatgpt-api-key"
-                                        type="password"
-                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none"
-                                        value={config.chatgpt?.apiKey ?? ""}
-                                        onChange={(e) => setSection("chatgpt", { apiKey: e.target.value })}
-                                        placeholder="sk-..."
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            id="chatgpt-api-key"
+                                            type={showChatgptApiKey ? "text" : "password"}
+                                            className="h-9 rounded-xl border-stone-200 bg-white pr-10 shadow-none dark:border-stone-700 dark:bg-stone-800"
+                                            value={config.chatgpt?.apiKey ?? ""}
+                                            onChange={(e) => setSection("chatgpt", { apiKey: e.target.value })}
+                                            placeholder="sk-..."
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-1 top-1/2 size-7 -translate-y-1/2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-200"
+                                            onClick={() => setShowChatgptApiKey((prev) => !prev)}
+                                            aria-label={showChatgptApiKey ? "隐藏图像 API Key" : "显示图像 API Key"}
+                                            aria-pressed={showChatgptApiKey}
+                                            title={showChatgptApiKey ? "隐藏图像 API Key" : "显示图像 API Key"}
+                                        >
+                                            {showChatgptApiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -230,7 +248,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                         value={String(config.chatgpt?.apiStyle || "v1")}
                                         onValueChange={(value) => setSection("chatgpt", { apiStyle: value as ImageApiStyle })}
                                     >
-                                        <SelectTrigger id="chatgpt-api-style" className="h-9 rounded-xl border-stone-200 bg-white shadow-none">
+                                        <SelectTrigger id="chatgpt-api-style" className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -247,7 +265,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 >
                                     <Input
                                         id="chatgpt-responses-model"
-                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none"
+                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
                                         value={String(config.chatgpt?.responsesModel ?? "gpt-5.5")}
                                         onChange={(e) => setSection("chatgpt", { responsesModel: e.target.value })}
                                         placeholder="gpt-5.5"
@@ -263,7 +281,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                     <div className="relative">
                                         <Input
                                             id="cpa-base-url"
-                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[104px] shadow-none"
+                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[104px] shadow-none dark:border-stone-700 dark:bg-stone-800"
                                             value={config.cpa?.baseUrl ?? ""}
                                             onChange={(e) => setSection("cpa", { baseUrl: e.target.value })}
                                             placeholder="https://your-cpa-proxy.example.com"
@@ -271,7 +289,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                         />
                                         <label
                                             htmlFor="cpa-enabled"
-                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700"
+                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
                                         >
                                             <Checkbox
                                                 id="cpa-enabled"
@@ -287,7 +305,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                     <Input
                                         id="cpa-management-key"
                                         type="password"
-                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none"
+                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
                                         value={config.cpa?.managementKey ?? ""}
                                         onChange={(e) => setSection("cpa", { managementKey: e.target.value })}
                                         placeholder="your-cliproxy-management-key"
@@ -303,7 +321,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                     <div className="relative">
                                         <Input
                                             id="proxy-url"
-                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[116px] shadow-none"
+                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[116px] shadow-none dark:border-stone-700 dark:bg-stone-800"
                                             value={(config.proxy as { enabled?: boolean; url?: string } | undefined)?.url ?? ""}
                                             onChange={(e) => setSection("proxy", { url: e.target.value })}
                                             placeholder="http://127.0.0.1:7890"
@@ -311,7 +329,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                         />
                                         <label
                                             htmlFor="proxy-enabled"
-                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700"
+                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
                                         >
                                             <Checkbox
                                                 id="proxy-enabled"
@@ -330,7 +348,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 <Input
                                     id="accounts-default-quota"
                                     type="number"
-                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none"
+                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
                                     value={config.accounts?.defaultQuota ?? 5}
                                     onChange={(e) => setSection("accounts", { defaultQuota: Number(e.target.value) })}
                                     placeholder="5"
@@ -341,7 +359,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 <Input
                                     id="accounts-refresh-interval"
                                     type="number"
-                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none"
+                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
                                     value={config.accounts?.refreshInterval ?? 30}
                                     onChange={(e) => setSection("accounts", { refreshInterval: Number(e.target.value) })}
                                     placeholder="30"

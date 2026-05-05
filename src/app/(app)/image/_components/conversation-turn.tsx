@@ -59,6 +59,9 @@ const modeLabelMap: Record<ImageMode, string> = {
     upscale: "增强",
 };
 
+const RESULT_MEDIA_CARD_WIDTH = "w-[270px] max-w-full shrink-0";
+const RESULT_MEDIA_VIEWPORT_HEIGHT = "aspect-square";
+
 function buildRetryButtonLabel(turn: ImageConversationTurn) {
     if (turn.retryAction === "resume_polling") {
         return "继续等待";
@@ -67,6 +70,13 @@ function buildRetryButtonLabel(turn: ImageConversationTurn) {
         return "重试下载";
     }
     return "重试";
+}
+
+function buildErrorCardTitle(image: StoredImage, turn: ImageConversationTurn) {
+    if (image.failureKind === "result_fetch_failed" || turn.failureKind === "result_fetch_failed") {
+        return "下载失败";
+    }
+    return "处理失败";
 }
 
 function ImageResolutionBadge({ src }: { src: string }) {
@@ -229,14 +239,7 @@ export function ConversationTurn({
 
                 {turn.images.length > 0 ? (
                     <div
-                        className={cn(
-                            "grid gap-3",
-                            turn.images.length === 1
-                                ? "grid-cols-1"
-                                : turn.images.length === 3
-                                    ? "grid-cols-1 lg:grid-cols-3"
-                                    : "grid-cols-1 lg:grid-cols-2",
-                        )}
+                        className="flex flex-wrap items-start gap-3"
                     >
                         {turn.images.map((image, index) => {
                             const shouldShowErrorState = image.status === "error" || (!isProcessing && turn.status === "error");
@@ -250,7 +253,7 @@ export function ConversationTurn({
                                 key={image.id}
                                 className={cn(
                                     "space-y-2",
-                                    turn.images.length === 1 && "w-fit max-w-full justify-self-start",
+                                    !image.text && RESULT_MEDIA_CARD_WIDTH,
                                 )}
                             >
                                 {image.status === "success" && image.text ? (
@@ -267,7 +270,10 @@ export function ConversationTurn({
                                         <div className="overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
                                             <button
                                                 type="button"
-                                                className="flex h-[min(72vw,360px)] min-h-[220px] w-full cursor-zoom-in items-center justify-center sm:h-[360px]"
+                                                className={cn(
+                                                    "flex w-full cursor-zoom-in items-center justify-center",
+                                                    RESULT_MEDIA_VIEWPORT_HEIGHT,
+                                                )}
                                                 onClick={() => onPreviewImage(imageDataUrl)}
                                             >
                                                 <Image
@@ -347,14 +353,14 @@ export function ConversationTurn({
                                     </>
                                 ) : shouldShowErrorState ? (
                                     /* ── 错误态 ── */
-                                    <div className="flex min-h-[220px] w-full max-w-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm sm:min-h-[240px] sm:w-[214px] dark:border-stone-700 dark:bg-stone-900">
-                                        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center">
+                                    <div className="flex w-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900">
+                                        <div className={cn("flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8 text-center", RESULT_MEDIA_VIEWPORT_HEIGHT)}>
                                             <div className="flex size-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-900/30">
                                                 <AlertCircle className="size-5 text-rose-500 dark:text-rose-400" />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm font-medium text-rose-600 dark:text-rose-400">处理失败</p>
-                                                <p className="max-w-[170px] whitespace-pre-wrap break-words text-xs leading-5 text-stone-500 dark:text-stone-400">
+                                                <p className="text-sm font-medium text-rose-600 dark:text-rose-400">{buildErrorCardTitle(image, turn)}</p>
+                                                <p className="max-w-full whitespace-pre-wrap break-words text-xs leading-5 text-stone-500 dark:text-stone-400">
                                                     {errorMessage}
                                                 </p>
                                             </div>
@@ -374,7 +380,10 @@ export function ConversationTurn({
                                     </div>
                                 ) : (
                                     /* ── 处理中态 ── */
-                                    <div className="relative flex min-h-[220px] w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-[20px] border border-stone-200 bg-[radial-gradient(circle_at_top,#f5f5f4,transparent_55%),linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] px-6 py-8 text-center shadow-sm sm:min-h-[240px] sm:min-w-[240px] dark:border-stone-700 dark:bg-[radial-gradient(circle_at_top,#292524,transparent_55%),linear-gradient(180deg,#1c1917_0%,#0c0a09_100%)]">
+                                    <div className={cn(
+                                        "relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-[20px] border border-stone-200 bg-[radial-gradient(circle_at_top,#f5f5f4,transparent_55%),linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] px-6 py-8 text-center shadow-sm dark:border-stone-700 dark:bg-[radial-gradient(circle_at_top,#292524,transparent_55%),linear-gradient(180deg,#1c1917_0%,#0c0a09_100%)]",
+                                        RESULT_MEDIA_VIEWPORT_HEIGHT,
+                                    )}>
                                         <div className="absolute inset-x-8 top-8 h-24 rounded-full bg-stone-200/40 blur-3xl dark:bg-stone-700/40" />
                                         <div className="absolute inset-0 opacity-60">
                                             <div className="absolute left-6 top-6 h-16 w-16 animate-pulse rounded-[20px] border border-stone-200/70 bg-white/80 dark:border-stone-700/70 dark:bg-stone-800/80" />

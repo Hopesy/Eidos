@@ -335,7 +335,7 @@ export function humanizeError(error: unknown): string {
       return "任务已提交到上游，当前仍在处理中。建议稍后继续等待，而不是立即重新提交。";
     }
     if (error.failureKind === "result_fetch_failed") {
-      return "图片结果已就绪，但下载失败。建议优先重试下载，而不是重新生成。";
+      return "图片结果已就绪，但下载失败。";
     }
     if (error.failureKind === "source_invalid") {
       return "上游未识别到源图，请重新上传源图后重试。";

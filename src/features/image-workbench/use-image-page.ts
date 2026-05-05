@@ -39,13 +39,20 @@ import {
   type PromptExample,
 } from "./composer";
 import {
+  applyComposerToolbarStateFromTurn,
   handleCancelAndEditActiveRequest as handleActiveRequestCancelAndEdit,
+  getLatestConversationTurn,
   handleEditTurn as handleConversationTurnEdit,
   restoreComposerFromTurn as restoreWorkbenchComposerFromTurn,
   retractTurnAfterAbort as retractConversationTurnAfterAbort,
 } from "./conversation-editing";
 import { buildProcessingStatus, buildWaitingDots } from "./processing-status";
-import { findRecoverableTaskCandidate, findRecoverableTurn } from "./recovery-candidates";
+import {
+  findRecoverableTaskCandidate,
+  findRecoverableTaskForTurn,
+  findRecoverableTurn,
+  mergeRecoverableTaskIntoTurn,
+} from "./recovery-candidates";
 import {
   runRetryTurn,
   runSelectionEditSubmit,
@@ -99,6 +106,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const mountedRef = useRef(true);
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
   const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
+  const restoredToolbarConversationIdRef = useRef<string | null>(null);
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const pendingAbortActionRef = useRef<PendingAbortAction | null>(null);
   const activeRequestMetaRef = useRef<ActiveRequestMeta | null>(null);
@@ -124,7 +132,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageCount, setImageCount] = useState("1");
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
-  const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
+  const [imageSize, setImageSize] = useState<ToolbarImageSize>("1:1");
   const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
   const [upscaleQuality, setUpscaleQuality] = useState<ImageGenerationQuality>("medium");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
@@ -336,6 +344,33 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   }, []);
 
   useEffect(() => {
+    if (!selectedConversationId) {
+      restoredToolbarConversationIdRef.current = null;
+      return;
+    }
+    if (!selectedConversation || restoredToolbarConversationIdRef.current === selectedConversationId) {
+      return;
+    }
+
+    const latestTurn = getLatestConversationTurn(selectedConversation);
+    if (latestTurn) {
+      applyComposerToolbarStateFromTurn(
+        {
+          setMode,
+          setImageModel,
+          setImageCount,
+          setImageSize,
+          setImageQuality,
+          setUpscaleQuality,
+        },
+        latestTurn,
+      );
+    }
+
+    restoredToolbarConversationIdRef.current = selectedConversationId;
+  }, [selectedConversation, selectedConversationId]);
+
+  useEffect(() => {
     if (!selectedConversation && !isSubmitting) {
       return;
     }
@@ -461,8 +496,15 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     openDraftConversation,
   };
 
-  const resetComposer = (nextMode = mode) => {
-    resetWorkbenchComposer(composerContext, nextMode);
+  const resetComposer = (
+    nextMode = mode,
+    options?: {
+      preserveImageSize?: boolean;
+      preserveImageQuality?: boolean;
+      preserveUpscaleQuality?: boolean;
+    },
+  ) => {
+    resetWorkbenchComposer(composerContext, nextMode, options);
   };
 
   const handleModeChange = (nextMode: ImageMode) => {
@@ -585,10 +627,12 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   };
 
   const handleRetryTurn = async (conversationId: string, turn: ImageConversationTurn, imageId?: string) => {
+    const recoverableTask = findRecoverableTaskForTurn(recoverableTasks, conversationId, turn);
+    const retryTurn = recoverableTask ? mergeRecoverableTaskIntoTurn(turn, recoverableTask) : turn;
     await runRetryTurn({
       focusConversation,
       updateConversation,
-    }, conversationId, turn, imageId);
+    }, conversationId, retryTurn, imageId);
   };
 
   useEffect(() => {

@@ -198,6 +198,8 @@ export async function runSubmit(ctx: SubmitContext) {
 
     ctx.resetComposer(mode === "generate" ? "generate" : mode, {
       preserveImageSize: mode === "generate",
+      preserveImageQuality: mode === "generate",
+      preserveUpscaleQuality: mode === "upscale",
     });
     if (failedCount > 0) {
       toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);

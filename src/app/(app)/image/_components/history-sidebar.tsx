@@ -120,7 +120,7 @@ export function HistorySidebar({
         </div>
 
         {/* 列表 */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+        <div className="theme-scrollbar min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {isLoadingHistory ? (
             <div className="flex items-center gap-2 rounded-xl px-3 py-3 text-xs text-stone-400 dark:text-stone-500">
               <LoaderCircle className="size-4 animate-spin" />

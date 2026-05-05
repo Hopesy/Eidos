@@ -18,14 +18,31 @@ export async function pollImageIds(session: ChatGptResultSession, accessToken: s
     token: maskAccessToken(accessToken),
   });
   while (Date.now() - started < 180000) {
-    const response = await session.fetch(`${BASE_URL}/backend-api/conversation/${conversationId}`, {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        "oai-device-id": deviceId,
-        accept: "*/*",
-      },
-      timeoutMs: 30000,
-    });
+    let response: Response;
+    try {
+      response = await session.fetch(`${BASE_URL}/backend-api/conversation/${conversationId}`, {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+          "oai-device-id": deviceId,
+          accept: "*/*",
+        },
+        timeoutMs: 30000,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "poll image ids failed";
+      logger.warn("openai-client", "poll-image-ids:error", {
+        conversationId,
+        error: message.slice(0, 300),
+        elapsedMs: Date.now() - started,
+      });
+      throw createImageError(message, {
+        kind: "accepted_pending",
+        retryAction: "resume_polling",
+        retryable: true,
+        stage: "poll",
+        upstreamConversationId: conversationId,
+      });
+    }
 
     if (response.ok) {
       const payload = (await response.json()) as { mapping?: Record<string, unknown> };
@@ -77,7 +94,13 @@ export async function fetchDownloadUrl(
       timeoutMs: 30000,
     });
   } catch (error) {
-    throw createImageError(error instanceof Error ? error.message : "failed to get download url", {
+    const message = error instanceof Error ? error.message : "failed to get download url";
+    logger.warn("openai-client", "download-url:error", {
+      conversationId,
+      fileId,
+      error: message.slice(0, 300),
+    });
+    throw createImageError(message, {
       kind: "result_fetch_failed",
       retryAction: "retry_download",
       retryable: true,

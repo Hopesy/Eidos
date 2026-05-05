@@ -115,7 +115,7 @@ function DesktopTopNav({
           <Link
             href="/image"
             className={cn(
-              "flex items-center rounded-2xl transition hover:bg-white/70",
+              "flex items-center rounded-2xl transition",
               collapsed
                 ? "justify-center px-0 py-1"
                 : "min-w-0 flex-1 gap-3 px-3 py-3",
