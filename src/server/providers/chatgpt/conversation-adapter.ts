@@ -30,14 +30,37 @@ type ConversationInput = {
   attachments?: UploadedMultimodalFile[];
 };
 
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+function buildImageSizeInstruction(size: ImageGenerationSize) {
+  if (size === "auto") {
+    return "";
+  }
+
+  const match = /^(\d+)x(\d+)$/.exec(size);
+  if (!match) {
+    return `输出分辨率使用 ${size}。`;
+  }
+
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  const divisor = gcd(width, height) || 1;
+  const aspectRatio = `${width / divisor}:${height / divisor}`;
+  const orientation = width === height ? "正方形" : width > height ? "横向" : "竖向";
+  return `输出画布必须使用 ${size}，宽高比 ${aspectRatio}，${orientation}构图；不要输出方图或其他比例。如果上游无法严格给出该像素尺寸，也必须保持这个宽高比和画布方向。`;
+}
+
 function buildImagePromptWithOptions(prompt: string, options?: ImageGenerationOptions) {
   const normalizedPrompt = String(prompt || "").trim();
   const size = options?.size ?? "auto";
   const quality = options?.quality ?? "auto";
   const instructions: string[] = [];
 
-  if (size !== "auto") {
-    instructions.push(`输出分辨率使用 ${size}。`);
+  const sizeInstruction = buildImageSizeInstruction(size);
+  if (sizeInstruction) {
+    instructions.push(sizeInstruction);
   }
 
   const qualityInstruction = buildImageGenerationQualityInstruction(quality);
@@ -271,6 +294,8 @@ export async function generateImageResultWithAttachments(
   }
 
   const upstreamModel = resolveUpstreamModel(account, requestedModel);
+  const size = params.size ?? "auto";
+  const quality = params.quality ?? "auto";
   const { session, deviceId, chatToken, proofToken } = await prepareConversationContext(normalizedToken, account);
 
   const uploadedFiles = await Promise.all(
@@ -287,6 +312,8 @@ export async function generateImageResultWithAttachments(
     token: maskAccessToken(normalizedToken),
     requestedModel,
     upstreamModel,
+    size,
+    quality,
     imageCount: params.images.length,
     hasMask: Boolean(params.mask),
     promptLength: normalizedPrompt.length,

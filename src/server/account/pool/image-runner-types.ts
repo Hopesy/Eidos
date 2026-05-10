@@ -35,6 +35,7 @@ export type AccountPoolImageRunner = {
     model: string,
     image: File,
     options?: {
+      imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;

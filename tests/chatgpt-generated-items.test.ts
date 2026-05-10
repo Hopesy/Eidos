@@ -28,7 +28,7 @@ describe("chatgpt generated item collection", () => {
       },
     };
     const raw = [
-      'data: {"conversation_id":"conv-retry","message":{"content":{"content_type":"text","parts":["sediment://file_1"]}}}',
+      'data: {"conversation_id":"conv-retry","message":{"author":{"role":"tool"},"metadata":{"async_task_type":"image_gen"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"sediment://file_1"}]}}}',
       "data: [DONE]",
     ].join("\n");
 
@@ -38,6 +38,112 @@ describe("chatgpt generated item collection", () => {
     assert.equal(imageDownloadCalls, 3);
     assert.equal(result.data.length, 1);
     assert.equal(result.data[0]?.file_id, "sed:file_1");
+  });
+
+  it("ignores source attachment pointers in streamed text and polls for generated output", async () => {
+    const fetchedUrls: string[] = [];
+    const session = {
+      async fetch(url: string) {
+        fetchedUrls.push(url);
+        if (url.endsWith("/backend-api/conversation/conv-source")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              node_1: {
+                message: {
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_result" }],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.includes("/attachment/file_result/download")) {
+          return new Response(JSON.stringify({ download_url: "https://download.local/result.png" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url === "https://download.local/result.png") {
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-source","message":{"content":{"content_type":"text","parts":["{\\"source\\":\\"sediment://file_source\\",\\"prompt\\":\\"make image\\"}"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    assert.equal(result.data.length, 1);
+    assert.equal(result.data[0]?.file_id, "sed:file_result");
+    assert.ok(fetchedUrls.some((url) => url.includes("/backend-api/conversation/conv-source")));
+    assert.ok(!fetchedUrls.some((url) => url.includes("/attachment/file_source/download")));
+  });
+
+  it("falls back to conversation mapping when streamed file ids are stale", async () => {
+    let staleDownloadCalls = 0;
+    const session = {
+      async fetch(url: string) {
+        if (url.endsWith("/attachment/file_stale/download")) {
+          return new Response(JSON.stringify({ download_url: "https://download.local/stale.png" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url === "https://download.local/stale.png") {
+          staleDownloadCalls += 1;
+          return new Response("not found", { status: 404 });
+        }
+        if (url.endsWith("/backend-api/conversation/conv-fallback")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              node_1: {
+                message: {
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_result" }],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.endsWith("/attachment/file_result/download")) {
+          return new Response(JSON.stringify({ download_url: "https://download.local/result.png" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url === "https://download.local/result.png") {
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-fallback","message":{"author":{"role":"tool"},"metadata":{"async_task_type":"image_gen"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"sediment://file_stale"}]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    assert.equal(staleDownloadCalls, 4);
+    assert.equal(result.data.length, 1);
+    assert.equal(result.data[0]?.file_id, "sed:file_result");
   });
 
   it("classifies polling network failures as recoverable pending work", async () => {
@@ -93,6 +199,47 @@ describe("chatgpt generated item collection", () => {
     );
   });
 
+  it("does not fall back to polling for non-recoverable download failures", async () => {
+    let pollCalled = false;
+    const session = {
+      async fetch(url: string) {
+        if (url.includes("/attachment/file_error/download")) {
+          return new Response(JSON.stringify({ download_url: "https://download.local/error.png" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url === "https://download.local/error.png") {
+          return new Response("server error", { status: 500 });
+        }
+        if (url.endsWith("/backend-api/conversation/conv-error")) {
+          pollCalled = true;
+          return new Response(JSON.stringify({ mapping: {} }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-error","message":{"author":{"role":"tool"},"metadata":{"async_task_type":"image_gen"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"sediment://file_error"}]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    await assert.rejects(
+      () => collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a"),
+      (error) => {
+        assert.ok(error instanceof ImageGenerationError);
+        assert.equal(error.kind, "result_fetch_failed");
+        assert.equal(error.retryAction, "retry_download");
+        return true;
+      },
+    );
+
+    assert.equal(pollCalled, false, "poll should not be called for 500 errors");
+  });
+
   it("preserves the first concrete download failure in the aggregate error", async () => {
     let attempts = 0;
     const session = {
@@ -102,7 +249,7 @@ describe("chatgpt generated item collection", () => {
       },
     };
     const raw = [
-      'data: {"conversation_id":"conv-1","message":{"content":{"content_type":"text","parts":["sediment://file_1"]}}}',
+      'data: {"conversation_id":"conv-1","message":{"author":{"role":"tool"},"metadata":{"async_task_type":"image_gen"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"sediment://file_1"}]}}}',
       "data: [DONE]",
     ].join("\n");
 

@@ -204,6 +204,7 @@ export async function upscaleWithPool(
   model: string,
   image: File,
   options: {
+    imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
   } = {},
 ) {
@@ -215,6 +216,7 @@ export async function upscaleWithApiService(
   model: string,
   image: File,
   options: {
+    imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
   } = {},
 ) {
@@ -232,6 +234,7 @@ export async function upscaleWithApiService(
     model,
     image,
     {
+      imageSize: options.imageSize,
       imageQuality: options.imageQuality,
       startedAt,
       startedAtMs,

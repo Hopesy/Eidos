@@ -10,14 +10,22 @@ import {
 } from "./result-shared";
 import { extractImageIds } from "./result-parser";
 
-export async function pollImageIds(session: ChatGptResultSession, accessToken: string, deviceId: string, conversationId: string) {
+export async function pollImageIds(
+  session: ChatGptResultSession,
+  accessToken: string,
+  deviceId: string,
+  conversationId: string,
+  options: { maxWaitMs?: number } = {},
+) {
   const started = Date.now();
+  const maxWaitMs = Math.max(3000, options.maxWaitMs ?? 180000);
   logger.info("openai-client", "poll-image-ids:start", {
     conversationId,
     deviceId,
     token: maskAccessToken(accessToken),
+    maxWaitMs,
   });
-  while (Date.now() - started < 180000) {
+  while (Date.now() - started < maxWaitMs) {
     let response: Response;
     try {
       response = await session.fetch(`${BASE_URL}/backend-api/conversation/${conversationId}`, {
@@ -68,6 +76,7 @@ export async function pollImageIds(session: ChatGptResultSession, accessToken: s
   logger.warn("openai-client", "poll-image-ids:timeout", {
     conversationId,
     elapsedMs: Date.now() - started,
+    maxWaitMs,
   });
   return [] as string[];
 }

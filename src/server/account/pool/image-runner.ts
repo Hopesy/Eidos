@@ -46,6 +46,7 @@ export function createAccountPoolImageRunner(
         model,
         {
           images: [image],
+          size: options.imageSize,
           quality: options.imageQuality,
         },
         {
@@ -54,7 +55,7 @@ export function createAccountPoolImageRunner(
           count: 1,
           route: "upscale",
           successLogMessage: "图片增强完成",
-          successLogData: { model, quality: options.imageQuality ?? "medium" },
+          successLogData: { model, size: options.imageSize ?? "auto", quality: options.imageQuality ?? "medium" },
         },
       );
     },

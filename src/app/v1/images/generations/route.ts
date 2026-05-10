@@ -8,7 +8,7 @@ import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/open
 import { imageGenerationBodySchema, parseJsonBody } from "@/server/request-validation";
 import { jsonError, jsonOk } from "@/server/response";
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import { resolveImageGenerationSize } from "@/shared/image-generation";
+import { normalizeImageGenerationSize, resolveImageGenerationSize } from "@/shared/image-generation";
 
 export const runtime = "nodejs";
 
@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
     const count = parseImageCount(body.n);
     const quality = (body.quality || "auto") as ImageGenerationQuality;
     const requestedSize = (body.size || "auto") as ImageGenerationSize;
-    const size = requestedSize === "auto" ? resolveImageGenerationSize("auto", quality) : requestedSize;
+    const size = requestedSize === "auto"
+      ? resolveImageGenerationSize("auto", quality)
+      : normalizeImageGenerationSize(requestedSize);
 
     logger.info("images.generations.route", "request:start", {
       model,

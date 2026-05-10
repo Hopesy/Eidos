@@ -104,17 +104,21 @@ export async function editImage(params: {
 export async function upscaleImage(params: {
   image: File;
   prompt?: string;
+  size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
   model?: ImageModel;
   signal?: AbortSignal;
 }) {
-  const { image, prompt, quality, model = "gpt-image-1", signal } = params;
+  const { image, prompt, size, quality, model = "gpt-image-1", signal } = params;
   const formData = new FormData();
   formData.append("image", image);
   formData.append("model", model);
   formData.append("response_format", "b64_json");
   if (prompt !== undefined) {
     formData.append("prompt", prompt);
+  }
+  if (size) {
+    formData.append("size", size);
   }
   if (quality) {
     formData.append("quality", quality);

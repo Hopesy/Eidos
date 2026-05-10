@@ -84,6 +84,8 @@ export type SelectionEditParams = {
 export type SelectionEditContext = SubmissionContext & {
   editorTarget: EditorTarget | null;
   imageModel: ImageModel;
+  imageSize: ImageRatioOption;
+  imageQuality: ImageGenerationQuality;
 };
 
 export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "updateConversation">;

@@ -7,7 +7,6 @@ import { resolveImageRatioFromSize, resolveUpscaleQuality, type ImageRatioOption
 import type { ActiveRequestMeta, EditorTarget, PendingAbortAction } from "./submission";
 import { cloneSourceImagesForComposer, type ActiveRequestState } from "./utils";
 
-const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "1:1";
 const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
 const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "medium";
 
@@ -65,16 +64,13 @@ export function applyComposerToolbarStateFromTurn(
   ctx.setMode(turn.mode);
   ctx.setImageModel(turn.model);
   ctx.setImageCount(String(Math.max(1, Number(turn.count) || 1)));
+  ctx.setImageSize(turn.imageRatio ?? resolveImageRatioFromSize(turn.imageSize));
+  ctx.setImageQuality(turn.imageQuality ?? DEFAULT_IMAGE_QUALITY);
 
   if (turn.mode === "generate") {
-    ctx.setImageSize(resolveImageRatioFromSize(turn.imageSize));
-    ctx.setImageQuality(turn.imageQuality ?? DEFAULT_IMAGE_QUALITY);
     ctx.setUpscaleQuality(DEFAULT_UPSCALE_QUALITY);
     return;
   }
-
-  ctx.setImageSize(DEFAULT_GENERATE_IMAGE_RATIO);
-  ctx.setImageQuality(DEFAULT_IMAGE_QUALITY);
 
   if (turn.mode === "upscale") {
     ctx.setUpscaleQuality(resolveUpscaleQuality(turn.imageQuality, turn.scale));
@@ -123,6 +119,7 @@ export async function retractTurnAfterAbort(
     mode: latestTurn.mode,
     prompt: latestTurn.prompt,
     model: latestTurn.model,
+    imageRatio: latestTurn.imageRatio,
     imageSize: latestTurn.imageSize,
     imageQuality: latestTurn.imageQuality,
     count: latestTurn.count,

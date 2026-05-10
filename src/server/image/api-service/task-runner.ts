@@ -75,6 +75,7 @@ export function runApiUpscaleTask(
   model: string,
   image: File,
   options: {
+    imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     startedAt: string;
     startedAtMs: number;
@@ -86,12 +87,14 @@ export function runApiUpscaleTask(
       ? editImageResultWithResponsesApiService(imageApiService, {
         prompt,
         images: [image],
+        size: options.imageSize,
         quality: options.imageQuality,
       })
       : editImageResultWithApiService(imageApiService, {
         prompt,
         model,
         images: [image],
+        size: options.imageSize,
         quality: options.imageQuality,
       }),
     {
@@ -104,7 +107,7 @@ export function runApiUpscaleTask(
       startedAt: options.startedAt,
       startedAtMs: options.startedAtMs,
       successLogMessage: "图像 API 图片增强完成",
-      successLogData: { model, quality: options.imageQuality ?? "medium" },
+      successLogData: { model, size: options.imageSize ?? "auto", quality: options.imageQuality ?? "medium" },
     },
   );
 }

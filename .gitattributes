@@ -1,0 +1,14 @@
+# Force LF line endings for consistency across platforms
+* text=lf
+
+# Exclude binary files from line ending normalization
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

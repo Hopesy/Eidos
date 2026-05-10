@@ -3,6 +3,8 @@
 import localforage from "localforage";
 
 import type { ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
+import type { ImageRatioOption } from "@/shared/image-generation";
+import { resolveImageRatioFromSize } from "@/shared/image-generation";
 import { httpRequest } from "@/lib/request";
 
 // ─────────────────────────────────────────────
@@ -66,6 +68,7 @@ export type ImageConversationTurn = {
   mode: ImageMode;
   prompt: string;
   model: ImageModel;
+  imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
   count: number;
@@ -92,6 +95,7 @@ export type ImageConversation = {
   title: string;
   prompt: string;
   model: ImageModel;
+  imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
   count: number;
@@ -175,6 +179,7 @@ export function normalizeTurn(turn: ImageConversationTurn): ImageConversationTur
   return {
     ...turn,
     mode: turn.mode ?? "generate",
+    imageRatio: turn.imageRatio ?? resolveImageRatioFromSize(turn.imageSize),
     imageSize: turn.imageSize ?? "auto",
     imageQuality: turn.imageQuality ?? "auto",
     sourceImages: turn.sourceImages ?? [],
@@ -195,6 +200,7 @@ export function normalizeConversation(
       mode: conversation.mode ?? "generate",
       prompt: conversation.prompt,
       model: conversation.model,
+      imageRatio: conversation.imageRatio,
       imageSize: conversation.imageSize,
       imageQuality: conversation.imageQuality,
       count: conversation.count,
@@ -210,6 +216,7 @@ export function normalizeConversation(
   return {
     ...conversation,
     mode: conversation.mode ?? "generate",
+    imageRatio: conversation.imageRatio ?? resolveImageRatioFromSize(conversation.imageSize),
     imageSize: conversation.imageSize ?? "auto",
     imageQuality: conversation.imageQuality ?? "auto",
     sourceImages: conversation.sourceImages ?? [],
@@ -271,6 +278,7 @@ export async function updateImageConversation(
     mode: "generate",
     prompt: "",
     model: "gpt-image-1",
+    imageRatio: "auto",
     imageSize: "auto",
     imageQuality: "auto",
     count: 1,

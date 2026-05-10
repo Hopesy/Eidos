@@ -1,6 +1,6 @@
 import type { Account, ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
 import { ApiRequestError } from "@/lib/request";
-import { getUpscaleQualityLabel } from "@/shared/image-generation";
+import { getUpscaleQualityLabel, type ImageRatioOption } from "@/shared/image-generation";
 import { isImageTaskActive } from "@/store/image-active-tasks";
 import { normalizeConversation, saveImageConversation, type ImageConversation, type ImageConversationTurn, type ImageMode, type StoredImage, type StoredSourceImage } from "@/store/image-conversations";
 
@@ -153,6 +153,7 @@ export function createConversationTurn(payload: {
   mode: ImageMode;
   prompt: string;
   model: ImageModel;
+  imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
   count: number;
@@ -169,6 +170,7 @@ export function createConversationTurn(payload: {
     mode: payload.mode,
     prompt: payload.prompt,
     model: payload.model,
+    imageRatio: payload.imageRatio,
     imageSize: payload.imageSize,
     imageQuality: payload.imageQuality,
     count: payload.count,

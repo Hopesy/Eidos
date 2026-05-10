@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 
 import { editImage } from "@/lib/api";
+import { resolveImageGenerationSize } from "@/shared/image-generation";
 
 import { beginRequest, finishRequest } from "./request-lifecycle";
 import type { SelectionEditContext, SelectionEditParams } from "./submission-types";
@@ -23,7 +24,7 @@ export async function runSelectionEditSubmit(
   ctx: SelectionEditContext,
   params: SelectionEditParams,
 ) {
-  const { editorTarget, imageModel } = ctx;
+  const { editorTarget, imageModel, imageSize, imageQuality } = ctx;
   if (!editorTarget) {
     return;
   }
@@ -33,14 +34,16 @@ export async function runSelectionEditSubmit(
   const turnId = makeId();
   const now = new Date().toISOString();
   const selectionSourceImage = createSourceImageFromResult(editorTarget.image, editorTarget.imageName || "source.png");
+  const turnImageSize = resolveImageGenerationSize(imageSize, imageQuality);
   const draftTurn = createConversationTurn({
     turnId,
     title: buildConversationTitle("edit", prompt),
     mode: "edit",
     prompt,
     model: imageModel,
-    imageSize: "auto",
-    imageQuality: "auto",
+    imageRatio: imageSize,
+    imageSize: turnImageSize,
+    imageQuality,
     count: 1,
     sourceImages: [
       selectionSourceImage ?? {
@@ -90,6 +93,8 @@ export async function runSelectionEditSubmit(
       mask: mask.file,
       sourceReference: buildSourceReference(selectionSourceImage),
       model: imageModel,
+      size: turnImageSize,
+      quality: imageQuality,
       signal,
     });
     const resultItems = mergeResultImages(turnId, data.data || [], 1);

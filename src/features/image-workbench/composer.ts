@@ -7,7 +7,7 @@ import type { ImageRatioOption } from "@/shared/image-generation";
 import type { EditorTarget } from "./submission";
 import { buildImageDataUrl, createSourceImageFromResult, fileToDataUrl, makeId } from "./utils";
 
-const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "1:1";
+const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "auto";
 const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
 const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "medium";
 

@@ -88,3 +88,21 @@ export function findRecoverableTaskCandidate(tasks: RecoverableImageTaskItem[], 
 
   return null;
 }
+
+export function buildAutoRecoveryKey(candidate: {
+  conversationId: string;
+  turn: ImageConversationTurn;
+  task?: RecoverableImageTaskItem;
+}) {
+  const taskId = String(candidate.task?.id || "").trim();
+  const turn = candidate.turn;
+  const parts = [
+    taskId ? `task:${taskId}` : `turn:${candidate.conversationId}:${turn.id}`,
+    String(turn.retryAction || "").trim(),
+    String(turn.upstreamConversationId || "").trim(),
+    String(turn.upstreamResponseId || "").trim(),
+    String(turn.imageGenerationCallId || "").trim(),
+    (turn.fileIds || []).join(","),
+  ];
+  return parts.join(":");
+}

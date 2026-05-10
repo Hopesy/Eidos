@@ -2,6 +2,71 @@ import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 
 export type ImageRatioOption = "auto" | "1:1" | "3:2" | "2:3" | "16:9" | "9:16";
 
+const SIZE_PATTERN = /^(\d+)x(\d+)$/;
+const SIZE_MULTIPLE = 16;
+const MAX_EDGE = 3840;
+const MAX_ASPECT_RATIO = 3;
+const MAX_PIXELS = 8_294_400;
+
+function roundToMultiple(value: number, multiple: number) {
+  return Math.max(multiple, Math.round(value / multiple) * multiple);
+}
+
+function floorToMultiple(value: number, multiple: number) {
+  return Math.max(multiple, Math.floor(value / multiple) * multiple);
+}
+
+function normalizeDimensions(width: number, height: number) {
+  let normalizedWidth = roundToMultiple(width, SIZE_MULTIPLE);
+  let normalizedHeight = roundToMultiple(height, SIZE_MULTIPLE);
+
+  const scaleToFit = (scale: number) => {
+    normalizedWidth = floorToMultiple(normalizedWidth * scale, SIZE_MULTIPLE);
+    normalizedHeight = floorToMultiple(normalizedHeight * scale, SIZE_MULTIPLE);
+  };
+
+  for (let i = 0; i < 4; i += 1) {
+    const maxEdge = Math.max(normalizedWidth, normalizedHeight);
+    if (maxEdge > MAX_EDGE) {
+      scaleToFit(MAX_EDGE / maxEdge);
+    }
+
+    if (normalizedWidth / normalizedHeight > MAX_ASPECT_RATIO) {
+      normalizedWidth = floorToMultiple(normalizedHeight * MAX_ASPECT_RATIO, SIZE_MULTIPLE);
+    } else if (normalizedHeight / normalizedWidth > MAX_ASPECT_RATIO) {
+      normalizedHeight = floorToMultiple(normalizedWidth * MAX_ASPECT_RATIO, SIZE_MULTIPLE);
+    }
+
+    const pixels = normalizedWidth * normalizedHeight;
+    if (pixels > MAX_PIXELS) {
+      scaleToFit(Math.sqrt(MAX_PIXELS / pixels));
+    }
+  }
+
+  return { width: normalizedWidth, height: normalizedHeight };
+}
+
+export function normalizeImageGenerationSize(size: unknown): ImageGenerationSize {
+  const normalized = String(size || "auto").trim();
+  if (normalized === "auto") {
+    return "auto";
+  }
+
+  const match = SIZE_PATTERN.exec(normalized);
+  if (!match) {
+    return "auto";
+  }
+
+  const width = Number(match[1]);
+  const height = Number(match[2]);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return "auto";
+  }
+
+  const { width: safeWidth, height: safeHeight } = normalizeDimensions(width, height);
+  return `${safeWidth}x${safeHeight}` as ImageGenerationSize;
+}
+
 export function getUpscaleQualityLabel(quality: ImageGenerationQuality) {
   switch (quality) {
     case "low":
@@ -52,23 +117,12 @@ export function resolveImageGenerationSize(
   quality: ImageGenerationQuality,
 ): ImageGenerationSize {
   if (ratio === "auto") {
-    switch (quality) {
-      case "low":
-        return "1024x1024";
-      case "medium":
-        return "2048x2048";
-      case "high":
-        return "4096x4096";
-      default:
-        return "auto";
-    }
-  }
-
-  if (quality === "auto") {
     return "auto";
   }
 
-  const key = `${ratio}:${quality}` as const;
+  // Preserve the requested ratio even when quality is delegated to the provider.
+  const effectiveQuality = quality === "auto" ? "medium" : quality;
+  const key = `${ratio}:${effectiveQuality}` as const;
   const mapping: Record<string, ImageGenerationSize> = {
     "1:1:low": "1024x1024",
     "1:1:medium": "2048x2048",
@@ -86,21 +140,28 @@ export function resolveImageGenerationSize(
     "9:16:medium": "1440x2560",
     "9:16:high": "2160x3840",
   };
-  return mapping[key] ?? "auto";
+  return normalizeImageGenerationSize(mapping[key] ?? "auto");
 }
 
 export function resolveImageRatioFromSize(size?: ImageGenerationSize): ImageRatioOption {
   switch (size) {
+    case "256x256":
+    case "512x512":
     case "1024x1024":
     case "2048x2048":
+    case "2880x2880":
     case "4096x4096":
       return "1:1";
+    case "1792x1024":
     case "1536x1024":
     case "3072x2048":
+    case "3520x2336":
     case "6144x4096":
       return "3:2";
+    case "1024x1792":
     case "1024x1536":
     case "2048x3072":
+    case "2336x3520":
     case "4096x6144":
       return "2:3";
     case "1920x1088":

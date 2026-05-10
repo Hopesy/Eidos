@@ -252,6 +252,8 @@ export async function runRetryTurn(
         mask: maskFile,
         sourceReference: buildSourceReference(turnImageSources[0]),
         model: turn.model,
+        size: turnImageSize,
+        quality: turnImageQuality,
         signal,
       });
       resultPayloadItems = data.data || [];
@@ -262,6 +264,7 @@ export async function runRetryTurn(
       const data = await upscaleImage({
         image: file,
         prompt,
+        size: turnImageSize,
         quality: turnUpscaleQuality,
         model: turn.model,
         signal,

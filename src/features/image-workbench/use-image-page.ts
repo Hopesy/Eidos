@@ -48,6 +48,7 @@ import {
 } from "./conversation-editing";
 import { buildProcessingStatus, buildWaitingDots } from "./processing-status";
 import {
+  buildAutoRecoveryKey,
   findRecoverableTaskCandidate,
   findRecoverableTaskForTurn,
   findRecoverableTurn,
@@ -84,6 +85,12 @@ type UseImagePageOptions = {
   initialUsesImageApiService?: boolean;
 };
 
+const DRAFT_REUSE_LATEST_PREFERENCE_KEY = "__draft__";
+
+function getReuseLatestPreferenceKey(conversationId: string | null) {
+  return conversationId || DRAFT_REUSE_LATEST_PREFERENCE_KEY;
+}
+
 export function useImagePage(options: UseImagePageOptions = {}) {
   const cachedWorkspaceState = getCachedImageWorkspaceState();
   const hasInitialConversations = options.initialConversations !== undefined;
@@ -108,6 +115,8 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
   const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
   const restoredToolbarConversationIdRef = useRef<string | null>(null);
+  const reuseLatestPreferenceScopeRef = useRef<string | null>(initialSelectedConversationId);
+  const reuseLatestPreferenceRef = useRef<Map<string, boolean>>(new Map());
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const pendingAbortActionRef = useRef<PendingAbortAction | null>(null);
   const activeRequestMetaRef = useRef<ActiveRequestMeta | null>(null);
@@ -133,7 +142,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageCount, setImageCount] = useState("1");
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
-  const [imageSize, setImageSize] = useState<ToolbarImageSize>("1:1");
+  const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
   const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
   const [upscaleQuality, setUpscaleQuality] = useState<ImageGenerationQuality>("medium");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
@@ -200,6 +209,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     () => canToggleLatestResultReference && reuseLatestResultForGenerate,
     [canToggleLatestResultReference, reuseLatestResultForGenerate],
   );
+  const defaultReuseLatestResultForGenerate = !latestTurnGeneratedMultipleImages;
   const processingStatus = useMemo(
     () =>
       activeRequest
@@ -210,6 +220,17 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const waitingDots = useMemo(() => buildWaitingDots(submitElapsedSeconds), [submitElapsedSeconds]);
 
   const focusConversation = (conversationId: string) => {
+    reuseLatestPreferenceRef.current.set(
+      getReuseLatestPreferenceKey(selectedConversationId),
+      reuseLatestResultForGenerate,
+    );
+    if (
+      selectedConversationId === null &&
+      !conversations.some((item) => item.id === conversationId) &&
+      !reuseLatestPreferenceRef.current.has(getReuseLatestPreferenceKey(conversationId))
+    ) {
+      reuseLatestPreferenceRef.current.set(getReuseLatestPreferenceKey(conversationId), reuseLatestResultForGenerate);
+    }
     draftSelectionRef.current = false;
     setCachedImageWorkspaceState({
       selectedConversationId: conversationId,
@@ -219,6 +240,10 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   };
 
   const openDraftConversation = () => {
+    reuseLatestPreferenceRef.current.set(
+      getReuseLatestPreferenceKey(selectedConversationId),
+      reuseLatestResultForGenerate,
+    );
     draftSelectionRef.current = true;
     setCachedImageWorkspaceState({
       selectedConversationId: null,
@@ -436,8 +461,24 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   }, [imagePrompt, mode]);
 
   useEffect(() => {
-    setReuseLatestResultForGenerate(!latestTurnGeneratedMultipleImages);
-  }, [latestTurnGeneratedMultipleImages, selectedConversationId]);
+    const previousScope = reuseLatestPreferenceScopeRef.current;
+    if (previousScope === selectedConversationId) {
+      return;
+    }
+
+    reuseLatestPreferenceRef.current.set(
+      getReuseLatestPreferenceKey(previousScope),
+      reuseLatestResultForGenerate,
+    );
+    reuseLatestPreferenceScopeRef.current = selectedConversationId;
+
+    const nextKey = getReuseLatestPreferenceKey(selectedConversationId);
+    setReuseLatestResultForGenerate(
+      reuseLatestPreferenceRef.current.has(nextKey)
+        ? Boolean(reuseLatestPreferenceRef.current.get(nextKey))
+        : defaultReuseLatestResultForGenerate,
+    );
+  }, [defaultReuseLatestResultForGenerate, reuseLatestResultForGenerate, selectedConversationId]);
 
   useEffect(() => {
     setSourceImages((prev) => {
@@ -622,6 +663,8 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       restoreComposerFromTurn,
       editorTarget,
       imageModel,
+      imageSize,
+      imageQuality,
     }, {
       prompt,
       mask,
@@ -646,9 +689,11 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     if (!candidate) {
       return;
     }
-    const key = taskCandidate
-      ? `task:${taskCandidate.task.id}:${taskCandidate.task.updatedAt}:${taskCandidate.turn.retryAction}:${taskCandidate.turn.upstreamConversationId}:${taskCandidate.turn.upstreamResponseId}:${(taskCandidate.turn.fileIds || []).join(",")}`
-      : `${candidate.conversationId}:${candidate.turn.id}:${candidate.turn.retryAction}:${candidate.turn.upstreamConversationId}:${(candidate.turn.fileIds || []).join(",")}`;
+    const key = buildAutoRecoveryKey({
+      conversationId: candidate.conversationId,
+      turn: candidate.turn,
+      task: taskCandidate?.task,
+    });
     if (autoRecoveredTurnKeysRef.current.has(key)) {
       return;
     }

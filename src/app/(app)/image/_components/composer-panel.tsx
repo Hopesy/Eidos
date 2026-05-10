@@ -174,7 +174,7 @@ export function ComposerPanel({
                             </div>
                         ) : null}
 
-                        {mode === "generate" ? (
+                        {mode !== "upscale" ? (
                             <>
                                 <Select value={imageSize} onValueChange={(value) => onImageSizeChange(value as ToolbarImageSize)}>
                                     <SelectTrigger className="h-8 w-[96px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[124px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">

@@ -2,6 +2,7 @@ import { logger } from "@/server/logger";
 import {
   createImageError,
   getImageErrorMeta,
+  ImageGenerationError,
 } from "@/server/providers/openai/image-errors";
 
 import {
@@ -30,12 +31,21 @@ type GeneratedDownloadFailure = {
   fileId: string;
   message: string;
   meta: ReturnType<typeof getImageErrorMeta>;
+  statusCode?: number;
 };
 
 const MAX_DOWNLOAD_RETRIES = 3;
+const DOWNLOAD_FALLBACK_POLL_MS = 15000;
 
 function getFailureMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error || "unknown download error");
+}
+
+function shouldPollAfterDownloadFailures(failures: GeneratedDownloadFailure[]) {
+  return failures.some((failure) =>
+    failure.statusCode === 404 ||
+    failure.message.includes("failed to get download url"),
+  );
 }
 
 async function downloadGeneratedItemWithRetry(
@@ -125,6 +135,7 @@ async function downloadGeneratedItems(
       fileId,
       message: getFailureMessage(result.reason),
       meta: getImageErrorMeta(result.reason),
+      statusCode: result.reason instanceof ImageGenerationError ? result.reason.statusCode : undefined,
     };
     failures.push(failure);
     logger.warn("openai-client", "generate-image:file-download-failed", {
@@ -137,6 +148,82 @@ async function downloadGeneratedItems(
   });
 
   return { items, failures };
+}
+
+async function downloadGeneratedItemsWithConversationFallback(
+  session: ChatGptResultSession,
+  accessToken: string,
+  deviceId: string,
+  conversationId: string,
+  fileIds: string[],
+  revisedPrompt?: string,
+  fallbackWaitMs = DOWNLOAD_FALLBACK_POLL_MS,
+) {
+  const firstAttempt = await downloadGeneratedItems(
+    session,
+    accessToken,
+    deviceId,
+    conversationId,
+    fileIds,
+    revisedPrompt,
+  );
+  if (firstAttempt.items.length > 0 || !conversationId) {
+    return {
+      ...firstAttempt,
+      fileIds,
+    };
+  }
+  if (!shouldPollAfterDownloadFailures(firstAttempt.failures)) {
+    return {
+      ...firstAttempt,
+      fileIds,
+    };
+  }
+
+  let polledFileIds: string[];
+  try {
+    polledFileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs });
+  } catch (error) {
+    logger.warn("openai-client", "generate-image:file-download-fallback-poll-failed", {
+      conversationId,
+      error: getFailureMessage(error).slice(0, 300),
+      token: maskAccessToken(accessToken),
+    });
+    return {
+      ...firstAttempt,
+      fileIds,
+    };
+  }
+  const fallbackFileIds = polledFileIds.filter((fileId) => !fileIds.includes(fileId));
+  if (fallbackFileIds.length === 0) {
+    return {
+      ...firstAttempt,
+      fileIds,
+    };
+  }
+
+  logger.warn("openai-client", "generate-image:file-download-fallback", {
+    conversationId,
+    originalFileCount: fileIds.length,
+    fallbackFileCount: fallbackFileIds.length,
+    token: maskAccessToken(accessToken),
+  });
+
+  const fallbackAttempt = await downloadGeneratedItems(
+    session,
+    accessToken,
+    deviceId,
+    conversationId,
+    fallbackFileIds,
+    revisedPrompt,
+  );
+  return {
+    items: fallbackAttempt.items,
+    failures: fallbackAttempt.items.length > 0
+      ? fallbackAttempt.failures
+      : [...firstAttempt.failures, ...fallbackAttempt.failures],
+    fileIds: fallbackFileIds,
+  };
 }
 
 export async function collectGeneratedItems(
@@ -191,7 +278,11 @@ export async function collectGeneratedItems(
     });
   }
 
-  const { items: successItems, failures } = await downloadGeneratedItems(
+  const {
+    items: successItems,
+    failures,
+    fileIds: attemptedFileIds,
+  } = await downloadGeneratedItemsWithConversationFallback(
     session,
     accessToken,
     deviceId,
@@ -215,7 +306,7 @@ export async function collectGeneratedItems(
       retryable: true,
       stage: "download",
       upstreamConversationId: conversationId,
-      fileIds,
+      fileIds: attemptedFileIds,
     });
   }
 
@@ -251,7 +342,9 @@ export async function recoverGeneratedItems(
   if (fileIds.length === 0) {
     const started = Date.now();
     while (Date.now() - started < waitMs) {
-      fileIds = await pollImageIds(session, accessToken, deviceId, conversationId);
+      fileIds = await pollImageIds(session, accessToken, deviceId, conversationId, {
+        maxWaitMs: Math.max(3000, waitMs - (Date.now() - started)),
+      });
       if (fileIds.length > 0) {
         break;
       }
@@ -268,13 +361,18 @@ export async function recoverGeneratedItems(
     });
   }
 
-  const { items: successItems, failures } = await downloadGeneratedItems(
+  const {
+    items: successItems,
+    failures,
+    fileIds: attemptedFileIds,
+  } = await downloadGeneratedItemsWithConversationFallback(
     session,
     accessToken,
     deviceId,
     conversationId,
     fileIds,
     recovery.revisedPrompt,
+    waitMs,
   );
 
   if (successItems.length === 0) {
@@ -285,7 +383,7 @@ export async function recoverGeneratedItems(
       retryable: true,
       stage: "download",
       upstreamConversationId: conversationId,
-      fileIds,
+      fileIds: attemptedFileIds,
     });
   }
 

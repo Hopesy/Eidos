@@ -135,14 +135,18 @@ export async function runSubmit(ctx: SubmitContext) {
   const turnId = makeId();
   const now = new Date().toISOString();
   const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
+  const turnImageQuality = mode === "upscale" ? upscaleQuality : imageQuality;
+  const turnImageRatio = mode === "upscale" ? "auto" : imageSize;
+  const turnImageSize = resolveImageGenerationSize(turnImageRatio, turnImageQuality);
   const draftTurn = createConversationTurn({
     turnId,
-    title: buildConversationTitle(mode, prompt, upscaleQuality),
+    title: buildConversationTitle(mode, prompt, turnImageQuality),
     mode,
     prompt,
     model: imageModel,
-    imageSize: mode === "generate" ? resolveImageGenerationSize(imageSize, imageQuality) : "auto",
-    imageQuality: mode === "generate" ? imageQuality : mode === "upscale" ? upscaleQuality : "auto",
+    imageRatio: turnImageRatio,
+    imageSize: turnImageSize,
+    imageQuality: turnImageQuality,
     count: expectedCount,
     sourceImages,
     images: createLoadingImages(expectedCount, turnId),
@@ -179,6 +183,7 @@ export async function runSubmit(ctx: SubmitContext) {
         mode: draftTurn.mode,
         prompt: draftTurn.prompt,
         model: draftTurn.model,
+        imageRatio: draftTurn.imageRatio,
         imageSize: draftTurn.imageSize,
         imageQuality: draftTurn.imageQuality,
         count: draftTurn.count,
@@ -197,6 +202,7 @@ export async function runSubmit(ctx: SubmitContext) {
         mode: draftTurn.mode,
         prompt: draftTurn.prompt,
         model: draftTurn.model,
+        imageRatio: draftTurn.imageRatio,
         imageSize: draftTurn.imageSize,
         imageQuality: draftTurn.imageQuality,
         count: draftTurn.count,
@@ -223,8 +229,8 @@ export async function runSubmit(ctx: SubmitContext) {
           images: files,
           sourceReference: buildSourceReference(imageSources[0]),
           model: imageModel,
-          size: resolveImageGenerationSize(imageSize, imageQuality),
-          quality: imageQuality,
+          size: turnImageSize,
+          quality: turnImageQuality,
           signal,
         });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
@@ -257,8 +263,8 @@ export async function runSubmit(ctx: SubmitContext) {
 
               try {
                 const data = await generateImage(prompt, imageModel, 1, {
-                  size: resolveImageGenerationSize(imageSize, imageQuality),
-                  quality: imageQuality,
+                  size: turnImageSize,
+                  quality: turnImageQuality,
                   signal,
                 });
                 const resultImage = createResultImage(
@@ -376,8 +382,8 @@ export async function runSubmit(ctx: SubmitContext) {
         }
 
         const data = await generateImage(prompt, imageModel, parsedCount, {
-          size: resolveImageGenerationSize(imageSize, imageQuality),
-          quality: imageQuality,
+          size: turnImageSize,
+          quality: turnImageQuality,
           signal,
         });
         resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
@@ -395,6 +401,8 @@ export async function runSubmit(ctx: SubmitContext) {
         mask: maskFile,
         sourceReference: buildSourceReference(imageSources[0]),
         model: imageModel,
+        size: turnImageSize,
+        quality: turnImageQuality,
         signal,
       });
       resultItems = mergeResultImages(turnId, data.data || [], 1);
@@ -405,7 +413,8 @@ export async function runSubmit(ctx: SubmitContext) {
       const data = await upscaleImage({
         image: file,
         prompt,
-        quality: upscaleQuality,
+        size: turnImageSize,
+        quality: turnImageQuality,
         model: imageModel,
         signal,
       });
@@ -422,8 +431,8 @@ export async function runSubmit(ctx: SubmitContext) {
     }));
 
     ctx.resetComposer(mode === "generate" ? "generate" : mode, {
-      preserveImageSize: mode === "generate",
-      preserveImageQuality: mode === "generate",
+      preserveImageSize: mode !== "upscale",
+      preserveImageQuality: mode !== "upscale",
       preserveUpscaleQuality: mode === "upscale",
     });
     if (failedCount > 0) {

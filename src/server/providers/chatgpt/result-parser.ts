@@ -21,31 +21,17 @@ export function parseSsePayload(raw: string) {
       continue;
     }
 
-    for (const [prefix, storedPrefix] of [
-      ["file-service://", ""],
-      ["sediment://", "sed:"],
-    ] as const) {
-      let cursor = 0;
-      while (cursor >= 0) {
-        const start = payload.indexOf(prefix, cursor);
-        if (start < 0) {
-          break;
-        }
-        cursor = start + prefix.length;
-        const tail = payload.slice(cursor);
-        const normalized = storedPrefix + (tail.match(/^[A-Za-z0-9_-]+/)?.[0] ?? "");
-        if (normalized && !fileIds.includes(normalized)) {
-          fileIds.push(normalized);
-        }
-      }
-    }
-
     try {
       const json = JSON.parse(payload) as Record<string, unknown>;
       conversationId = String(json.conversation_id || conversationId);
       const nested = json.v;
       if (nested && typeof nested === "object") {
         conversationId = String((nested as Record<string, unknown>).conversation_id || conversationId);
+      }
+      for (const fileId of extractImageIdsFromPayload(json)) {
+        if (fileId && !fileIds.includes(fileId)) {
+          fileIds.push(fileId);
+        }
       }
       const message = (json.message as Record<string, unknown> | undefined) ?? {};
       const content = (message.content as Record<string, unknown> | undefined) ?? {};
@@ -62,6 +48,55 @@ export function parseSsePayload(raw: string) {
     fileIds,
     text: textParts.join(""),
   };
+}
+
+function normalizeAssetPointer(pointer: string) {
+  if (pointer.startsWith("file-service://")) {
+    return pointer.replace("file-service://", "");
+  }
+  if (pointer.startsWith("sediment://")) {
+    return `sed:${pointer.replace("sediment://", "")}`;
+  }
+  return "";
+}
+
+function extractImageIdsFromMessage(message: unknown) {
+  const record = (message ?? {}) as Record<string, unknown>;
+  const author = (record.author ?? {}) as Record<string, unknown>;
+  const metadata = (record.metadata ?? {}) as Record<string, unknown>;
+  const content = (record.content ?? {}) as Record<string, unknown>;
+
+  if (author.role !== "tool" || metadata.async_task_type !== "image_gen" || content.content_type !== "multimodal_text") {
+    return [] as string[];
+  }
+
+  const fileIds: string[] = [];
+  const parts = Array.isArray(content.parts) ? content.parts : [];
+  for (const part of parts) {
+    const pointer = String((part as Record<string, unknown>)?.asset_pointer || "");
+    const fileId = normalizeAssetPointer(pointer);
+    if (fileId && !fileIds.includes(fileId)) {
+      fileIds.push(fileId);
+    }
+  }
+  return fileIds;
+}
+
+function extractImageIdsFromPayload(payload: Record<string, unknown>) {
+  const candidates = [
+    payload.message,
+    (payload.v as Record<string, unknown> | undefined)?.message,
+    payload.v,
+  ];
+  const fileIds: string[] = [];
+  for (const candidate of candidates) {
+    for (const fileId of extractImageIdsFromMessage(candidate)) {
+      if (!fileIds.includes(fileId)) {
+        fileIds.push(fileId);
+      }
+    }
+  }
+  return fileIds;
 }
 
 export function buildNoImageReturnedError(textReply: string) {
@@ -100,27 +135,9 @@ export function extractImageIds(mapping: Record<string, unknown>) {
   const fileIds: string[] = [];
   for (const node of Object.values(mapping)) {
     const message = ((node as Record<string, unknown> | undefined)?.message ?? {}) as Record<string, unknown>;
-    const author = (message.author ?? {}) as Record<string, unknown>;
-    const metadata = (message.metadata ?? {}) as Record<string, unknown>;
-    const content = (message.content ?? {}) as Record<string, unknown>;
-
-    if (author.role !== "tool" || metadata.async_task_type !== "image_gen" || content.content_type !== "multimodal_text") {
-      continue;
-    }
-
-    const parts = Array.isArray(content.parts) ? content.parts : [];
-    for (const part of parts) {
-      const pointer = String((part as Record<string, unknown>)?.asset_pointer || "");
-      if (pointer.startsWith("file-service://")) {
-        const fileId = pointer.replace("file-service://", "");
-        if (fileId && !fileIds.includes(fileId)) {
-          fileIds.push(fileId);
-        }
-      } else if (pointer.startsWith("sediment://")) {
-        const fileId = `sed:${pointer.replace("sediment://", "")}`;
-        if (fileId && !fileIds.includes(fileId)) {
-          fileIds.push(fileId);
-        }
+    for (const fileId of extractImageIdsFromMessage(message)) {
+      if (fileId && !fileIds.includes(fileId)) {
+        fileIds.push(fileId);
       }
     }
   }
