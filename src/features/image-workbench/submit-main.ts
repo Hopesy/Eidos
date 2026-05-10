@@ -462,7 +462,7 @@ export async function runSubmit(ctx: SubmitContext) {
       ),
     }));
 
-    ctx.resetComposer(mode === "generate" ? "generate" : mode, {
+    ctx.resetComposer(mode === "upscale" ? "generate" : mode, {
       preserveImageSize: mode !== "upscale",
       preserveImageQuality: mode !== "upscale",
       preserveUpscaleQuality: mode === "upscale",

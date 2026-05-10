@@ -1,8 +1,10 @@
 "use client";
 
-import { X } from "lucide-react";
-import { useEffect, useState, useRef, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { Save, X } from "lucide-react";
+import { useCallback, useEffect, useState, useRef, type WheelEvent as ReactWheelEvent, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { AppImage as Image } from "@/components/app-image";
+
+const DEFAULT_MAGNIFIER_ZOOM = 2;
 
 export type ImagePreviewModalProps = {
   open: boolean;
@@ -17,10 +19,32 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
-  const [magnifierZoom, setMagnifierZoom] = useState(3);
+  const [magnifierZoom, setMagnifierZoom] = useState(DEFAULT_MAGNIFIER_ZOOM);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const currentMousePos = useRef({ x: 0, y: 0 });
+
+  const handleSave = useCallback(async () => {
+    if (!imageSrc) return;
+
+    const anchor = document.createElement("a");
+    anchor.download = "eidos-preview.png";
+
+    try {
+      const response = await fetch(imageSrc);
+      if (!response.ok) {
+        throw new Error("download failed");
+      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      anchor.href = objectUrl;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch {
+      anchor.href = imageSrc;
+      anchor.click();
+    }
+  }, [imageSrc]);
 
   useEffect(() => {
     if (!open) return;
@@ -36,6 +60,12 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
         // 使用当前存储的鼠标位置
         setMagnifierPos({ x: currentMousePos.current.x, y: currentMousePos.current.y });
         setShowMagnifier(true);
+        return;
+      }
+
+      if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        void handleSave();
       }
     };
 
@@ -56,7 +86,7 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       document.removeEventListener("keyup", handleKeyUp);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open, onClose, handleSave]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -65,7 +95,7 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       setOffset({ x: 0, y: 0 });
       setIsPanning(false);
       setShowMagnifier(false);
-      setMagnifierZoom(3);
+      setMagnifierZoom(DEFAULT_MAGNIFIER_ZOOM);
     }
   }, [open, imageSrc]);
 
@@ -136,14 +166,28 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       onPointerLeave={handlePointerUp}
       style={{ cursor: isPanning ? 'grabbing' : showMagnifier ? 'none' : 'grab' }}
     >
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute right-4 top-4 z-10 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
-        aria-label="关闭"
-      >
-        <X className="size-5" />
-      </button>
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            void handleSave();
+          }}
+          className="inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+          aria-label="保存图片"
+          title="保存图片 (S)"
+        >
+          <Save className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+          aria-label="关闭"
+        >
+          <X className="size-5" />
+        </button>
+      </div>
 
       <div
         className="relative max-h-[90vh] max-w-[90vw]"
@@ -213,7 +257,7 @@ export function ImagePreviewModal({ open, imageSrc, onClose }: ImagePreviewModal
       {/* Hint */}
       {!showMagnifier && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-xs text-white backdrop-blur-sm">
-          按住 Q 键显示放大镜 · 滚轮调整倍率
+          按住 Q 键显示放大镜 · 滚轮调整倍率 · S 保存
         </div>
       )}
     </div>

@@ -23,7 +23,6 @@ export const imageModelOptions: ImageModelOption[] = [
 export const modeOptions: ModeOption[] = [
   { label: "生成", value: "generate", description: "提示词生成新图，也可上传参考图辅助生成" },
   { label: "编辑", value: "edit", description: "上传图像后局部或整体改图" },
-  { label: "增强", value: "upscale", description: "基于源图做高清增强，提升清晰度与细节" },
 ];
 
 export const imageSizeOptions: GenerationOption<ImageRatioOption>[] = [
@@ -44,9 +43,9 @@ export const imageQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
 
 export const upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[] = [
   { label: "Auto", value: "auto" },
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High", value: "high" },
+  { label: "1K", value: "low" },
+  { label: "2K", value: "medium" },
+  { label: "4K", value: "high" },
 ];
 
 export const inspirationExamples: InspirationExample[] = [
