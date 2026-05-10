@@ -71,7 +71,7 @@ async function downloadGeneratedItemWithRetry(
           fileIds: [fileId],
         });
       }
-      const b64 = await downloadAsBase64(session, url);
+      const b64 = await downloadAsBase64(session, url, accessToken, deviceId);
       logger.info("openai-client", "generate-image:file-downloaded", {
         conversationId,
         fileId,

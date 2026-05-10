@@ -14,6 +14,7 @@ import {
     Maximize2,
     Download,
     Pencil,
+    SquarePen,
     X,
 } from "lucide-react";
 
@@ -68,18 +69,14 @@ const modeLabelMap: Record<ImageMode, string> = {
 const RESULT_MEDIA_CARD_WIDTH = "w-[270px] max-w-full shrink-0";
 const RESULT_MEDIA_VIEWPORT_HEIGHT = "aspect-square";
 
-function buildRetryButtonLabel(turn: ImageConversationTurn, image?: StoredImage) {
-    const retryAction = image?.retryAction || turn.retryAction;
-    if (retryAction === "resume_polling") {
-        return "继续等待";
-    }
-    if (retryAction === "retry_download") {
-        return "重试下载";
-    }
+function buildRetryButtonLabel(_turn: ImageConversationTurn, _image?: StoredImage) {
     return "重试";
 }
 
 function buildErrorCardTitle(image: StoredImage, turn: ImageConversationTurn) {
+    if (image.failureKind === "accepted_pending" || turn.failureKind === "accepted_pending") {
+        return "仍在生成中";
+    }
     if (image.failureKind === "result_fetch_failed" || turn.failureKind === "result_fetch_failed") {
         return "下载失败";
     }
@@ -379,7 +376,7 @@ export function ConversationTurn({
                                                 disabled={isSubmitting}
                                                 title="继续编辑"
                                             >
-                                                <Copy className="size-3.5" />
+                                                <SquarePen className="size-3.5" />
                                             </button>
                                             <button
                                                 type="button"
@@ -440,7 +437,7 @@ export function ConversationTurn({
                                 ) : (
                                     /* ── 处理中态 ── */
                                     <div className={cn(
-                                        "relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded-[20px] border border-stone-200 bg-[radial-gradient(circle_at_top,#f5f5f4,transparent_55%),linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] px-6 py-8 text-center shadow-sm dark:border-stone-700 dark:bg-[radial-gradient(circle_at_top,#292524,transparent_55%),linear-gradient(180deg,#1c1917_0%,#0c0a09_100%)]",
+                                        "relative flex w-full min-w-0 flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-[radial-gradient(circle_at_top,#f5f5f4,transparent_55%),linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] text-center shadow-sm dark:border-stone-700 dark:bg-[radial-gradient(circle_at_top,#292524,transparent_55%),linear-gradient(180deg,#1c1917_0%,#0c0a09_100%)]",
                                         RESULT_MEDIA_VIEWPORT_HEIGHT,
                                     )}>
                                         <div className="absolute inset-x-8 top-8 h-24 rounded-full bg-stone-200/40 blur-3xl dark:bg-stone-700/40" />
@@ -449,7 +446,7 @@ export function ConversationTurn({
                                             <div className="absolute right-8 top-12 h-10 w-10 animate-pulse rounded-[14px] border border-stone-200/60 bg-white/70 [animation-delay:300ms] dark:border-stone-700/60 dark:bg-stone-800/70" />
                                             <div className="absolute bottom-8 left-1/2 h-20 w-20 -translate-x-1/2 animate-pulse rounded-[24px] border border-stone-200/70 bg-white/80 [animation-delay:600ms] dark:border-stone-700/70 dark:bg-stone-800/80" />
                                         </div>
-                                        <div className="relative z-10 flex flex-col items-center gap-4">
+                                        <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-4 px-6 py-8">
                                             <div className="relative">
                                                 <div className="absolute inset-[-10px] rounded-[24px] border border-stone-200/70 animate-pulse dark:border-stone-700/70" />
                                                 <div className="relative flex size-16 items-center justify-center rounded-[22px] border border-stone-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-stone-700 dark:bg-stone-900">
@@ -479,19 +476,21 @@ export function ConversationTurn({
                                                           : "已接收请求，正在准备图像画布"}
                                                 </p>
                                             </div>
-                                            {isRetryProcessing ? (
+                                        </div>
+                                        {isRetryProcessing ? (
+                                            <div className="relative z-10 mt-auto px-3 pb-4 pt-3 text-left">
                                                 <button
                                                     type="button"
-                                                    className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 dark:hover:text-stone-100"
                                                     onClick={() => onCancelRetry(conversationId, turn.id, image.id)}
-                                                    aria-label="取消重试"
-                                                    title="取消重试"
+                                                    aria-label="取消"
+                                                    title="取消"
                                                 >
                                                     <X className="size-3.5" />
-                                                    取消重试
+                                                    取消
                                                 </button>
-                                            ) : null}
-                                        </div>
+                                            </div>
+                                        ) : null}
                                     </div>
                                 )}
                             </div>

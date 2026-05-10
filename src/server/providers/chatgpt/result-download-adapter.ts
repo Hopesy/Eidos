@@ -138,10 +138,34 @@ export async function fetchDownloadUrl(
   return downloadUrl;
 }
 
-export async function downloadAsBase64(session: ChatGptResultSession, downloadUrl: string) {
+function buildDownloadHeaders(downloadUrl: string, accessToken: string, deviceId: string): HeadersInit | undefined {
+  let parsed: URL;
+  try {
+    parsed = new URL(downloadUrl);
+  } catch {
+    return undefined;
+  }
+  if (parsed.origin !== BASE_URL) {
+    return undefined;
+  }
+  return {
+    authorization: `Bearer ${accessToken}`,
+    "oai-device-id": deviceId,
+  };
+}
+
+export async function downloadAsBase64(
+  session: ChatGptResultSession,
+  downloadUrl: string,
+  accessToken: string,
+  deviceId: string,
+) {
   let response: Response;
   try {
-    response = await session.fetch(downloadUrl, { timeoutMs: 60000 });
+    response = await session.fetch(downloadUrl, {
+      headers: buildDownloadHeaders(downloadUrl, accessToken, deviceId),
+      timeoutMs: 60000,
+    });
   } catch (error) {
     throw createImageError(error instanceof Error ? error.message : "download image failed", {
       kind: "result_fetch_failed",

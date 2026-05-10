@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClipboardEvent, RefObject } from "react";
-import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
+import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, SquarePen, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
@@ -135,7 +135,7 @@ export function ComposerPanel({
                                 )}
                             >
                                 {item.value === "generate" && <Sparkles className="size-3.5" />}
-                                {item.value === "edit" && <Pencil className="size-3.5" />}
+                                {item.value === "edit" && <SquarePen className="size-3.5" />}
                                 {item.value === "upscale" && <Maximize2 className="size-3.5" />}
                                 {item.label}
                             </button>

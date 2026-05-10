@@ -347,7 +347,7 @@ export function countFailures(images: StoredImage[]) {
 export function humanizeError(error: unknown): string {
   if (error instanceof ApiRequestError) {
     if (error.failureKind === "accepted_pending") {
-      return "任务已提交到上游，当前仍在处理中。建议稍后继续等待，而不是立即重新提交。";
+      return "任务已提交，图像服务还在处理。可以稍后点击重试继续获取结果。";
     }
     if (error.failureKind === "result_fetch_failed") {
       return "图片结果已就绪，但下载失败。";

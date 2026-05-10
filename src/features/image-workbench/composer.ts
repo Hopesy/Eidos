@@ -129,7 +129,7 @@ export function applyPromptExample(ctx: ComposerContext, example: PromptExample)
   ctx.setImageModel(example.model);
   ctx.setImageCount(String(example.count));
   ctx.setImageSize(DEFAULT_GENERATE_IMAGE_RATIO);
-  ctx.setImageQuality("high");
+  ctx.setImageQuality(DEFAULT_IMAGE_QUALITY);
   ctx.setImagePrompt(example.prompt);
   ctx.openDraftConversation();
   ctx.setSourceImages([]);

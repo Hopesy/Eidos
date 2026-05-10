@@ -34,6 +34,33 @@ const statusIconMap: Record<AccountStatus, typeof CheckCircle2> = {
   禁用: Ban,
 };
 
+function isNetworkDisplayStatus(account: Account) {
+  return account.refresh_error_reason === "network_error" || account.refresh_error_reason === "request_timeout";
+}
+
+function getDisplayStatus(account: Account) {
+  if (isNetworkDisplayStatus(account)) {
+    return {
+      label: "网络异常",
+      Icon: CircleAlert,
+      className: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
+      showRefreshError: false,
+    };
+  }
+
+  return {
+    label: account.status,
+    Icon: statusIconMap[account.status],
+    className: cn(
+      account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+      account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+      account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
+      account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
+    ),
+    showRefreshError: Boolean(account.refresh_error),
+  };
+}
+
 export type AccountsTableProps = {
   accountsCount: number;
   rows: Account[];
@@ -126,7 +153,8 @@ export function AccountsTable({
           </div>
 
           {rows.map((account) => {
-            const StatusIcon = statusIconMap[account.status];
+            const displayStatus = getDisplayStatus(account);
+            const StatusIcon = displayStatus.Icon;
             const imageGenLimit = extractImageGenLimit(account);
             const imageGenRemaining = imageGenLimit.remaining;
             const imageGenRestore = formatRelativeTime(imageGenLimit.resetAfter);
@@ -170,17 +198,14 @@ export function AccountsTable({
                         <span
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium",
-                            account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-                            account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-                            account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
-                            account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
+                            displayStatus.className,
                           )}
                         >
                           <StatusIcon className="size-3" />
-                          {account.status}
+                          {displayStatus.label}
                         </span>
-                        {account.refresh_error ? (
-                          <span className="block max-w-[128px] truncate text-right text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
+                        {displayStatus.showRefreshError ? (
+                          <span className="block max-w-[128px] truncate text-right text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error ?? undefined}>
                             {account.refresh_error}
                           </span>
                         ) : null}
@@ -330,7 +355,8 @@ export function AccountsTable({
               </thead>
               <tbody>
                 {rows.map((account) => {
-                  const StatusIcon = statusIconMap[account.status];
+                  const displayStatus = getDisplayStatus(account);
+                  const StatusIcon = displayStatus.Icon;
                   const imageGenLimit = extractImageGenLimit(account);
                   const imageGenRemaining = imageGenLimit.remaining;
                   const imageGenRestore = formatRelativeTime(imageGenLimit.resetAfter);
@@ -384,17 +410,14 @@ export function AccountsTable({
                           <span
                             className={cn(
                               "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
-                              account.status === "正常" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
-                              account.status === "限流" && "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
-                              account.status === "异常" && "bg-red-50/60 text-red-400 dark:bg-red-950/40 dark:text-red-300",
-                              account.status === "禁用" && "bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500",
+                              displayStatus.className,
                             )}
                           >
                             <StatusIcon className="size-3" />
-                            {account.status}
+                            {displayStatus.label}
                           </span>
-                          {account.refresh_error ? (
-                            <span className="block max-w-[132px] truncate text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error}>
+                          {displayStatus.showRefreshError ? (
+                            <span className="block max-w-[132px] truncate text-[11px] leading-4 text-red-500 dark:text-red-400" title={account.refresh_error ?? undefined}>
                               {account.refresh_error}
                             </span>
                           ) : null}

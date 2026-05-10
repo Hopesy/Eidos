@@ -513,7 +513,9 @@ export async function runSubmit(ctx: SubmitContext) {
         turn.id === turnId ? applyTurnFailure(turn, message, failureMeta) : turn,
       ),
     }));
-    toast.error(message);
+    if (failureMeta.failureKind !== "accepted_pending") {
+      toast.error(message);
+    }
   } finally {
     finishRequest(ctx, conversationId, turnId);
   }

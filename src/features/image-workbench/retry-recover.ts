@@ -364,7 +364,9 @@ export async function runRetryTurn(
         return keepGeneratingWhileAnyImageLoads(applyTurnFailure(item, message, failureMeta, retryIndexes));
       }),
     }));
-    toast.error(message);
+    if (failureMeta.failureKind !== "accepted_pending") {
+      toast.error(message);
+    }
   } finally {
     activeRetryKeys.delete(retryKey);
     ctx.retryAbortControllersRef.current.delete(retryKey);

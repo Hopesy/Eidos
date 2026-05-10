@@ -40,6 +40,37 @@ describe("chatgpt generated item collection", () => {
     assert.equal(result.data[0]?.file_id, "sed:file_1");
   });
 
+  it("passes account auth headers when downloading ChatGPT estuary content", async () => {
+    let downloadHeaders: Headers | null = null;
+    const session = {
+      async fetch(url: string, options?: RequestInit) {
+        if (url.includes("/attachment/")) {
+          return new Response(JSON.stringify({
+            download_url: "https://chatgpt.com/backend-api/estuary/content?id=file_1&sig=abc",
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.startsWith("https://chatgpt.com/backend-api/estuary/content")) {
+          downloadHeaders = new Headers(options?.headers);
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-auth","message":{"author":{"role":"tool"},"metadata":{"async_task_type":"image_gen"},"content":{"content_type":"multimodal_text","parts":[{"asset_pointer":"sediment://file_1"}]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    assert.equal(result.data.length, 1);
+    assert.equal(downloadHeaders?.get("authorization"), "Bearer token-a");
+    assert.equal(downloadHeaders?.get("oai-device-id"), "device-a");
+  });
+
   it("ignores source attachment pointers in streamed text and polls for generated output", async () => {
     const fetchedUrls: string[] = [];
     const session = {
