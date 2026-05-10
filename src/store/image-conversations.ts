@@ -36,6 +36,8 @@ export type StoredImage = {
   status?: "loading" | "success" | "error";
   b64_json?: string;
   url?: string;
+  startedAt?: number;
+  durationMs?: number;
   image_id?: string;
   file_path?: string;
   revised_prompt?: string;

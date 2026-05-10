@@ -86,7 +86,6 @@ export function ImageClient({
     canToggleLatestResultReference,
     isLatestResultReferenceEnabled,
     processingStatus,
-    waitingDots,
     submitElapsedSeconds,
     focusConversation,
     handleCreateDraft,
@@ -103,6 +102,7 @@ export function ImageClient({
     handleSelectionEditSubmit,
     handleMaskEditorSubmit,
     handleRetryTurn,
+    handleCancelRetry,
     handleSubmit,
     handleComposerCancelAction,
     composerCancelLabel,
@@ -265,7 +265,6 @@ export function ImageClient({
                       activeRequest.turnId === turn.id,
                   )}
                   processingStatus={processingStatus}
-                  waitingDots={waitingDots}
                   submitElapsedSeconds={submitElapsedSeconds}
                   isSubmitting={isSubmitting}
                   retryingImageId={
@@ -277,6 +276,7 @@ export function ImageClient({
                   onRetryTurn={(conversationId, currentTurn, imageId) => {
                     void handleRetryTurn(conversationId, currentTurn, imageId);
                   }}
+                  onCancelRetry={handleCancelRetry}
                   onPreviewImage={(dataUrl) => setPreviewImage(dataUrl)}
                   onEditTurn={handleEditTurn}
                   onCopyPrompt={(prompt) => {

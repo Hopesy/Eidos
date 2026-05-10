@@ -55,7 +55,17 @@ function patchSingleTurnImage(
   nextImage: StoredImage,
   durationMs: number,
 ) {
-  const nextImages = turn.images.map((image, index) => (index === slotIndex ? nextImage : image));
+  const currentImage = turn.images[slotIndex];
+  const imageDurationMs = currentImage?.startedAt ? Date.now() - currentImage.startedAt : durationMs;
+  const nextImages = turn.images.map((image, index) =>
+    index === slotIndex
+      ? {
+        ...nextImage,
+        startedAt: currentImage?.startedAt ?? nextImage.startedAt,
+        durationMs: imageDurationMs,
+      }
+      : image,
+  );
   return patchTurnImages(turn, nextImages, durationMs);
 }
 
@@ -76,6 +86,7 @@ function patchSingleTurnFailure(
     {
       ...currentImage,
       status: "error" as const,
+      durationMs: currentImage.startedAt ? Date.now() - currentImage.startedAt : durationMs,
       error: message,
       failureKind: failureMeta.failureKind,
       retryAction: failureMeta.retryAction,
@@ -134,6 +145,7 @@ export async function runSubmit(ctx: SubmitContext) {
   const conversationId = selectedConversationId ?? makeId();
   const turnId = makeId();
   const now = new Date().toISOString();
+  const startedAt = Date.now();
   const expectedCount = mode === "generate" && imageSources.length === 0 ? parsedCount : 1;
   const turnImageQuality = mode === "upscale" ? upscaleQuality : imageQuality;
   const turnImageRatio = mode === "upscale" ? "auto" : imageSize;
@@ -149,13 +161,12 @@ export async function runSubmit(ctx: SubmitContext) {
     imageQuality: turnImageQuality,
     count: expectedCount,
     sourceImages,
-    images: createLoadingImages(expectedCount, turnId),
+    images: createLoadingImages(expectedCount, turnId, expectedCount === 1 ? startedAt : undefined),
     createdAt: now,
     status: "generating",
   });
   const draftLoadingImages = draftTurn.images;
 
-  const startedAt = Date.now();
   const signal = beginRequest(ctx, {
     conversationId,
     turnId,
@@ -260,6 +271,26 @@ export async function runSubmit(ctx: SubmitContext) {
               if (slotIndex >= slotCount) {
                 return;
               }
+              const slotStartedAt = Date.now();
+              await ctx.updateConversation(conversationId, (current) => ({
+                ...current,
+                turns: (current.turns ?? []).map((turn) => {
+                  if (turn.id !== turnId) {
+                    return turn;
+                  }
+                  return {
+                    ...turn,
+                    images: turn.images.map((image, index) =>
+                      index === slotIndex && image.status === "loading"
+                        ? {
+                          ...image,
+                          startedAt: slotStartedAt,
+                        }
+                        : image,
+                    ),
+                  };
+                }),
+              }));
 
               try {
                 const data = await generateImage(prompt, imageModel, 1, {
@@ -325,6 +356,7 @@ export async function runSubmit(ctx: SubmitContext) {
                         return {
                           ...image,
                           status: "error" as const,
+                          durationMs: image.startedAt ? Date.now() - image.startedAt : undefined,
                           error: message,
                           failureKind: failureMeta.failureKind,
                           retryAction: failureMeta.retryAction,

@@ -14,12 +14,14 @@ import {
     Maximize2,
     Download,
     Pencil,
+    X,
 } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { cn } from "@/lib/utils";
 import type { ImageConversationTurn, ImageMode, StoredImage, StoredSourceImage } from "@/store/image-conversations";
 import type { DownloadImageFileOptions } from "@/features/image-workbench/browser-actions";
+import { buildProcessingStatus } from "@/features/image-workbench/processing-status";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
@@ -53,6 +55,10 @@ function formatProcessingDuration(totalSeconds: number) {
     return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
+function buildWaitingDots(totalSeconds: number) {
+    return ".".repeat((totalSeconds % 3) + 1);
+}
+
 const modeLabelMap: Record<ImageMode, string> = {
     generate: "生成",
     edit: "编辑",
@@ -78,6 +84,26 @@ function buildErrorCardTitle(image: StoredImage, turn: ImageConversationTurn) {
         return "下载失败";
     }
     return "处理失败";
+}
+
+function buildRetryProcessingStatus(mode: ImageMode, elapsedSeconds: number) {
+    const operation = mode === "edit" ? "编辑" : mode === "upscale" ? "增强" : "生成";
+    if (elapsedSeconds < 4) {
+        return {
+            title: `正在重新提交${operation}请求`,
+            detail: "正在重新连接图像服务",
+        };
+    }
+    if (elapsedSeconds < 120) {
+        return {
+            title: `正在重新处理图片${buildWaitingDots(elapsedSeconds)}`,
+            detail: `图像服务正在处理，已等待 ${formatProcessingDuration(elapsedSeconds)}`,
+        };
+    }
+    return {
+        title: `图像服务响应较慢${buildWaitingDots(elapsedSeconds)}`,
+        detail: `已等待 ${formatProcessingDuration(elapsedSeconds)}，仍在尝试处理`,
+    };
 }
 
 function ImageResolutionBadge({ src }: { src: string }) {
@@ -127,7 +153,6 @@ export type ConversationTurnProps = {
     /** 该 turn 是否正在处理中 */
     isProcessing: boolean;
     processingStatus: { title: string; detail: string } | null;
-    waitingDots: string;
     submitElapsedSeconds: number;
     isSubmitting: boolean;
     retryingImageId?: string | null;
@@ -135,6 +160,7 @@ export type ConversationTurnProps = {
     onOpenSelectionEditor: (conversationId: string, turnId: string, image: StoredImage, imageName: string) => void;
     onSeedFromResult: (conversationId: string, image: StoredImage, nextMode: ImageMode) => void;
     onRetryTurn: (conversationId: string, turn: ImageConversationTurn, imageId?: string) => void;
+    onCancelRetry: (conversationId: string, turnId: string, imageId?: string) => void;
     onPreviewImage: (dataUrl: string) => void;
     onEditTurn: (conversationId: string, turn: ImageConversationTurn) => void | Promise<void>;
     onCopyPrompt: (prompt: string) => void;
@@ -148,7 +174,6 @@ export function ConversationTurn({
     conversationId,
     isProcessing,
     processingStatus,
-    waitingDots,
     submitElapsedSeconds,
     isSubmitting,
     retryingImageId,
@@ -156,11 +181,28 @@ export function ConversationTurn({
     onOpenSelectionEditor,
     onSeedFromResult,
     onRetryTurn,
+    onCancelRetry,
     onPreviewImage,
     onEditTurn,
     onCopyPrompt,
     onDownloadImage,
 }: ConversationTurnProps) {
+    const [retryNowMs, setRetryNowMs] = useState(() => Date.now());
+    const hasRetryLoadingImage = !isProcessing && turn.images.some((image) => image.status === "loading");
+
+    useEffect(() => {
+        if (!hasRetryLoadingImage) {
+            return;
+        }
+
+        const updateNow = () => setRetryNowMs(Date.now());
+        updateNow();
+        const timer = window.setInterval(updateNow, 1000);
+        return () => {
+            window.clearInterval(timer);
+        };
+    }, [hasRetryLoadingImage]);
+
     return (
         <div className="space-y-4">
             {/* 用户消息 */}
@@ -247,8 +289,19 @@ export function ConversationTurn({
                             const errorMessage = image.error || turn.error || "未知错误";
                             const isRetryingCurrentImage = retryingImageId === image.id;
                             const isCurrentImageProcessing = isProcessing || image.status === "loading";
+                            const isRetryProcessing = !isProcessing && image.status === "loading";
+                            const elapsedNowMs = isRetryProcessing ? retryNowMs : Date.now();
                             const retryLabel = buildRetryButtonLabel(turn, image);
                             const imageDataUrl = buildImageDataUrl(image);
+                            const imageDurationMs = image.durationMs ?? turn.durationMs;
+                            const imageElapsedSeconds = image.startedAt
+                                ? Math.max(0, Math.floor((elapsedNowMs - image.startedAt) / 1000))
+                                : submitElapsedSeconds;
+                            const imageProcessingStatus = image.status === "loading" && image.startedAt
+                                ? isProcessing
+                                    ? buildProcessingStatus(turn.mode, imageElapsedSeconds, 1, "standard")
+                                    : buildRetryProcessingStatus(turn.mode, imageElapsedSeconds)
+                                : processingStatus;
                             return (
                             <div
                                 key={image.id}
@@ -290,10 +343,10 @@ export function ConversationTurn({
                                                         <span className="font-semibold text-stone-600 dark:text-stone-300">Eidos</span>
                                                         <span className="text-stone-300">·</span>
                                                         <span>{turn.model}</span>
-                                                        {turn.durationMs != null && (
+                                                        {imageDurationMs != null && (
                                                             <>
                                                                 <span className="text-stone-300">·</span>
-                                                                <span>{(turn.durationMs / 1000).toFixed(1)}s</span>
+                                                                <span>{(imageDurationMs / 1000).toFixed(1)}s</span>
                                                             </>
                                                         )}
                                                     </div>
@@ -412,20 +465,32 @@ export function ConversationTurn({
                                             </div>
                                             <div className="space-y-1.5">
                                                 <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
-                                                    {isProcessing && processingStatus
-                                                        ? processingStatus.title
+                                                    {imageProcessingStatus
+                                                        ? imageProcessingStatus.title
                                                         : isCurrentImageProcessing
                                                           ? "正在重新处理图片…"
                                                           : "正在创建占位图…"}
                                                 </p>
                                                 <p className="text-xs leading-5 text-stone-400 dark:text-stone-500">
-                                                    {isProcessing && processingStatus
-                                                        ? processingStatus.detail
+                                                    {imageProcessingStatus
+                                                        ? imageProcessingStatus.detail
                                                           : isCurrentImageProcessing
                                                           ? "正在等待上游返回结果"
                                                           : "已接收请求，正在准备图像画布"}
                                                 </p>
                                             </div>
+                                            {isRetryProcessing ? (
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white/85 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm transition hover:bg-white hover:text-stone-900 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                                                    onClick={() => onCancelRetry(conversationId, turn.id, image.id)}
+                                                    aria-label="取消重试"
+                                                    title="取消重试"
+                                                >
+                                                    <X className="size-3.5" />
+                                                    取消重试
+                                                </button>
+                                            ) : null}
                                         </div>
                                     </div>
                                 )}

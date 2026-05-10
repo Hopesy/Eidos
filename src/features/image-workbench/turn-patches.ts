@@ -63,9 +63,17 @@ export function applyTurnSuccess(
   failedCount: number,
   durationMs: number,
 ) {
+  const finishedAt = Date.now();
   return {
     ...turn,
-    images: resultItems,
+    images: resultItems.map((image, index) => {
+      const previous = turn.images[index];
+      return {
+        ...image,
+        startedAt: image.startedAt ?? previous?.startedAt,
+        durationMs: image.durationMs ?? (previous?.startedAt ? finishedAt - previous.startedAt : durationMs),
+      };
+    }),
     status: failedCount > 0 ? "error" as const : "success" as const,
     error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
     durationMs,
@@ -86,6 +94,7 @@ export function applyTurnCanceled(
         ? {
           ...image,
           status: "error" as const,
+          durationMs: image.startedAt ? Date.now() - image.startedAt : image.durationMs,
           error: "已取消生成",
         }
         : image,
@@ -117,6 +126,8 @@ export function applyTurnFailure(
         {
           id: turn.images[0]?.id || `${turn.id}-shared-error`,
           status: "error" as const,
+          startedAt: turn.images[0]?.startedAt,
+          durationMs: turn.images[0]?.startedAt ? Date.now() - turn.images[0].startedAt : undefined,
           error: message,
           failureKind: failureMeta.failureKind,
           retryAction: failureMeta.retryAction,
@@ -148,6 +159,7 @@ export function applyTurnFailure(
         ? {
           ...image,
           status: "error" as const,
+          durationMs: image.startedAt ? Date.now() - image.startedAt : image.durationMs,
           error: message,
           failureKind: failureMeta.failureKind,
           retryAction: failureMeta.retryAction,

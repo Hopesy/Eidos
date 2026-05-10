@@ -78,7 +78,7 @@ function makeRelativeImagePath(role: ImageRole, id: string, extension: string) {
   const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
   const dd = String(now.getUTCDate()).padStart(2, "0");
   const root = role === "result" ? "images" : "uploads";
-  return path.join(root, yyyy, mm, dd, `${id}.${extension}`).replace(/\\/g, "/");
+  return `${root}/${yyyy}/${mm}/${dd}/${id}.${extension}`;
 }
 
 function getSafeAbsoluteDataPath(relativePath: string) {

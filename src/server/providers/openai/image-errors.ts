@@ -6,6 +6,7 @@ export type ImageFailureKind =
   | "accepted_pending"
   | "source_invalid"
   | "result_fetch_failed"
+  | "service_unavailable"
   | "account_blocked"
   | "input_blocked"
   | "unknown";
@@ -108,8 +109,33 @@ export function normalizeUpstreamErrorMessage(raw: string) {
   return parsed.message || parsed.code || parsed.type || String(raw || "").trim();
 }
 
+export function isApiServiceUnavailableMessage(message: string) {
+  const normalized = String(message || "").toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized.includes("<!doctype html") ||
+    normalized.includes("<html") ||
+    normalized.includes("</html>") ||
+    normalized.includes("<head>") ||
+    normalized.includes("<body") ||
+    normalized.includes("just a moment") ||
+    normalized.includes("cloudflare") ||
+    normalized.includes("cf-ray") ||
+    normalized.includes("captcha") ||
+    normalized.includes("bad gateway") ||
+    normalized.includes("gateway timeout") ||
+    normalized.includes("service unavailable") ||
+    normalized.includes("origin is unreachable")
+  );
+}
+
 export function isInputBlockedMessage(message: string) {
   const normalized = String(message || "").toLowerCase();
+  if (isApiServiceUnavailableMessage(normalized)) {
+    return false;
+  }
   return (
     normalized.includes("content policy") ||
     normalized.includes("content_policy_violation") ||
@@ -147,6 +173,7 @@ export function isAccountBlockedMessage(message: string) {
 export function buildHttpImageError(message: string, status: number, stage: ImagePipelineStage, fallbackKind: ImageFailureKind = "submit_failed") {
   const normalizedMessage = normalizeUpstreamErrorMessage(message);
   const isApiServiceStage = stage === "api_service";
+  const inputBlocked = isInputBlockedMessage(normalizedMessage);
   if (status === 401 || status === 429) {
     if (isApiServiceStage && status === 401) {
       return createImageError(`图像 API 认证失败：${normalizedMessage}`, {
@@ -174,11 +201,38 @@ export function buildHttpImageError(message: string, status: number, stage: Imag
       statusCode: status,
     });
   }
-  if (status === 400 || status === 403 || isInputBlockedMessage(normalizedMessage)) {
+  if (isApiServiceStage && isApiServiceUnavailableMessage(normalizedMessage)) {
+    return createImageError("图像 API 服务暂时不可用：上游网关返回了不可用页面或拦截页", {
+      kind: "service_unavailable",
+      retryAction: "resubmit",
+      retryable: true,
+      stage,
+      statusCode: status,
+    });
+  }
+  if (status === 400 || inputBlocked || (!isApiServiceStage && status === 403)) {
     return createImageError(normalizedMessage, {
       kind: "input_blocked",
       retryAction: "revise_input",
       retryable: false,
+      stage,
+      statusCode: status,
+    });
+  }
+  if (isApiServiceStage && status === 403) {
+    return createImageError(`图像 API 服务拒绝访问：${normalizedMessage}`, {
+      kind: "account_blocked",
+      retryAction: "none",
+      retryable: false,
+      stage,
+      statusCode: status,
+    });
+  }
+  if (isApiServiceStage && status >= 500) {
+    return createImageError(normalizedMessage || "图像 API 服务暂时不可用", {
+      kind: "service_unavailable",
+      retryAction: "resubmit",
+      retryable: true,
       stage,
       statusCode: status,
     });

@@ -37,6 +37,7 @@ type AccountRefreshFailure = {
   message: string;
   status: "正常" | "限流" | "异常";
   quota?: number;
+  preserveLocalState?: boolean;
   reason:
     | "auth_invalid"
     | "account_restricted"
@@ -135,6 +136,8 @@ function extractQuotaAndRestoreAt(limitsProgress: Array<Record<string, unknown>>
 function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
   const message = error instanceof Error ? error.message : String(error || "unknown error");
   const normalized = cleanToken(message).toLowerCase();
+  const httpStatus = Number(/http\s+(\d{3})/i.exec(message)?.[1] ?? 0);
+  const isTransientHttpStatus = httpStatus === 408 || httpStatus === 425 || httpStatus >= 500;
 
   if (normalized.includes("/backend-api/me failed: http 401")) {
     return {
@@ -190,6 +193,19 @@ function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
     };
   }
 
+  if (
+    isTransientHttpStatus &&
+    (normalized.includes("/backend-api/me failed: http") ||
+      normalized.includes("/backend-api/conversation/init failed: http"))
+  ) {
+    return {
+      message: "上游服务暂时不可用，已保留本地账号状态，请稍后重试",
+      status: "异常",
+      preserveLocalState: true,
+      reason: httpStatus === 408 ? "request_timeout" : "network_error",
+    };
+  }
+
   if (normalized.includes("/backend-api/conversation/init failed: http")) {
     return {
       message: "会话初始化失败，上游未正常返回可用会话",
@@ -200,16 +216,18 @@ function resolveRefreshFailure(error: unknown): AccountRefreshFailure {
 
   if (normalized.includes("request timed out") || normalized.includes("timed out") || normalized.includes("timeout")) {
     return {
-      message: "请求超时，未能在规定时间内完成账号状态刷新",
+      message: "请求超时，已保留本地账号状态，请稍后重试",
       status: "异常",
+      preserveLocalState: true,
       reason: "request_timeout",
     };
   }
 
   if (normalized.includes("network error") || normalized.includes("fetch failed") || normalized.includes("econn") || normalized.includes("enotfound")) {
     return {
-      message: "网络异常，无法连接上游服务",
+      message: "网络异常，已保留本地账号状态，请检查网络后重试",
       status: "异常",
+      preserveLocalState: true,
       reason: "network_error",
     };
   }
@@ -276,8 +294,8 @@ export function createAccountRemoteRefreshService(
         token: accessToken.slice(0, 16) + "...",
       });
       return runtimeDependencies.updateAccount(accessToken, {
-        status: failure.status,
-        ...(typeof failure.quota === "number" ? { quota: failure.quota } : {}),
+        ...(failure.preserveLocalState ? {} : { status: failure.status }),
+        ...(!failure.preserveLocalState && typeof failure.quota === "number" ? { quota: failure.quota } : {}),
         refresh_error: failure.message,
         refresh_error_reason: failure.reason,
       });
@@ -316,8 +334,8 @@ export function createAccountRemoteRefreshService(
       const accessToken = normalizedTokens[index];
       const failure = resolveRefreshFailure(item.reason);
       await runtimeDependencies.updateAccount(accessToken, {
-        status: failure.status,
-        ...(typeof failure.quota === "number" ? { quota: failure.quota } : {}),
+        ...(failure.preserveLocalState ? {} : { status: failure.status }),
+        ...(!failure.preserveLocalState && typeof failure.quota === "number" ? { quota: failure.quota } : {}),
         refresh_error: failure.message,
         refresh_error_reason: failure.reason,
       });

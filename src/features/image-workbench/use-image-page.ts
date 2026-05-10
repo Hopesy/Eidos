@@ -46,7 +46,7 @@ import {
   restoreComposerFromTurn as restoreWorkbenchComposerFromTurn,
   retractTurnAfterAbort as retractConversationTurnAfterAbort,
 } from "./conversation-editing";
-import { buildProcessingStatus, buildWaitingDots } from "./processing-status";
+import { buildProcessingStatus } from "./processing-status";
 import {
   buildAutoRecoveryKey,
   findRecoverableTaskCandidate,
@@ -120,6 +120,12 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const pendingAbortActionRef = useRef<PendingAbortAction | null>(null);
   const activeRequestMetaRef = useRef<ActiveRequestMeta | null>(null);
+  const retryAbortControllersRef = useRef(new Map<string, {
+    controller: AbortController;
+    conversationId: string;
+    turnId: string;
+    imageIds: string[];
+  }>());
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -217,7 +223,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
         : null,
     [activeRequest, submitElapsedSeconds],
   );
-  const waitingDots = useMemo(() => buildWaitingDots(submitElapsedSeconds), [submitElapsedSeconds]);
 
   const focusConversation = (conversationId: string) => {
     reuseLatestPreferenceRef.current.set(
@@ -677,7 +682,22 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     await runRetryTurn({
       focusConversation,
       updateConversation,
+      retryAbortControllersRef,
     }, conversationId, retryTurn, imageId);
+  };
+
+  const handleCancelRetry = (conversationId: string, turnId: string, imageId?: string) => {
+    for (const entry of retryAbortControllersRef.current.values()) {
+      if (entry.conversationId !== conversationId || entry.turnId !== turnId) {
+        continue;
+      }
+      if (imageId && !entry.imageIds.includes(imageId)) {
+        continue;
+      }
+
+      entry.controller.abort();
+      return;
+    }
   };
 
   useEffect(() => {
@@ -853,7 +873,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     canToggleLatestResultReference,
     isLatestResultReferenceEnabled,
     processingStatus,
-    waitingDots,
     submitElapsedSeconds,
     focusConversation,
     handleCreateDraft,
@@ -871,6 +890,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     handleSelectionEditSubmit,
     handleMaskEditorSubmit,
     handleRetryTurn,
+    handleCancelRetry,
     handleSubmit,
     handleComposerCancelAction,
     composerCancelLabel,

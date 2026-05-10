@@ -140,10 +140,11 @@ export function getLatestSuccessfulImage(turns: ImageConversationTurn[]) {
   return null;
 }
 
-export function createLoadingImages(count: number, conversationId: string) {
+export function createLoadingImages(count: number, conversationId: string, startedAt?: number) {
   return Array.from({ length: count }, (_, index) => ({
     id: `${conversationId}-${index}`,
     status: "loading" as const,
+    startedAt,
   }));
 }
 
@@ -242,11 +243,16 @@ export function buildSourceReference(source: StoredSourceImage | null | undefine
   };
 }
 
-export function createResultImage(id: string, item: ResultItemPayload | null | undefined): StoredImage {
+export function createResultImage(
+  id: string,
+  item: ResultItemPayload | null | undefined,
+  timing: Pick<StoredImage, "startedAt" | "durationMs"> = {},
+): StoredImage {
   if (item?.url || item?.b64_json) {
     return {
       id,
       status: "success",
+      ...timing,
       ...(item.url ? { url: item.url } : { b64_json: item.b64_json }),
       image_id: item.image_id,
       file_path: item.file_path,
@@ -270,6 +276,7 @@ export function createResultImage(id: string, item: ResultItemPayload | null | u
     return {
       id,
       status: "success",
+      ...timing,
       text: item.text,
     };
   }
@@ -277,6 +284,7 @@ export function createResultImage(id: string, item: ResultItemPayload | null | u
   return {
     id,
     status: "error",
+    ...timing,
     error: "接口没有返回图片数据",
   };
 }
@@ -304,7 +312,11 @@ export function patchRetriedImages(existingImages: StoredImage[], retryIndexes: 
     if (!current) {
       return;
     }
-    nextImages[slotIndex] = createResultImage(current.id, items[resultIndex]);
+    const durationMs = current.startedAt ? Date.now() - current.startedAt : undefined;
+    nextImages[slotIndex] = createResultImage(current.id, items[resultIndex], {
+      startedAt: current.startedAt,
+      durationMs,
+    });
   });
 
   if (items.length < retryIndexes.length) {
@@ -317,6 +329,7 @@ export function patchRetriedImages(existingImages: StoredImage[], retryIndexes: 
       nextImages[slotIndex] = {
         ...current,
         status: "error",
+        durationMs: current.startedAt ? Date.now() - current.startedAt : current.durationMs,
         error: "未返回足够数量的图片",
       };
     }
@@ -347,6 +360,9 @@ export function humanizeError(error: unknown): string {
     }
     if (error.failureKind === "input_blocked") {
       return "请修改提示词后重试。";
+    }
+    if (error.failureKind === "service_unavailable") {
+      return "图像 API 服务暂时不可用，请稍后重新提交。";
     }
     if (error.failureKind === "submit_failed") {
       return "图片请求提交失败，请稍后重新提交。";

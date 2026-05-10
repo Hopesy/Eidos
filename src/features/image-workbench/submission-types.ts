@@ -45,6 +45,13 @@ export type RestoreComposerFn = (
   successMessage?: string,
 ) => void;
 
+export type RetryAbortControllerEntry = {
+  controller: AbortController;
+  conversationId: string;
+  turnId: string;
+  imageIds: string[];
+};
+
 export type SubmissionContext = {
   mountedRef: MutableRefObject<boolean>;
   requestAbortControllerRef: MutableRefObject<AbortController | null>;
@@ -88,7 +95,9 @@ export type SelectionEditContext = SubmissionContext & {
   imageQuality: ImageGenerationQuality;
 };
 
-export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "updateConversation">;
+export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "updateConversation"> & {
+  retryAbortControllersRef: MutableRefObject<Map<string, RetryAbortControllerEntry>>;
+};
 
 export type SubmitContext = SubmissionContext & {
   selectedConversationId: string | null;

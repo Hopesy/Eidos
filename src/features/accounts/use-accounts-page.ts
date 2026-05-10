@@ -32,6 +32,10 @@ import {
   type AccountTypeFilter,
 } from "./account-view-model";
 
+function isTransientRefreshReason(reason: string | undefined) {
+  return reason === "network_error" || reason === "request_timeout";
+}
+
 type UseAccountsPageOptions = {
   initialAccounts?: Account[];
   initialSyncStatus?: SyncStatusResponse;
@@ -219,9 +223,13 @@ export function useAccountsPage(options: UseAccountsPageOptions = {}) {
       await loadSync({ silent: true });
       if (data.errors.length > 0) {
         const firstError = data.errors[0]?.error;
-        toast.error(
-          `刷新成功 ${data.refreshed} 个，失败 ${data.errors.length} 个${firstError ? `，首个错误：${firstError}` : ""}`,
-        );
+        const onlyTransientErrors = data.errors.every((item) => isTransientRefreshReason(item.reason));
+        const message = `刷新成功 ${data.refreshed} 个，失败 ${data.errors.length} 个${firstError ? `，首个错误：${firstError}` : ""}`;
+        if (onlyTransientErrors) {
+          toast.info(`${message}。本地凭证状态和额度已保留`);
+        } else {
+          toast.error(message);
+        }
       } else {
         toast.success(`刷新成功 ${data.refreshed} 个账户`);
       }

@@ -52,19 +52,28 @@ export function buildSharedRecoverableRetryResult(
   if (remainingFileIds.length === 0) {
     const images = mergeResultImages(turn.id, resultPayloadItems, expectedCount);
     return {
-      images,
+      images: images.map((image) => ({
+        ...image,
+        startedAt: image.startedAt ?? turn.images[0]?.startedAt,
+        durationMs: image.durationMs ?? (turn.images[0]?.startedAt ? Date.now() - turn.images[0].startedAt : undefined),
+      })),
       failedCount: countFailures(images),
       remainingFileIds: [] as string[],
     };
   }
 
-  const successImages = resultPayloadItems.map((item, index) => createResultImage(`${turn.id}-${index}`, item));
+  const successImages = resultPayloadItems.map((item, index) => createResultImage(`${turn.id}-${index}`, item, {
+    startedAt: turn.images[0]?.startedAt,
+    durationMs: turn.images[0]?.startedAt ? Date.now() - turn.images[0].startedAt : undefined,
+  }));
   return {
     images: [
       ...successImages,
       {
         id: `${turn.id}-shared-retry-error`,
         status: "error" as const,
+        startedAt: turn.images[0]?.startedAt,
+        durationMs: turn.images[0]?.startedAt ? Date.now() - turn.images[0].startedAt : undefined,
         error: "图片结果已就绪，但下载失败。",
         failureKind: "result_fetch_failed",
         retryAction: "retry_download",
@@ -181,6 +190,13 @@ export async function runRetryTurn(
   const startedAt = Date.now();
   const abortController = new AbortController();
   const signal = abortController.signal;
+  const retryImageIds = retryIndexes.map((index) => turn.images[index]?.id).filter((id): id is string => Boolean(id));
+  ctx.retryAbortControllersRef.current.set(retryKey, {
+    controller: abortController,
+    conversationId,
+    turnId,
+    imageIds: retryImageIds,
+  });
   ctx.focusConversation(conversationId);
 
   try {
@@ -196,6 +212,7 @@ export async function runRetryTurn(
             ? {
               id: image.id,
               status: "loading" as const,
+              startedAt,
             }
             : image,
         );
@@ -350,5 +367,6 @@ export async function runRetryTurn(
     toast.error(message);
   } finally {
     activeRetryKeys.delete(retryKey);
+    ctx.retryAbortControllersRef.current.delete(retryKey);
   }
 }
