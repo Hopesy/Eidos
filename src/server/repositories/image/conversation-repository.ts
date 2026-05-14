@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 
 import { getDb } from "@/server/db";
+import { deleteImageFavoritesByConversationIds } from "@/server/repositories/image/favorite-repository";
 import { cleanupOrphanedImageFiles, deleteImageFilesIfUnreferenced, getConversationImageReferences, normalizeConversationAssets } from "@/server/repositories/image/file-repository";
 import { deleteImageUpstreamTasksByConversationIds, upsertImageUpstreamTask } from "@/server/repositories/image/upstream-task-repository";
+import { normalizeImageConversationRuntimeState } from "@/shared/image-conversation-runtime";
 
 type ImageConversationRecord = Record<string, unknown> & {
   id: string;
@@ -105,6 +107,17 @@ export async function listImageConversationRecords() {
   return rows.map(parseConversation).filter((item): item is ImageConversationRecord => Boolean(item));
 }
 
+export async function normalizeImageConversationRuntimeRecords() {
+  const items = await listImageConversationRecords();
+  const normalized = normalizeImageConversationRuntimeState(items);
+
+  for (const conversation of normalized.changedItems) {
+    await saveImageConversationRecord(conversation);
+  }
+
+  return normalized.items;
+}
+
 export async function getImageConversationRecord(id: string) {
   const row = getDb()
     .prepare("SELECT data_json FROM image_conversations WHERE id = ?")
@@ -153,6 +166,7 @@ export async function deleteImageConversationRecord(id: string) {
   const refs = getConversationImageReferences(id);
   const imageIds = refs.map((item) => item.imageId);
   getDb().prepare("DELETE FROM image_conversations WHERE id = ?").run(id);
+  deleteImageFavoritesByConversationIds([id]);
   deleteImageUpstreamTasksByConversationIds([id]);
   const cleanup = await deleteImageFilesIfUnreferenced(imageIds, [id]);
   return {
@@ -172,6 +186,7 @@ export async function clearImageConversationRecords() {
     }
   });
   getDb().prepare("DELETE FROM image_conversations").run();
+  deleteImageFavoritesByConversationIds(conversations.map((conversation) => String(conversation.id || "")));
   deleteImageUpstreamTasksByConversationIds(conversations.map((conversation) => String(conversation.id || "")));
   const cleanup = await deleteImageFilesIfUnreferenced(imageIds);
   const orphanCleanup = await cleanupOrphanedImageFiles();

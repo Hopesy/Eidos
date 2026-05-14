@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import type { AccountRecord } from "@/server/types";
 
 export type AccountPoolImageRunnerDependencies = {
@@ -18,6 +18,7 @@ export type AccountPoolImageRunner = {
       operation?: string;
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
+      imageFormat?: ImageOutputFormat;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
   edit(
@@ -28,6 +29,7 @@ export type AccountPoolImageRunner = {
     options?: {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
+      imageFormat?: ImageOutputFormat;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
   upscale(
@@ -37,6 +39,7 @@ export type AccountPoolImageRunner = {
     options?: {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
+      imageFormat?: ImageOutputFormat;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
 };

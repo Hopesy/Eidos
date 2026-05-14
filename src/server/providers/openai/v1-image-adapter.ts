@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { logger } from "@/server/logger";
 import {
   ImageGenerationError,
@@ -24,6 +24,7 @@ export async function generateImageResultWithApiService(
   const normalizedPrompt = cleanToken(prompt);
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
+  const outputFormat = options.format ?? "png";
   if (!apiKey) {
     throw createImageError("image api key is required", {
       kind: "input_blocked",
@@ -51,6 +52,7 @@ export async function generateImageResultWithApiService(
       count,
       size,
       quality,
+      outputFormat,
       promptLength: normalizedPrompt.length,
     });
 
@@ -65,6 +67,7 @@ export async function generateImageResultWithApiService(
         model: requestedModel,
         n: count,
         response_format: "b64_json",
+        output_format: outputFormat,
         ...(size !== "auto" ? { size } : {}),
         ...(quality !== "auto" ? { quality } : {}),
       }),
@@ -133,6 +136,7 @@ export async function editImageResultWithApiService(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    format?: ImageOutputFormat;
   },
 ) {
   const apiKey = cleanToken(serviceConfig.apiKey);
@@ -140,6 +144,7 @@ export async function editImageResultWithApiService(
   const model = cleanToken(params.model) || "gpt-image-1";
   const size = params.size ?? "auto";
   const quality = params.quality ?? "auto";
+  const outputFormat = params.format ?? "png";
   const images = params.images.filter(Boolean);
   if (!apiKey) {
     throw createImageError("image api key is required", {
@@ -171,6 +176,7 @@ export async function editImageResultWithApiService(
   formData.append("prompt", prompt);
   formData.append("model", model);
   formData.append("response_format", "b64_json");
+  formData.append("output_format", outputFormat);
   if (size !== "auto") {
     formData.append("size", size);
   }
@@ -192,6 +198,7 @@ export async function editImageResultWithApiService(
       hasMask: Boolean(params.mask),
       size,
       quality,
+      outputFormat,
       prompt,
       promptLength: prompt.length,
     });

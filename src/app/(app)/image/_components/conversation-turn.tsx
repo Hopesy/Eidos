@@ -15,6 +15,7 @@ import {
     Download,
     Pencil,
     SquarePen,
+    Star,
     X,
 } from "lucide-react";
 
@@ -156,6 +157,8 @@ export type ConversationTurnProps = {
     onOpenImageInNewTab: (dataUrl: string) => void;
     onOpenSelectionEditor: (conversationId: string, turnId: string, image: StoredImage, imageName: string) => void;
     onSeedFromResult: (conversationId: string, image: StoredImage, nextMode: ImageMode) => void;
+    isImageFavorited: (conversationId: string, turnId: string, image: StoredImage) => boolean;
+    onToggleFavorite: (conversationId: string, turn: ImageConversationTurn, image: StoredImage) => void;
     onRetryTurn: (conversationId: string, turn: ImageConversationTurn, imageId?: string) => void;
     onCancelRetry: (conversationId: string, turnId: string, imageId?: string) => void;
     onPreviewImage: (dataUrl: string) => void;
@@ -177,6 +180,8 @@ export function ConversationTurn({
     onOpenImageInNewTab,
     onOpenSelectionEditor,
     onSeedFromResult,
+    isImageFavorited,
+    onToggleFavorite,
     onRetryTurn,
     onCancelRetry,
     onPreviewImage,
@@ -290,6 +295,7 @@ export function ConversationTurn({
                             const elapsedNowMs = isRetryProcessing ? retryNowMs : Date.now();
                             const retryLabel = buildRetryButtonLabel(turn, image);
                             const imageDataUrl = buildImageDataUrl(image);
+                            const isFavorited = isImageFavorited(conversationId, turn.id, image);
                             const imageDurationMs = image.durationMs ?? turn.durationMs;
                             const imageElapsedSeconds = image.startedAt
                                 ? Math.max(0, Math.floor((elapsedNowMs - image.startedAt) / 1000))
@@ -399,6 +405,21 @@ export function ConversationTurn({
                                                 title="下载"
                                             >
                                                 <Download className="size-3.5" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={cn(
+                                                    "inline-flex size-7 items-center justify-center rounded-lg transition",
+                                                    isFavorited
+                                                        ? "bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/15"
+                                                        : "text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200",
+                                                )}
+                                                onClick={() => onToggleFavorite(conversationId, turn, image)}
+                                                title={isFavorited ? "取消收藏" : "收藏"}
+                                                aria-label={isFavorited ? "取消收藏" : "收藏"}
+                                                aria-pressed={isFavorited}
+                                            >
+                                                <Star className={cn("size-3.5", isFavorited && "fill-current")} />
                                             </button>
                                         </div>
                                     </>

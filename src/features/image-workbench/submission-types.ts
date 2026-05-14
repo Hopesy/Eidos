@@ -1,6 +1,6 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type {
   ImageConversation,
   ImageConversationTurn,
@@ -50,6 +50,7 @@ export type RetryAbortControllerEntry = {
   conversationId: string;
   turnId: string;
   imageIds: string[];
+  retractOnCancel?: boolean;
 };
 
 export type SubmissionContext = {
@@ -74,6 +75,7 @@ export type SubmissionContext = {
       preserveImageSize?: boolean;
       preserveImageQuality?: boolean;
       preserveUpscaleQuality?: boolean;
+      preserveImageFormat?: boolean;
     },
   ) => void;
   retractTurnAfterAbort: (conversationId: string, turnId: string) => Promise<boolean>;
@@ -93,10 +95,12 @@ export type SelectionEditContext = SubmissionContext & {
   imageModel: ImageModel;
   imageSize: ImageRatioOption;
   imageQuality: ImageGenerationQuality;
+  imageFormat: ImageOutputFormat;
 };
 
 export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "updateConversation"> & {
   retryAbortControllersRef: MutableRefObject<Map<string, RetryAbortControllerEntry>>;
+  retractTurnAfterAbort: (conversationId: string, turnId: string) => Promise<boolean>;
 };
 
 export type SubmitContext = SubmissionContext & {
@@ -110,6 +114,7 @@ export type SubmitContext = SubmissionContext & {
   imageModel: ImageModel;
   imageSize: ImageRatioOption;
   imageQuality: ImageGenerationQuality;
+  imageFormat: ImageOutputFormat;
   upscaleQuality: ImageGenerationQuality;
   sourceImages: StoredSourceImage[];
 };

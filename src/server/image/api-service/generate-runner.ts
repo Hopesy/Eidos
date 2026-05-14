@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
@@ -25,16 +25,19 @@ async function invokeGenerateWithApiService(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   return imageApiService.apiStyle === "responses"
     ? generateImageResultWithResponsesApiService(imageApiService, prompt, model, count, {
       size: options.imageSize,
       quality: options.imageQuality,
+      format: options.imageFormat,
     })
     : generateImageResultWithApiService(imageApiService, prompt, model, count, {
       size: options.imageSize,
       quality: options.imageQuality,
+      format: options.imageFormat,
     });
 }
 
@@ -48,6 +51,7 @@ export async function runApiGenerateTask(
     operation: string;
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
     startedAt: string;
     startedAtMs: number;
   },
@@ -71,6 +75,7 @@ export async function runApiGenerateTask(
       const result = await invokeGenerateWithApiService(imageApiService, prompt, model, needed, {
         imageSize: options.imageSize,
         imageQuality: options.imageQuality,
+        imageFormat: options.imageFormat,
       }) as ImageApiTaskResult;
 
       if (created === null) {
@@ -138,6 +143,7 @@ export async function runApiGenerateTask(
     prompt,
     accountEmail: "图像 API 服务",
     accountType: "api_service",
+    format: options.imageFormat ?? "png",
   }, { keepBase64: true });
 
   const finishedAt = new Date().toISOString();

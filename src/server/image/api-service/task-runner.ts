@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import {
   editImageResultWithApiService,
   editImageResultWithResponsesApiService,
@@ -19,6 +19,7 @@ export function runApiEditTask(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
     sourceReference?: {
       originalFileId: string;
       originalGenId: string;
@@ -41,6 +42,7 @@ export function runApiEditTask(
         mask,
         size: options.imageSize,
         quality: options.imageQuality,
+        format: options.imageFormat,
         continuation: options.sourceReference
           ? {
             previousResponseId: options.sourceReference.previousResponseId || options.sourceReference.originalGenId,
@@ -55,6 +57,7 @@ export function runApiEditTask(
         mask,
         size: options.imageSize,
         quality: options.imageQuality,
+        format: options.imageFormat,
       }),
     {
       endpoint: "POST /v1/images/edits",
@@ -77,6 +80,7 @@ export function runApiUpscaleTask(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
     startedAt: string;
     startedAtMs: number;
   },
@@ -89,6 +93,7 @@ export function runApiUpscaleTask(
         images: [image],
         size: options.imageSize,
         quality: options.imageQuality,
+        format: options.imageFormat,
       })
       : editImageResultWithApiService(imageApiService, {
         prompt,
@@ -96,6 +101,7 @@ export function runApiUpscaleTask(
         images: [image],
         size: options.imageSize,
         quality: options.imageQuality,
+        format: options.imageFormat,
       }),
     {
       endpoint: "POST /v1/images/upscale",
@@ -107,7 +113,7 @@ export function runApiUpscaleTask(
       startedAt: options.startedAt,
       startedAtMs: options.startedAtMs,
       successLogMessage: "图像 API 图片增强完成",
-      successLogData: { model, size: options.imageSize ?? "auto", quality: options.imageQuality ?? "medium" },
+      successLogData: { model, size: options.imageSize ?? "auto", quality: options.imageQuality ?? "medium", format: options.imageFormat ?? "png" },
     },
   );
 }

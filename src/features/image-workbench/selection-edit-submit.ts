@@ -24,7 +24,7 @@ export async function runSelectionEditSubmit(
   ctx: SelectionEditContext,
   params: SelectionEditParams,
 ) {
-  const { editorTarget, imageModel, imageSize, imageQuality } = ctx;
+  const { editorTarget, imageModel, imageSize, imageQuality, imageFormat } = ctx;
   if (!editorTarget) {
     return;
   }
@@ -44,6 +44,7 @@ export async function runSelectionEditSubmit(
     imageRatio: imageSize,
     imageSize: turnImageSize,
     imageQuality,
+    imageFormat,
     count: 1,
     sourceImages: [
       selectionSourceImage ?? {
@@ -95,6 +96,7 @@ export async function runSelectionEditSubmit(
       model: imageModel,
       size: turnImageSize,
       quality: imageQuality,
+      format: imageFormat,
       signal,
     });
     const resultItems = mergeResultImages(turnId, data.data || [], 1);

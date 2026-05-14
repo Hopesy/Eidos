@@ -12,6 +12,7 @@ export type ConfigStore = {
         apiKey?: string;
         apiStyle?: "v1" | "responses";
         responsesModel?: string;
+        imageFormat?: "png" | "jpeg" | "webp";
         [key: string]: unknown;
     };
     sync?: {

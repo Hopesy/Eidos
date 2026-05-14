@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { resolveAccountId } from "@/server/account-id";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
@@ -23,6 +23,7 @@ export async function runGenerateTaskWithPool(
     operation?: string;
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   const startedAt = new Date().toISOString();

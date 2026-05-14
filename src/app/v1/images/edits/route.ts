@@ -9,8 +9,8 @@ import {
     getImageErrorMeta,
     ImageGenerationError,
 } from "@/server/providers/openai-client";
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
-import { normalizeImageGenerationSize, resolveImageGenerationSize } from "@/shared/image-generation";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import { normalizeImageGenerationSize, normalizeImageOutputFormat, resolveImageGenerationSize } from "@/shared/image-generation";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
         let model = "gpt-image-1";
         let size: ImageGenerationSize = "auto";
         let quality: ImageGenerationQuality = "auto";
+        let outputFormat: ImageOutputFormat = "png";
         let images: File[] = [];
         let mask: File | null = null;
         let sourceReference:
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
             model = String(formData.get("model") || "gpt-image-1").trim() || "gpt-image-1";
             size = (String(formData.get("size") || "auto").trim() || "auto") as ImageGenerationSize;
             quality = (String(formData.get("quality") || "auto").trim() || "auto") as ImageGenerationQuality;
+            outputFormat = normalizeImageOutputFormat(formData.get("output_format"));
             images = formData.getAll("image").filter((item): item is File => item instanceof File);
             const maskValue = formData.get("mask");
             mask = maskValue instanceof File ? maskValue : null;
@@ -65,6 +67,7 @@ export async function POST(request: NextRequest) {
             model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
             size = (String(body.size || "auto").trim() || "auto") as ImageGenerationSize;
             quality = (String(body.quality || "auto").trim() || "auto") as ImageGenerationQuality;
+            outputFormat = normalizeImageOutputFormat(body.output_format);
         }
 
         if (!prompt) {
@@ -79,6 +82,7 @@ export async function POST(request: NextRequest) {
             model,
             size,
             quality,
+            outputFormat,
             imageCount: images.length,
             hasMask: Boolean(mask),
             prompt,
@@ -92,6 +96,7 @@ export async function POST(request: NextRequest) {
             result = await editWithApiService(prompt, model, images, mask, {
                 imageSize: size,
                 imageQuality: quality,
+                imageFormat: outputFormat,
                 sourceReference: sourceReference ? {
                     originalFileId: sourceReference.originalFileId,
                     originalGenId: sourceReference.originalGenId,
@@ -106,6 +111,7 @@ export async function POST(request: NextRequest) {
             result = await editWithPool(prompt, model, images, mask, {
                 imageSize: size,
                 imageQuality: quality,
+                imageFormat: outputFormat,
             });
         }
 

@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { logger } from "@/server/logger";
 import {
   ImageGenerationError,
@@ -55,6 +55,7 @@ export async function generateImageResultWithResponsesApiService(
   const model = cleanToken(serviceConfig.responsesModel) || "gpt-5.5";
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
+  const outputFormat = options.format ?? "png";
   if (!apiKey) {
     throw createImageError("image api key is required", {
       kind: "input_blocked",
@@ -84,6 +85,7 @@ export async function generateImageResultWithResponsesApiService(
         total: count,
         size,
         quality,
+        outputFormat,
         promptLength: normalizedPrompt.length,
       });
 
@@ -100,6 +102,7 @@ export async function generateImageResultWithResponsesApiService(
             {
               type: "image_generation",
               action: "generate",
+              output_format: outputFormat,
               ...(quality !== "auto" ? { quality } : {}),
               ...(size !== "auto" ? { size } : {}),
             },
@@ -174,6 +177,7 @@ export async function editImageResultWithResponsesApiService(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    format?: ImageOutputFormat;
     continuation?: ResponsesContinuationOptions | null;
   },
 ) {
@@ -184,6 +188,7 @@ export async function editImageResultWithResponsesApiService(
   const imageGenerationCallId = cleanToken(params.continuation?.imageGenerationCallId);
   const size = params.size ?? "auto";
   const quality = params.quality ?? "auto";
+  const outputFormat = params.format ?? "png";
   const images = params.images.filter(Boolean);
   if (!apiKey) {
     throw createImageError("image api key is required", {
@@ -245,6 +250,7 @@ export async function editImageResultWithResponsesApiService(
       hasImageGenerationCallId: Boolean(imageGenerationCallId),
       size,
       quality,
+      outputFormat,
       prompt,
       promptLength: prompt.length,
     });
@@ -276,6 +282,7 @@ export async function editImageResultWithResponsesApiService(
           {
             type: "image_generation",
             action: "edit",
+            output_format: outputFormat,
             ...(quality !== "auto" ? { quality } : {}),
             ...(size !== "auto" ? { size } : {}),
             ...(maskFileId ? { input_image_mask: { file_id: maskFileId } } : {}),

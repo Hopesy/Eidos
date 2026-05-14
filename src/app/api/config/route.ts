@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 
+import { ensureAccountWatcherStarted } from "@/server/account-service";
 import { getSavedConfig, setSavedConfig } from "@/server/repositories/config";
 import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
 import { jsonError, jsonOk } from "@/server/response";
@@ -26,6 +27,7 @@ export async function PUT(request: NextRequest) {
     const body = await parseJsonBody(request, recordBodySchema);
     const sanitized = sanitizeConfigPayload(body);
     setSavedConfig(sanitized);
+    await ensureAccountWatcherStarted({ reload: true });
     return jsonOk(sanitized);
   } catch (error) {
     return jsonError(error);

@@ -1,7 +1,7 @@
 import type { ClipboardEvent as ReactClipboardEvent, Dispatch, MutableRefObject, SetStateAction } from "react";
 import { toast } from "sonner";
 
-import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type { ImageMode, StoredImage, StoredSourceImage } from "@/store/image-conversations";
 import type { ImageRatioOption } from "@/shared/image-generation";
 import type { EditorTarget } from "./submission";
@@ -21,6 +21,7 @@ type ResetComposerOptions = {
   preserveImageSize?: boolean;
   preserveImageQuality?: boolean;
   preserveUpscaleQuality?: boolean;
+  preserveImageFormat?: boolean;
 };
 
 type ComposerContext = {
@@ -36,6 +37,7 @@ type ComposerContext = {
   setImageModel: Dispatch<SetStateAction<ImageModel>>;
   setImageSize: Dispatch<SetStateAction<ImageRatioOption>>;
   setImageQuality: Dispatch<SetStateAction<ImageGenerationQuality>>;
+  setImageFormat: Dispatch<SetStateAction<ImageOutputFormat>>;
   setUpscaleQuality: Dispatch<SetStateAction<ImageGenerationQuality>>;
   setReuseLatestResultForGenerate: Dispatch<SetStateAction<boolean>>;
   setSourceImages: Dispatch<SetStateAction<StoredSourceImage[]>>;

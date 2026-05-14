@@ -152,6 +152,21 @@ function initializeSchema(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_image_conversations_created_at ON image_conversations(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_image_conversations_status ON image_conversations(status);
 
+    CREATE TABLE IF NOT EXISTS image_favorites (
+      id TEXT PRIMARY KEY,
+      image_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      turn_id TEXT NOT NULL,
+      image_local_id TEXT NOT NULL,
+      note TEXT,
+      created_at TEXT NOT NULL,
+      UNIQUE(conversation_id, turn_id, image_local_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_image_favorites_created_at ON image_favorites(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_image_favorites_image_id ON image_favorites(image_id);
+    CREATE INDEX IF NOT EXISTS idx_image_favorites_conversation ON image_favorites(conversation_id, turn_id);
+
     CREATE TABLE IF NOT EXISTS image_upstream_tasks (
       id TEXT PRIMARY KEY,
       data_json TEXT NOT NULL,

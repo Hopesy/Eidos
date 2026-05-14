@@ -26,6 +26,7 @@ export type ImageGenerationSize =
   | "1440x2560"
   | "2160x3840";
 export type ImageGenerationQuality = "auto" | "low" | "medium" | "high";
+export type ImageOutputFormat = "png" | "jpeg" | "webp";
 export type ImageApiStyle = "v1" | "responses";
 export type SyncStatus =
   | "synced"
@@ -144,6 +145,29 @@ export type ImageResponseItem = {
   upstreamConversationId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+};
+
+export type GalleryImageItem = {
+  favoriteId: string;
+  imageId: string;
+  imageLocalId: string;
+  imageUrl: string;
+  createdAt: string;
+  conversationId: string;
+  turnId: string;
+  title: string;
+  mode: "generate" | "edit" | "upscale";
+  prompt: string;
+  revisedPrompt?: string;
+  model: ImageModel;
+  imageRatio?: "auto" | "1:1" | "3:2" | "2:3" | "16:9" | "9:16";
+  imageSize?: ImageGenerationSize;
+  imageQuality?: ImageGenerationQuality;
+  imageFormat?: ImageOutputFormat;
+  count: number;
+  durationMs?: number;
+  sourceAccountId?: string;
+  note?: string | null;
 };
 
 export type InpaintSourceReference = {

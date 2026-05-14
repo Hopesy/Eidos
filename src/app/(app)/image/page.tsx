@@ -2,9 +2,12 @@ import { ImageClient } from "./image-client";
 
 import { listAccounts } from "@/server/account-service";
 import { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
-import { listImageConversationRecords } from "@/server/repositories/image/conversation-repository";
+import { getSavedConfig } from "@/server/repositories/config";
+import { normalizeImageConversationRuntimeRecords } from "@/server/repositories/image/conversation-repository";
 import { listImageFiles } from "@/server/repositories/image/file-repository";
 import { listRecoverableImageUpstreamTasks } from "@/server/repositories/image/upstream-task-repository";
+import { normalizeImageOutputFormat } from "@/shared/image-generation";
+import { sanitizeConfigPayload } from "@/shared/app-config";
 import type { ImageConversation } from "@/store/image-conversations";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +19,13 @@ function formatAvailableQuota(accounts: Awaited<ReturnType<typeof listAccounts>>
 
 export default async function ImagePage() {
   const [initialConversations, initialFiles, accounts] = await Promise.all([
-    listImageConversationRecords(),
+    normalizeImageConversationRuntimeRecords(),
     listImageFiles(),
     listAccounts(),
   ]);
   const initialUsesImageApiService = Boolean(getImageApiServiceConfig());
+  const savedConfig = sanitizeConfigPayload(getSavedConfig());
+  const initialImageFormat = normalizeImageOutputFormat(savedConfig.chatgpt?.imageFormat);
 
   return (
     <ImageClient
@@ -29,6 +34,7 @@ export default async function ImagePage() {
       initialRecoverableTasks={listRecoverableImageUpstreamTasks(30)}
       initialAvailableQuota={formatAvailableQuota(accounts)}
       initialUsesImageApiService={initialUsesImageApiService}
+      initialImageFormat={initialImageFormat}
     />
   );
 }

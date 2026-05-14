@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import {
   buildHttpImageError,
   createImageError,
@@ -15,6 +15,7 @@ export type ImageApiServiceConfig = {
 export type ImageGenerationOptions = {
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
+  format?: ImageOutputFormat;
 };
 
 export type ResponsesContinuationOptions = {

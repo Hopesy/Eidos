@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { createAccountAdminService } from "@/server/account/admin-service";
 import { createAccountSelector } from "@/server/account/selection-service";
 import { createAccountPoolImageRunner } from "@/server/account/pool/image-runner";
@@ -7,7 +7,9 @@ import { createImageRecoveryService } from "@/server/image/recovery-service";
 import { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
 import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image/api-service/task-runner";
 import { logger } from "@/server/logger";
+import { getSavedConfig } from "@/server/repositories/config";
 import type { AccountRecord } from "@/server/types";
+import { sanitizeConfigPayload } from "@/shared/app-config";
 
 export { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
 
@@ -35,7 +37,62 @@ const imageRecoveryService = createImageRecoveryService({
   getAccountById: accountAdminService.getAccountById,
 });
 
+let accountWatcherTimer: ReturnType<typeof setInterval> | null = null;
+let accountWatcherIntervalMs = 0;
+let accountWatcherRunning = false;
+
+function getAccountWatcherConfig() {
+  const savedConfig = sanitizeConfigPayload(getSavedConfig());
+  const intervalMinutes = savedConfig.accounts?.refreshInterval ?? 5;
+  return {
+    enabled: Boolean(savedConfig.accounts?.autoRefresh),
+    intervalMinutes,
+    intervalMs: intervalMinutes * 60_000,
+  };
+}
+
+function clearAccountWatcherTimer() {
+  if (!accountWatcherTimer) {
+    return;
+  }
+  clearInterval(accountWatcherTimer);
+  accountWatcherTimer = null;
+  accountWatcherIntervalMs = 0;
+}
+
+async function runAccountWatcherRefresh(reason: "interval") {
+  if (accountWatcherRunning) {
+    logger.warn("account-service", "账号自动刷新仍在执行，跳过本轮", { reason });
+    return;
+  }
+
+  accountWatcherRunning = true;
+  try {
+    const accessTokens = await listTokens();
+    if (accessTokens.length === 0) {
+      logger.info("account-service", "账号自动刷新跳过：暂无账号", { reason });
+      return;
+    }
+
+    const result = await refreshAccounts(accessTokens, { markRefreshedAt: true });
+    logger.info("account-service", "账号自动刷新完成", {
+      reason,
+      total: accessTokens.length,
+      refreshed: result.refreshed,
+      errors: result.errors.length,
+    });
+  } catch (error) {
+    logger.error("account-service", "账号自动刷新失败", {
+      reason,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    accountWatcherRunning = false;
+  }
+}
+
 export async function listAccounts() {
+  await ensureAccountWatcherStarted();
   return accountAdminService.listAccounts();
 }
 
@@ -95,12 +152,14 @@ export async function generateWithPool(
     operation?: string;
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   const route = options.route ?? "generations";
   const operation = options.operation ?? "generate";
   const imageSize = options.imageSize ?? "auto";
   const imageQuality = options.imageQuality ?? "auto";
+  const imageFormat = options.imageFormat ?? "png";
   const imageApiService = getImageApiServiceConfig();
 
   logger.info("account-service", "开始图片生成", {
@@ -108,6 +167,7 @@ export async function generateWithPool(
     count,
     size: imageSize,
     quality: imageQuality,
+    format: imageFormat,
   });
 
   if (imageApiService) {
@@ -125,6 +185,7 @@ export async function generateWithPool(
       operation,
       imageSize,
       imageQuality,
+      imageFormat,
       startedAt,
       startedAtMs: startTime,
     });
@@ -140,6 +201,7 @@ export async function generateWithPool(
     operation,
     imageSize,
     imageQuality,
+    imageFormat,
   });
 }
 
@@ -151,6 +213,7 @@ export async function editWithPool(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   return accountPoolImageRunner.edit(prompt, model, images, mask, options);
@@ -164,6 +227,7 @@ export async function editWithApiService(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
     sourceReference?: {
       originalFileId: string;
       originalGenId: string;
@@ -192,6 +256,7 @@ export async function editWithApiService(
     {
       imageSize: options.imageSize,
       imageQuality: options.imageQuality,
+      imageFormat: options.imageFormat,
       sourceReference: options.sourceReference,
       startedAt,
       startedAtMs,
@@ -206,6 +271,7 @@ export async function upscaleWithPool(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   return accountPoolImageRunner.upscale(prompt, model, image, options);
@@ -218,6 +284,7 @@ export async function upscaleWithApiService(
   options: {
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
   } = {},
 ) {
   const imageApiService = getImageApiServiceConfig();
@@ -236,14 +303,37 @@ export async function upscaleWithApiService(
     {
       imageSize: options.imageSize,
       imageQuality: options.imageQuality,
+      imageFormat: options.imageFormat,
       startedAt,
       startedAtMs,
     },
   );
 }
 
-export async function ensureAccountWatcherStarted() {
-  // 定期自动刷新已禁用，账号状态由用户手动刷新
+export async function ensureAccountWatcherStarted(options: { reload?: boolean } = {}) {
+  const config = getAccountWatcherConfig();
+  if (!config.enabled) {
+    if (accountWatcherTimer) {
+      logger.info("account-service", "账号自动刷新已停止");
+    }
+    clearAccountWatcherTimer();
+    return;
+  }
+
+  if (!options.reload && accountWatcherTimer && accountWatcherIntervalMs === config.intervalMs) {
+    return;
+  }
+
+  clearAccountWatcherTimer();
+  accountWatcherIntervalMs = config.intervalMs;
+  accountWatcherTimer = setInterval(() => {
+    void runAccountWatcherRefresh("interval");
+  }, config.intervalMs);
+  accountWatcherTimer.unref?.();
+
+  logger.info("account-service", "账号自动刷新已启动", {
+    intervalMinutes: config.intervalMinutes,
+  });
 }
 
 export async function recoverImageTaskWithAccount(

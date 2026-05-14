@@ -1,3 +1,5 @@
+import type { ImageOutputFormat } from "@/lib/api";
+
 export type ConfigPayload = {
   chatgpt?: {
     enabled?: boolean;
@@ -5,10 +7,10 @@ export type ConfigPayload = {
     apiKey?: string;
     apiStyle?: "v1" | "responses";
     responsesModel?: string;
+    imageFormat?: ImageOutputFormat;
     [key: string]: unknown;
   };
   accounts?: {
-    defaultQuota?: number;
     autoRefresh?: boolean;
     refreshInterval?: number;
     [key: string]: unknown;
@@ -43,9 +45,9 @@ export function getDefaultConfigPayload(): ConfigPayload {
       apiKey: "",
       apiStyle: "v1",
       responsesModel: "gpt-5.5",
+      imageFormat: "png",
     },
     accounts: {
-      defaultQuota: 50,
       autoRefresh: true,
       refreshInterval: 5,
     },
@@ -72,6 +74,22 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? { ...(value as Record<string, unknown>) } : {};
 }
 
+function normalizeImageFormat(value: unknown): ImageOutputFormat {
+  const normalized = String(value || "png").trim().toLowerCase();
+  if (normalized === "jpeg" || normalized === "webp") {
+    return normalized;
+  }
+  return "png";
+}
+
+function normalizeAccountRefreshInterval(value: unknown, fallback: number) {
+  const interval = Number(value);
+  if (!Number.isFinite(interval)) {
+    return fallback;
+  }
+  return Math.max(1, Math.min(1440, Math.trunc(interval)));
+}
+
 export function sanitizeConfigPayload(value: Record<string, unknown> | null | undefined): ConfigPayload {
   const defaults = getDefaultConfigPayload();
   const source = asRecord(value);
@@ -83,6 +101,8 @@ export function sanitizeConfigPayload(value: Record<string, unknown> | null | un
 
   const chatgpt = asRecord(source.chatgpt);
   delete chatgpt.timeout;
+  const accounts = asRecord(source.accounts);
+  delete accounts.defaultQuota;
 
   return {
     ...defaults,
@@ -90,10 +110,16 @@ export function sanitizeConfigPayload(value: Record<string, unknown> | null | un
     chatgpt: {
       ...defaults.chatgpt,
       ...chatgpt,
+      imageFormat: normalizeImageFormat(chatgpt.imageFormat ?? defaults.chatgpt?.imageFormat),
     },
     accounts: {
       ...defaults.accounts,
-      ...asRecord(source.accounts),
+      ...accounts,
+      autoRefresh: typeof accounts.autoRefresh === "boolean" ? accounts.autoRefresh : defaults.accounts?.autoRefresh,
+      refreshInterval: normalizeAccountRefreshInterval(
+        accounts.refreshInterval ?? defaults.accounts?.refreshInterval,
+        defaults.accounts?.refreshInterval ?? 5,
+      ),
     },
     sync: {
       ...defaults.sync,

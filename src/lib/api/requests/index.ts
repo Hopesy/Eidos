@@ -2,6 +2,15 @@ import { httpRequest } from "@/lib/request";
 
 import type { RequestLogItem } from "../types";
 
-export async function fetchRequestLogs() {
-  return httpRequest<{ items: RequestLogItem[] }>("/api/requests");
+type FetchRequestLogsOptions = {
+  limit?: number;
+};
+
+export async function fetchRequestLogs(options: FetchRequestLogsOptions = {}) {
+  const params = new URLSearchParams();
+  if (options.limit !== undefined) {
+    params.set("limit", String(options.limit));
+  }
+  const query = params.toString();
+  return httpRequest<{ items: RequestLogItem[] }>(`/api/requests${query ? `?${query}` : ""}`);
 }

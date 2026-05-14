@@ -1,6 +1,7 @@
-import type { Account, ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
+import type { Account, ImageGenerationQuality, ImageGenerationSize, ImageModel, ImageOutputFormat } from "@/lib/api";
 import { ApiRequestError } from "@/lib/request";
 import { getUpscaleQualityLabel, type ImageRatioOption } from "@/shared/image-generation";
+import { normalizeImageConversationRuntimeState } from "@/shared/image-conversation-runtime";
 import { isImageTaskActive } from "@/store/image-active-tasks";
 import { normalizeConversation, saveImageConversation, type ImageConversation, type ImageConversationTurn, type ImageMode, type StoredImage, type StoredSourceImage } from "@/store/image-conversations";
 
@@ -59,54 +60,39 @@ export function formatAvailableQuota(accounts: Account[]) {
   return String(availableAccounts.reduce((sum, account) => sum + Math.max(0, account.quota), 0));
 }
 
-export async function normalizeConversationHistory(items: ImageConversation[]) {
-  const normalized = items.map((item) => {
-    let changed = false;
-    const turns = (item.turns ?? []).map((turn) => {
-      if (turn.status !== "generating" || isImageTaskActive(item.id, turn.id)) {
-        return turn;
-      }
-
-      changed = true;
-      const errorMessage = turn.images.some((image) => image.status === "success")
-        ? turn.error || "任务已中断"
-        : "页面已刷新，任务已中断";
-
-      return {
-        ...turn,
-        status: "error" as const,
-        error: errorMessage,
-        images: turn.images.map((image) =>
-          image.status === "loading"
-            ? {
-              ...image,
-              status: "error" as const,
-              error: "页面已刷新，任务已中断",
-            }
-            : image,
-        ),
-      };
-    });
-
-    const conversation = normalizeConversation(
-      changed
-        ? {
-          ...item,
-          turns,
-        }
-        : item,
+export function normalizeConversationRuntimeState(items: ImageConversation[]) {
+  const normalizedItems = items.map(normalizeConversation);
+  const runtimeState = normalizeImageConversationRuntimeState(
+    normalizedItems,
+    {
+      isTurnActive: isImageTaskActive,
+    },
+  );
+  const runtimeChangedIds = new Set(runtimeState.changedItems.map((item) => item.id));
+  const changedItems = runtimeState.items.filter((item, index) => {
+    const original = items[index];
+    return (
+      runtimeChangedIds.has(item.id) ||
+      item.status !== original?.status ||
+      item.error !== original?.error
     );
-
-    return { conversation, changed };
   });
 
+  return {
+    ...runtimeState,
+    changedItems,
+    changed: changedItems.length > 0,
+  };
+}
+
+export async function normalizeConversationHistory(items: ImageConversation[]) {
+  const normalized = normalizeConversationRuntimeState(items);
+
   await Promise.all(
-    normalized
-      .filter((item) => item.changed)
-      .map((item) => saveImageConversation(item.conversation)),
+    normalized.changedItems.map((conversation) => saveImageConversation(conversation)),
   );
 
-  return normalized.map((item) => item.conversation);
+  return normalized.items;
 }
 
 export function makeId() {
@@ -157,6 +143,7 @@ export function createConversationTurn(payload: {
   imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
+  imageFormat?: ImageOutputFormat;
   count: number;
   scale?: string;
   sourceImages?: StoredSourceImage[];
@@ -174,6 +161,7 @@ export function createConversationTurn(payload: {
     imageRatio: payload.imageRatio,
     imageSize: payload.imageSize,
     imageQuality: payload.imageQuality,
+    imageFormat: payload.imageFormat,
     count: payload.count,
     scale: payload.scale,
     sourceImages: payload.sourceImages ?? [],

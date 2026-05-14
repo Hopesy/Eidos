@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type { ImageRatioOption } from "@/shared/image-generation";
 import type { ImageMode } from "@/store/image-conversations";
 
@@ -46,6 +46,12 @@ export const upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[] =
   { label: "1K", value: "low" },
   { label: "2K", value: "medium" },
   { label: "4K", value: "high" },
+];
+
+export const imageFormatOptions: GenerationOption<ImageOutputFormat>[] = [
+  { label: "PNG", value: "png" },
+  { label: "JPEG", value: "jpeg" },
+  { label: "WebP", value: "webp" },
 ];
 
 export const inspirationExamples: InspirationExample[] = [

@@ -1,0 +1,1 @@
+export const REQUEST_LOG_PAGE_LIMIT = 120;

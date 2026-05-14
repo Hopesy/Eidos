@@ -1,10 +1,10 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { toast } from "sonner";
 
-import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel, ImageOutputFormat } from "@/lib/api";
 import { deleteImageConversation, getImageConversation, type ImageConversation, type ImageConversationTurn, type ImageMode, type StoredSourceImage } from "@/store/image-conversations";
 import { resolveImageRatioFromSize, resolveUpscaleQuality, type ImageRatioOption } from "@/shared/image-generation";
-import type { ActiveRequestMeta, EditorTarget, PendingAbortAction } from "./submission";
+import type { ActiveRequestMeta, EditorTarget, PendingAbortAction, RetryAbortControllerEntry } from "./submission";
 import { cloneSourceImagesForComposer, type ActiveRequestState } from "./utils";
 
 const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
@@ -25,6 +25,7 @@ type ConversationEditingContext = {
   draftSelectionRef: MutableRefObject<boolean>;
   requestAbortControllerRef: MutableRefObject<AbortController | null>;
   pendingAbortActionRef: MutableRefObject<PendingAbortAction | null>;
+  retryAbortControllersRef: MutableRefObject<Map<string, RetryAbortControllerEntry>>;
   activeRequestMetaRef: MutableRefObject<ActiveRequestMeta | null>;
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>;
   isSubmitting: boolean;
@@ -36,6 +37,7 @@ type ConversationEditingContext = {
   setImageCount: Dispatch<SetStateAction<string>>;
   setImageSize: Dispatch<SetStateAction<ImageRatioOption>>;
   setImageQuality: Dispatch<SetStateAction<ImageGenerationQuality>>;
+  setImageFormat: Dispatch<SetStateAction<ImageOutputFormat>>;
   setUpscaleQuality: Dispatch<SetStateAction<ImageGenerationQuality>>;
   setReuseLatestResultForGenerate: Dispatch<SetStateAction<boolean>>;
   setSourceImages: Dispatch<SetStateAction<StoredSourceImage[]>>;
@@ -50,6 +52,7 @@ type ConversationEditingContext = {
 type ToolbarStateContext = Pick<
   ConversationEditingContext,
   "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setUpscaleQuality"
+  | "setImageFormat"
 >;
 
 export function getLatestConversationTurn(conversation: ImageConversation | null): ImageConversationTurn | null {
@@ -122,6 +125,7 @@ export async function retractTurnAfterAbort(
     imageRatio: latestTurn.imageRatio,
     imageSize: latestTurn.imageSize,
     imageQuality: latestTurn.imageQuality,
+    imageFormat: latestTurn.imageFormat,
     count: latestTurn.count,
     scale: latestTurn.scale,
     sourceImages: latestTurn.sourceImages ?? [],
@@ -135,7 +139,7 @@ export async function retractTurnAfterAbort(
 }
 
 export function restoreComposerFromTurn(
-  ctx: Pick<ConversationEditingContext, "isSubmitting" | "activeRequest" | "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
+  ctx: Pick<ConversationEditingContext, "isSubmitting" | "activeRequest" | "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setImageFormat" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
   conversationId: string | null,
   turn: ImageConversationTurn,
   successMessage?: string,
@@ -180,10 +184,27 @@ export function restoreComposerFromTurn(
   }
 }
 
+export function abortRetryTurnForRetraction(
+  retryAbortControllersRef: MutableRefObject<Map<string, RetryAbortControllerEntry>>,
+  conversationId: string,
+  turnId: string,
+) {
+  let aborted = false;
+  for (const entry of retryAbortControllersRef.current.values()) {
+    if (entry.conversationId !== conversationId || entry.turnId !== turnId) {
+      continue;
+    }
+    entry.retractOnCancel = true;
+    entry.controller.abort();
+    aborted = true;
+  }
+  return aborted;
+}
+
 export async function handleEditTurn(
   ctx: Pick<ConversationEditingContext, "isSubmitting" | "activeRequest" | "pendingAbortActionRef" | "activeRequestMetaRef" | "requestAbortControllerRef"> &
     Pick<ConversationEditingContext, "mountedRef" | "draftSelectionRef" | "setConversations" | "setSelectedConversationId" | "setCachedWorkspaceState" | "updateConversation"> &
-    Pick<ConversationEditingContext, "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
+    Pick<ConversationEditingContext, "retryAbortControllersRef" | "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setImageFormat" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
   conversationId: string,
   turn: ImageConversationTurn,
 ) {
@@ -196,6 +217,17 @@ export async function handleEditTurn(
 
   if (ctx.isSubmitting && !isActiveTurn) {
     toast.error("当前还有其他任务在处理中，暂时不能切换编辑");
+    return;
+  }
+
+  if (abortRetryTurnForRetraction(ctx.retryAbortControllersRef, conversationId, turn.id)) {
+    const conversationStillExists = await retractTurnAfterAbort(ctx, conversationId, turn.id);
+    restoreComposerFromTurn(
+      ctx,
+      conversationStillExists ? conversationId : null,
+      turn,
+      "已撤回重试请求，可修改提示词后重新发送",
+    );
     return;
   }
 
@@ -234,7 +266,7 @@ export function handleCancelAndEditActiveRequest(
   ctx: Pick<ConversationEditingContext, "activeRequest"> &
     Pick<ConversationEditingContext, "isSubmitting" | "pendingAbortActionRef" | "activeRequestMetaRef" | "requestAbortControllerRef"> &
     Pick<ConversationEditingContext, "mountedRef" | "draftSelectionRef" | "setConversations" | "setSelectedConversationId" | "setCachedWorkspaceState" | "updateConversation"> &
-    Pick<ConversationEditingContext, "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
+    Pick<ConversationEditingContext, "retryAbortControllersRef" | "focusConversation" | "openDraftConversation" | "setMode" | "setImageModel" | "setImageCount" | "setImageSize" | "setImageQuality" | "setImageFormat" | "setUpscaleQuality" | "setReuseLatestResultForGenerate" | "setSourceImages" | "setImagePrompt" | "setEditorTarget" | "textareaRef">,
   conversations: ImageConversation[],
 ) {
   if (!ctx.activeRequest) {

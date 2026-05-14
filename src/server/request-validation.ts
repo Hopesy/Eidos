@@ -17,6 +17,7 @@ export const syncDirectionBodySchema = z.object({
 });
 
 export const imageQualitySchema = z.enum(["auto", "low", "medium", "high"]);
+export const imageOutputFormatSchema = z.enum(["png", "jpeg", "webp"]);
 export const imageSizeSchema = z.enum([
   "auto",
   "1024x1024",
@@ -51,6 +52,7 @@ export const imageGenerationBodySchema = z.object({
   response_format: z.string().optional(),
   size: imageSizeSchema.optional(),
   quality: imageQualitySchema.optional(),
+  output_format: imageOutputFormatSchema.optional(),
 });
 
 export const imageTaskRecoverBodySchema = z.object({
@@ -61,6 +63,14 @@ export const imageTaskRecoverBodySchema = z.object({
   waitMs: z.number().positive().optional(),
   model: z.string().trim().optional(),
   mode: z.enum(["generate", "edit", "upscale"]).optional(),
+});
+
+export const imageFavoriteBodySchema = z.object({
+  conversationId: z.string().trim().min(1, "conversationId is required"),
+  turnId: z.string().trim().min(1, "turnId is required"),
+  imageLocalId: z.string().trim().min(1, "imageLocalId is required"),
+  imageId: z.string().trim().optional(),
+  note: z.string().trim().optional(),
 });
 
 export const accountTypeSchema = z.enum(["Free", "Plus", "Pro", "Team"]);

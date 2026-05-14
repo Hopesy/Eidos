@@ -28,6 +28,7 @@ export function createAccountPoolImageRunner(
           mask,
           size: options.imageSize,
           quality: options.imageQuality,
+          format: options.imageFormat,
         },
         {
           endpoint: "POST /v1/images/edits",
@@ -48,6 +49,7 @@ export function createAccountPoolImageRunner(
           images: [image],
           size: options.imageSize,
           quality: options.imageQuality,
+          format: options.imageFormat,
         },
         {
           endpoint: "POST /v1/images/upscale",

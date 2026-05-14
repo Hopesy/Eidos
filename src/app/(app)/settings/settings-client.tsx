@@ -23,8 +23,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useSettingsPage } from "@/features/settings/use-settings-page";
-import type { ImageApiStyle } from "@/lib/api";
+import type { ImageApiStyle, ImageOutputFormat } from "@/lib/api";
 import type { ConfigPayload } from "@/shared/app-config";
+
+const imageFormatOptions: Array<{ label: string; value: ImageOutputFormat }> = [
+    { label: "PNG", value: "png" },
+    { label: "JPEG", value: "jpeg" },
+    { label: "WebP", value: "webp" },
+];
 
 function HintTooltip({ text }: { text: string }) {
     return (
@@ -104,23 +110,28 @@ function ToggleField({
     hint,
     checked,
     onCheckedChange,
+    children,
 }: {
     id: string;
     label: string;
     hint?: string;
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
+    children?: ReactNode;
 }) {
     return (
         <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 md:col-span-2 dark:border-stone-700 dark:bg-stone-800/50">
-            <div className="flex items-center gap-2.5">
-                <Checkbox id={id} checked={checked} onCheckedChange={(value) => onCheckedChange(Boolean(value))} />
-                <div className="min-w-0">
-                    <label htmlFor={id} className="text-sm font-medium text-stone-700 dark:text-stone-300">
-                        {label}
-                    </label>
-                    {hint ? <p className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{hint}</p> : null}
+            <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:items-center md:gap-3">
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <Checkbox id={id} checked={checked} onCheckedChange={(value) => onCheckedChange(Boolean(value))} />
+                    <div className="min-w-0">
+                        <label htmlFor={id} className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                            {label}
+                        </label>
+                        {hint ? <p className="mt-0.5 text-xs leading-5 text-stone-500 dark:text-stone-400">{hint}</p> : null}
+                    </div>
                 </div>
+                {children ? <div className="min-w-0">{children}</div> : null}
             </div>
         </div>
     );
@@ -238,40 +249,69 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 </div>
                             </div>
 
-                            <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
-                                <Field
-                                    id="chatgpt-api-style"
-                                    label="图像 API 风格"
-                                    hint="启用后：v1 Images 走 /v1/images/*；Responses 走 /v1/responses + image_generation 工具"
-                                >
-                                    <Select
-                                        value={String(config.chatgpt?.apiStyle || "v1")}
-                                        onValueChange={(value) => setSection("chatgpt", { apiStyle: value as ImageApiStyle })}
-                                    >
-                                        <SelectTrigger id="chatgpt-api-style" className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="v1">v1 Images 风格</SelectItem>
-                                            <SelectItem value="responses">Responses 风格</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
+                            <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 md:col-span-2 dark:border-stone-700 dark:bg-stone-800/50">
+                                <div className="flex flex-col gap-3">
+                                    <div className="grid gap-3 md:grid-cols-2 md:items-end">
+                                        <Field
+                                            id="chatgpt-api-style"
+                                            label="图像 API 风格"
+                                            hint="选择当前图像服务兼容的请求协议"
+                                        >
+                                            <Select
+                                                value={String(config.chatgpt?.apiStyle || "v1")}
+                                                onValueChange={(value) => setSection("chatgpt", { apiStyle: value as ImageApiStyle })}
+                                                disabled={!config.chatgpt?.enabled}
+                                            >
+                                                <SelectTrigger id="chatgpt-api-style" className="h-9 w-full rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="v1">Images API</SelectItem>
+                                                    <SelectItem value="responses">Responses API</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </Field>
 
-                                <Field
-                                    id="chatgpt-responses-model"
-                                    label="Responses 主模型"
-                                    hint="仅在 Responses 风格下使用；官方推荐使用支持 image_generation 工具的响应模型"
-                                >
-                                    <Input
-                                        id="chatgpt-responses-model"
-                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
-                                        value={String(config.chatgpt?.responsesModel ?? "gpt-5.5")}
-                                        onChange={(e) => setSection("chatgpt", { responsesModel: e.target.value })}
-                                        placeholder="gpt-5.5"
-                                        disabled={config.chatgpt?.apiStyle !== "responses"}
-                                    />
-                                </Field>
+                                        <Field
+                                            id="chatgpt-responses-model"
+                                            label="Responses 主模型"
+                                            hint="仅在 Responses API 下使用"
+                                        >
+                                            <Input
+                                                id="chatgpt-responses-model"
+                                                className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900"
+                                                value={String(config.chatgpt?.responsesModel ?? "gpt-5.5")}
+                                                onChange={(e) => setSection("chatgpt", { responsesModel: e.target.value })}
+                                                placeholder="gpt-5.5"
+                                                disabled={!config.chatgpt?.enabled || config.chatgpt?.apiStyle !== "responses"}
+                                            />
+                                        </Field>
+                                    </div>
+
+                                    <div className="w-full sm:w-[156px]">
+                                        <Field
+                                            id="chatgpt-image-format"
+                                            label="图片格式"
+                                            hint="生成页只显示当前格式，修改后新任务使用这个输出格式"
+                                        >
+                                            <Select
+                                                value={String(config.chatgpt?.imageFormat || "png")}
+                                                onValueChange={(value) => setSection("chatgpt", { imageFormat: value as ImageOutputFormat })}
+                                            >
+                                                <SelectTrigger id="chatgpt-image-format" className="h-9 w-full rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {imageFormatOptions.map((item) => (
+                                                        <SelectItem key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </Field>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* CPA：接口地址 + Management Key + 开关 同一行 */}
@@ -314,66 +354,49 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                 </div>
                             </div>
 
-                            {/* 代理：地址 + 开关 同一行 */}
-                            <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:items-end">
-                                <div className="flex-1">
-                                    <LabelWithHint id="proxy-url" label="代理地址" hint="HTTP/HTTPS 代理 URL" />
-                                    <div className="relative">
-                                        <Input
-                                            id="proxy-url"
-                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[116px] shadow-none dark:border-stone-700 dark:bg-stone-800"
-                                            value={(config.proxy as { enabled?: boolean; url?: string } | undefined)?.url ?? ""}
-                                            onChange={(e) => setSection("proxy", { url: e.target.value })}
-                                            placeholder="http://127.0.0.1:7890"
-                                            disabled={!config.proxy?.enabled}
-                                        />
-                                        <label
-                                            htmlFor="proxy-enabled"
-                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
-                                        >
-                                            <Checkbox
-                                                id="proxy-enabled"
-                                                checked={!!config.proxy?.enabled}
-                                                onCheckedChange={(v) => setSection("proxy", { enabled: Boolean(v) })}
-                                            />
-                                            <span className="whitespace-nowrap">启用代理</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                            <ToggleField
+                                id="proxy-enabled"
+                                label="启用代理"
+                                hint="启用后请求会通过 HTTP/HTTPS 代理转发"
+                                checked={!!config.proxy?.enabled}
+                                onCheckedChange={(v) => setSection("proxy", { enabled: v })}
+                            >
+                                <Field id="proxy-url" label="代理地址" hint="HTTP/HTTPS 代理 URL">
+                                    <Input
+                                        id="proxy-url"
+                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900"
+                                        value={(config.proxy as { enabled?: boolean; url?: string } | undefined)?.url ?? ""}
+                                        onChange={(e) => setSection("proxy", { url: e.target.value })}
+                                        placeholder="http://127.0.0.1:7890"
+                                        disabled={!config.proxy?.enabled}
+                                    />
+                                </Field>
+                            </ToggleField>
                         </ConfigSection>
 
-                        <ConfigSection title="账号" description="账号池默认配额与自动刷新策略。">
-                            <Field id="accounts-default-quota" label="默认账号配额" hint="新账号的默认并发请求配额">
-                                <Input
-                                    id="accounts-default-quota"
-                                    type="number"
-                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
-                                    value={config.accounts?.defaultQuota ?? 5}
-                                    onChange={(e) => setSection("accounts", { defaultQuota: Number(e.target.value) })}
-                                    placeholder="5"
-                                />
-                            </Field>
-
-                            <Field id="accounts-refresh-interval" label="刷新间隔（分钟）" hint="自动刷新账号状态的间隔时间">
-                                <Input
-                                    id="accounts-refresh-interval"
-                                    type="number"
-                                    className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-800"
-                                    value={config.accounts?.refreshInterval ?? 30}
-                                    onChange={(e) => setSection("accounts", { refreshInterval: Number(e.target.value) })}
-                                    placeholder="30"
-                                    disabled={!config.accounts?.autoRefresh}
-                                />
-                            </Field>
-
+                        <ConfigSection title="账号" description="账号池自动刷新策略。">
                             <ToggleField
                                 id="accounts-auto-refresh"
                                 label="自动刷新账号状态"
                                 hint="定期自动刷新账号配额和状态信息"
                                 checked={!!config.accounts?.autoRefresh}
                                 onCheckedChange={(v) => setSection("accounts", { autoRefresh: v })}
-                            />
+                            >
+                                <Field id="accounts-refresh-interval" label="刷新间隔（分钟）" hint="自动刷新账号状态的间隔时间">
+                                    <Input
+                                        id="accounts-refresh-interval"
+                                        type="number"
+                                        min={1}
+                                        max={1440}
+                                        step={1}
+                                        className="h-9 rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900"
+                                        value={config.accounts?.refreshInterval ?? 30}
+                                        onChange={(e) => setSection("accounts", { refreshInterval: Number(e.target.value) })}
+                                        placeholder="30"
+                                        disabled={!config.accounts?.autoRefresh}
+                                    />
+                                </Field>
+                            </ToggleField>
                         </ConfigSection>
 
                     </>

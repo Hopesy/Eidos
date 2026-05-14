@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 
 export type ImageRatioOption = "auto" | "1:1" | "3:2" | "2:3" | "16:9" | "9:16";
 
@@ -110,6 +110,14 @@ export function resolveUpscaleQuality(rawQuality?: unknown, rawLegacyScale?: unk
     default:
       return "medium";
   }
+}
+
+export function normalizeImageOutputFormat(value: unknown): ImageOutputFormat {
+  const normalized = String(value || "png").trim().toLowerCase();
+  if (normalized === "jpeg" || normalized === "webp") {
+    return normalized;
+  }
+  return "png";
 }
 
 export function resolveImageGenerationSize(

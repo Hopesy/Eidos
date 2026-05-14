@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClipboardEvent, RefObject } from "react";
-import { ArrowUp, ImagePlus, LoaderCircle, Trash2, Upload, Sparkles, Pencil, SquarePen, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio } from "lucide-react";
+import { ArrowUp, ImagePlus, LoaderCircle, Sparkles, Upload, SquarePen, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio, FileImage, X } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { ImageRatioOption } from "@/shared/image-generation";
 import { cn } from "@/lib/utils";
-import type { ImageGenerationQuality, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type { ImageMode, StoredSourceImage } from "@/store/image-conversations";
 
 export type ModeOption = { label: string; value: ImageMode; description: string };
@@ -40,6 +40,7 @@ export type ComposerPanelProps = {
     imageQuality: ImageGenerationQuality;
     imageQualityOptions: GenerationOption<ImageGenerationQuality>[];
     onImageQualityChange: (value: ImageGenerationQuality) => void;
+    imageFormat: ImageOutputFormat;
     upscaleQuality: ImageGenerationQuality;
     upscaleQualityOptions: GenerationOption<ImageGenerationQuality>[];
     onUpscaleQualityChange: (value: ImageGenerationQuality) => void;
@@ -49,7 +50,6 @@ export type ComposerPanelProps = {
     canToggleLatestResultReference: boolean;
     useLatestResultAsReference: boolean;
     onToggleLatestResultReference: () => void;
-    onOpenImageInNewTab: (dataUrl: string) => void;
     textareaRef: RefObject<HTMLTextAreaElement | null>;
     imagePrompt: string;
     onImagePromptChange: (value: string) => void;
@@ -60,8 +60,7 @@ export type ComposerPanelProps = {
     cancelButtonTitle: string;
     isSubmitting: boolean;
     uploadInputRef: RefObject<HTMLInputElement | null>;
-    maskInputRef: RefObject<HTMLInputElement | null>;
-    onUploadFiles: (files: FileList | null, role: "image" | "mask") => void;
+    onUploadFiles: (files: FileList | null) => void;
     onOpenMaskEditor: () => void;
 };
 
@@ -75,6 +74,16 @@ function renderQualityOption(value: ImageGenerationQuality, label: string) {
             <span>{label}</span>
         </div>
     );
+}
+
+function getImageFormatLabel(value: ImageOutputFormat) {
+    if (value === "jpeg") {
+        return "JPEG";
+    }
+    if (value === "webp") {
+        return "WebP";
+    }
+    return "PNG";
 }
 
 export function ComposerPanel({
@@ -93,6 +102,7 @@ export function ComposerPanel({
     imageQuality,
     imageQualityOptions,
     onImageQualityChange,
+    imageFormat,
     upscaleQuality,
     upscaleQualityOptions,
     onUpscaleQualityChange,
@@ -102,7 +112,6 @@ export function ComposerPanel({
     canToggleLatestResultReference,
     useLatestResultAsReference,
     onToggleLatestResultReference,
-    onOpenImageInNewTab,
     textareaRef,
     imagePrompt,
     onImagePromptChange,
@@ -113,10 +122,11 @@ export function ComposerPanel({
     cancelButtonTitle,
     isSubmitting,
     uploadInputRef,
-    maskInputRef,
     onUploadFiles,
     onOpenMaskEditor,
 }: ComposerPanelProps) {
+    const uploadLabel = mode === "generate" ? "上传参考图" : "上传源图";
+
     return (
         <div className="shrink-0 border-t border-stone-200/60 bg-white px-3 py-2.5 sm:px-5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
             <div className="mx-auto flex max-w-[980px] flex-col gap-2.5">
@@ -148,7 +158,7 @@ export function ComposerPanel({
                         </div>
                     ) : null}
 
-                    <div className="flex w-full flex-nowrap items-center gap-1 sm:flex-1 sm:flex-wrap sm:justify-end sm:gap-2">
+                    <div className="flex w-full flex-wrap items-center gap-1 sm:flex-1 sm:justify-end sm:gap-2">
                         <Select value={imageModel} onValueChange={(value) => onImageModelChange(value as ImageModel)}>
                             <SelectTrigger className="h-8 w-[112px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <SelectValue />
@@ -239,10 +249,6 @@ export function ComposerPanel({
                             </Select>
                         ) : null}
 
-                        <div className="ml-auto flex h-8 shrink-0 items-center justify-between gap-1 rounded-lg bg-gradient-to-br from-stone-100 to-stone-50 px-2 shadow-sm ring-1 ring-stone-900/5 sm:ml-0 sm:justify-start sm:gap-2 sm:px-3 dark:from-stone-800 dark:to-stone-700 dark:ring-stone-700">
-                            <span className="whitespace-nowrap text-[10px] font-medium text-stone-500 dark:text-stone-400 sm:text-xs">额度</span>
-                            <span className="whitespace-nowrap text-[11px] font-semibold text-stone-900 sm:text-sm dark:text-stone-100">{availableQuota}</span>
-                        </div>
                     </div>
                 </div>
 
@@ -252,45 +258,6 @@ export function ComposerPanel({
                         textareaRef.current?.focus();
                     }}
                 >
-                    {sourceImages.length > 0 ? (
-                        <div className="hide-scrollbar flex gap-2 overflow-x-auto border-b border-stone-200 px-3 py-2 dark:border-stone-700">
-                            {sourceImages.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="w-[116px] shrink-0 overflow-hidden rounded-[14px] border border-stone-200/80 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900"
-                                >
-                                    <div className="flex items-center justify-between border-b border-stone-200/70 bg-gradient-to-b from-stone-50/50 to-transparent px-1.5 py-[1px] text-[8px] font-medium leading-none text-stone-500 dark:border-stone-700 dark:from-stone-800/50 dark:text-stone-400">
-                                        <span>{item.role === "mask" ? "遮罩" : "源图"}</span>
-                                        <button
-                                            type="button"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                onRemoveSourceImage(item.id);
-                                            }}
-                                            className="rounded-md p-0.5 text-stone-400 transition hover:bg-stone-100 hover:text-rose-500 dark:hover:bg-stone-700 dark:hover:text-rose-400"
-                                        >
-                                            <Trash2 className="size-3" />
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="block w-full cursor-zoom-in"
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            onOpenImageInNewTab(item.dataUrl);
-                                        }}
-                                    >
-                                        <Image
-                                            src={item.dataUrl}
-                                            alt={item.name}
-                                            className="block h-[68px] w-full bg-stone-50/30 object-contain p-1"
-                                        />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-
                     <div className="px-2.5 pb-1 pt-2">
                         <Textarea
                             ref={textareaRef}
@@ -317,7 +284,7 @@ export function ComposerPanel({
                     </div>
                     <div className="px-2.5 pb-2.5 pt-1.5">
                         <div className="flex items-end justify-between gap-3">
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                                 {mode === "generate" && canToggleLatestResultReference ? (
                                     <Button
                                         type="button"
@@ -340,73 +307,117 @@ export function ComposerPanel({
                                     </Button>
                                 ) : null}
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        uploadInputRef.current?.click();
-                                    }}
-                                >
-                                    <ImagePlus className="size-3.5" />
-                                    {mode === "generate" ? "上传参考图" : "上传源图"}
-                                </Button>
-
                                 {mode === "edit" ? (
-                                    <>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                maskInputRef.current?.click();
-                                            }}
-                                        >
-                                            <Upload className="size-3.5" />
-                                            上传遮罩
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                onOpenMaskEditor();
-                                            }}
-                                        >
-                                            <Pencil className="size-3.5" />
-                                            添加遮罩
-                                        </Button>
-                                    </>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-full border-stone-200 bg-white px-2.5 text-xs font-medium text-stone-700 shadow-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            onOpenMaskEditor();
+                                        }}
+                                    >
+                                        <Upload className="size-3.5" />
+                                        添加遮罩
+                                    </Button>
                                 ) : null}
+
+                                {sourceImages.length > 0 ? (
+                                    <div className="group/source hide-scrollbar relative flex h-12 min-w-0 max-w-full items-center gap-2 overflow-x-auto pr-11">
+                                        {sourceImages.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="group/item relative h-12 shrink-0 overflow-hidden rounded-lg border border-stone-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.08)] transition-all duration-150 hover:-translate-y-px hover:border-stone-300 hover:shadow-[0_4px_10px_rgba(15,23,42,0.14)] focus-within:border-stone-300 focus-within:shadow-[0_4px_10px_rgba(15,23,42,0.14)] dark:border-stone-700/80 dark:bg-stone-900 dark:hover:border-stone-600 dark:focus-within:border-stone-600"
+                                            >
+                                                <div className="block h-full">
+                                                    <Image
+                                                        src={item.dataUrl}
+                                                        alt={item.name}
+                                                        className="block h-full w-auto max-w-[136px] object-contain"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    title="移除图片"
+                                                    className="absolute right-0.5 top-0.5 z-10 inline-flex size-5 items-center justify-center rounded-full bg-white/45 text-stone-700 opacity-0 transition hover:bg-white/70 hover:text-stone-950 group-hover/item:opacity-100 focus-visible:opacity-100 dark:bg-stone-950/35 dark:text-stone-200 dark:hover:bg-stone-950/60 dark:hover:text-white"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        onRemoveSourceImage(item.id);
+                                                    }}
+                                                >
+                                                    <X className="size-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            title={uploadLabel}
+                                            aria-label={uploadLabel}
+                                            className="absolute right-0 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-600 opacity-0 shadow-sm backdrop-blur transition hover:bg-stone-50 hover:text-stone-950 group-hover/source:opacity-100 focus-visible:opacity-100 dark:border-stone-700 dark:bg-stone-900/95 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                uploadInputRef.current?.click();
+                                            }}
+                                        >
+                                            <ImagePlus className="size-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        title={uploadLabel}
+                                        aria-label={uploadLabel}
+                                        className={cn(
+                                            "inline-flex shrink-0 items-center justify-center rounded-lg border border-dashed border-stone-300 bg-stone-50/70 text-stone-500 transition hover:border-stone-400 hover:bg-stone-100 hover:text-stone-800 dark:border-stone-700 dark:bg-stone-900/60 dark:text-stone-400 dark:hover:border-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-200",
+                                            mode === "generate" ? "size-10" : "size-12",
+                                        )}
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            uploadInputRef.current?.click();
+                                        }}
+                                    >
+                                        <ImagePlus className="size-4" />
+                                    </button>
+                                )}
                             </div>
 
-                            {isSubmitting ? (
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={onCancel}
-                                    title={cancelButtonTitle}
-                                    className="h-9 shrink-0 rounded-full bg-stone-950 px-3 text-xs font-medium text-white shadow-none transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                            <div className="flex shrink-0 items-center gap-1.5">
+                                <div
+                                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-stone-200/50 bg-stone-50/70 px-2 text-[11px] font-medium text-stone-500 shadow-none dark:border-stone-700/50 dark:bg-stone-800/45 dark:text-stone-400 sm:px-2.5"
+                                    title="图片格式在设置页修改"
                                 >
-                                    <LoaderCircle className="size-3.5 animate-spin" />
-                                    {cancelButtonLabel}
-                                </Button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={onSubmit}
-                                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-stone-950 text-white transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
-                                    aria-label="提交图片任务"
-                                >
-                                    <ArrowUp className="size-4" />
-                                </button>
-                            )}
+                                    <FileImage className="size-3.5" />
+                                    <span className="whitespace-nowrap">{getImageFormatLabel(imageFormat)}</span>
+                                </div>
+
+                                <div className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-stone-200/50 bg-stone-50/70 px-2 text-[11px] font-medium text-stone-500 shadow-none dark:border-stone-700/50 dark:bg-stone-800/45 dark:text-stone-400 sm:px-2.5">
+                                    <span className="hidden whitespace-nowrap sm:inline">额度</span>
+                                    <span className="whitespace-nowrap text-stone-700 dark:text-stone-200">{availableQuota}</span>
+                                </div>
+
+                                {isSubmitting ? (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={onCancel}
+                                        title={cancelButtonTitle}
+                                        className="h-9 shrink-0 rounded-full bg-stone-950 px-3 text-xs font-medium text-white shadow-none transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                                    >
+                                        <LoaderCircle className="size-3.5 animate-spin" />
+                                        {cancelButtonLabel}
+                                    </Button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={onSubmit}
+                                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-stone-950 text-white transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
+                                        aria-label="提交图片任务"
+                                    >
+                                        <ArrowUp className="size-4" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -417,17 +428,7 @@ export function ComposerPanel({
                         multiple={mode !== "upscale"}
                         className="hidden"
                         onChange={(event) => {
-                            onUploadFiles(event.target.files, "image");
-                            event.currentTarget.value = "";
-                        }}
-                    />
-                    <input
-                        ref={maskInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(event) => {
-                            onUploadFiles(event.target.files, "mask");
+                            onUploadFiles(event.target.files);
                             event.currentTarget.value = "";
                         }}
                     />

@@ -1,8 +1,10 @@
 import { httpRequest } from "@/lib/request";
 
 import type {
+  GalleryImageItem,
   ImageGenerationQuality,
   ImageGenerationSize,
+  ImageOutputFormat,
   ImageModel,
   ImageResponseItem,
   InpaintSourceReference,
@@ -16,10 +18,11 @@ export async function generateImage(
   options: {
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    format?: ImageOutputFormat;
     signal?: AbortSignal;
   } = {},
 ) {
-  const { size = "auto", quality = "auto", signal } = options;
+  const { size = "auto", quality = "auto", format = "png", signal } = options;
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/generations",
     {
@@ -31,6 +34,7 @@ export async function generateImage(
         response_format: "b64_json",
         size,
         quality,
+        output_format: format,
       },
       signal,
     },
@@ -45,6 +49,7 @@ export async function editImage(params: {
   model?: ImageModel;
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
+  format?: ImageOutputFormat;
   signal?: AbortSignal;
 }) {
   const {
@@ -55,6 +60,7 @@ export async function editImage(params: {
     model = "gpt-image-1",
     size,
     quality,
+    format = "png",
     signal,
   } = params;
   const formData = new FormData();
@@ -67,6 +73,7 @@ export async function editImage(params: {
   if (quality) {
     formData.append("quality", quality);
   }
+  formData.append("output_format", format);
   images.forEach((image) => formData.append("image", image));
   if (mask) {
     formData.append("mask", mask);
@@ -106,10 +113,11 @@ export async function upscaleImage(params: {
   prompt?: string;
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
+  format?: ImageOutputFormat;
   model?: ImageModel;
   signal?: AbortSignal;
 }) {
-  const { image, prompt, size, quality, model = "gpt-image-1", signal } = params;
+  const { image, prompt, size, quality, format = "png", model = "gpt-image-1", signal } = params;
   const formData = new FormData();
   formData.append("image", image);
   formData.append("model", model);
@@ -123,6 +131,7 @@ export async function upscaleImage(params: {
   if (quality) {
     formData.append("quality", quality);
   }
+  formData.append("output_format", format);
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/upscale",
     {
@@ -130,6 +139,36 @@ export async function upscaleImage(params: {
       body: formData,
       signal,
     },
+  );
+}
+
+export async function fetchImageFavorites() {
+  return httpRequest<{ items: GalleryImageItem[] }>("/api/image-favorites");
+}
+
+export async function fetchImageFavorite(id: string) {
+  return httpRequest<{ item: GalleryImageItem }>(
+    `/api/image-favorites/${encodeURIComponent(id)}`,
+  );
+}
+
+export async function addImageFavorite(payload: {
+  conversationId: string;
+  turnId: string;
+  imageLocalId: string;
+  imageId?: string;
+  note?: string;
+}) {
+  return httpRequest<{ item: GalleryImageItem }>("/api/image-favorites", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export async function deleteImageFavorite(id: string) {
+  return httpRequest<{ deletedFavoriteId: string; deleted: boolean }>(
+    `/api/image-favorites/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
   );
 }
 

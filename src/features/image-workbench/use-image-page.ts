@@ -5,14 +5,20 @@ import { toast } from "sonner";
 
 import { APP_CREDENTIALS_REFRESHED_EVENT } from "@/lib/app-startup-refresh";
 import {
+  addImageFavorite as createImageFavorite,
+  deleteImageFavorite as removeImageFavorite,
   fetchAccounts,
+  fetchImageFavorite,
+  fetchImageFavorites,
+  type GalleryImageItem,
   type ImageGenerationQuality,
+  type ImageOutputFormat,
   type ImageModel,
   type RecoverableImageTaskItem,
 } from "@/lib/api";
+import { normalizeImageOutputFormat, resolveImageRatioFromSize, type ImageRatioOption as ToolbarImageSize } from "@/shared/image-generation";
 import { subscribeImageTasks } from "@/store/image-active-tasks";
 import {
-  normalizeConversation,
   primeImageConversations,
   type ImageConversation,
   type ImageConversationTurn,
@@ -21,7 +27,6 @@ import {
   type StoredSourceImage,
 } from "@/store/image-conversations";
 import { getCachedImageWorkspaceState, setCachedImageWorkspaceState } from "@/store/image-workspace-cache";
-import { type ImageRatioOption as ToolbarImageSize } from "@/shared/image-generation";
 
 import { downloadImageFile, openImageInNewTab } from "./browser-actions";
 import {
@@ -68,6 +73,8 @@ import {
   formatAvailableQuota,
   getLatestSuccessfulImage,
   makeId,
+  normalizeConversationHistory,
+  normalizeConversationRuntimeState,
 } from "./utils";
 import {
   clearHistory as clearWorkbenchHistory,
@@ -77,12 +84,14 @@ import {
   syncRuntimeTaskState as syncWorkbenchRuntimeTaskState,
   updateConversation as updateWorkbenchConversation,
 } from "./workspace";
+import { applyTurnCanceled } from "./turn-patches";
 
 type UseImagePageOptions = {
   initialConversations?: ImageConversation[];
   initialRecoverableTasks?: RecoverableImageTaskItem[];
   initialAvailableQuota?: string;
   initialUsesImageApiService?: boolean;
+  initialImageFormat?: ImageOutputFormat;
 };
 
 const DRAFT_REUSE_LATEST_PREFERENCE_KEY = "__draft__";
@@ -91,15 +100,20 @@ function getReuseLatestPreferenceKey(conversationId: string | null) {
   return conversationId || DRAFT_REUSE_LATEST_PREFERENCE_KEY;
 }
 
+function buildFavoriteImageKey(conversationId: string, turnId: string, imageLocalId: string) {
+  return `${conversationId}:${turnId}:${imageLocalId}`;
+}
+
 export function useImagePage(options: UseImagePageOptions = {}) {
   const cachedWorkspaceState = getCachedImageWorkspaceState();
   const hasInitialConversations = options.initialConversations !== undefined;
   const hasInitialRecoverableTasks = options.initialRecoverableTasks !== undefined;
   const hasInitialAvailableQuota = options.initialAvailableQuota !== undefined;
-  const normalizedInitialConversations = useMemo(
-    () => (options.initialConversations ?? []).map(normalizeConversation),
+  const initialConversationState = useMemo(
+    () => normalizeConversationRuntimeState(options.initialConversations ?? []),
     [options.initialConversations],
   );
+  const normalizedInitialConversations = initialConversationState.items;
   const initialSelectedConversationId = useMemo(() => {
     const cachedId = cachedWorkspaceState.selectedConversationId;
     if (cachedId && normalizedInitialConversations.some((item) => item.id === cachedId)) {
@@ -127,7 +141,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     imageIds: string[];
   }>());
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  const maskInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resultsViewportRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +163,9 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
   const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
   const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
+  const [imageFormat, setImageFormat] = useState<ImageOutputFormat>(
+    normalizeImageOutputFormat(options.initialImageFormat),
+  );
   const [upscaleQuality, setUpscaleQuality] = useState<ImageGenerationQuality>("medium");
   const [sourceImages, setSourceImages] = useState<StoredSourceImage[]>([]);
   const [reuseLatestResultForGenerate, setReuseLatestResultForGenerate] = useState(true);
@@ -173,7 +189,16 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     imageName: string;
   } | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [favoriteItems, setFavoriteItems] = useState<GalleryImageItem[]>([]);
   const usesImageApiService = Boolean(options.initialUsesImageApiService);
+
+  const favoriteByImageKey = useMemo(() => {
+    const map = new Map<string, GalleryImageItem>();
+    for (const item of favoriteItems) {
+      map.set(buildFavoriteImageKey(item.conversationId, item.turnId, item.imageLocalId), item);
+    }
+    return map;
+  }, [favoriteItems]);
 
   const selectedConversation = useMemo(
     () => conversations.find((item) => item.id === selectedConversationId) ?? null,
@@ -298,6 +323,27 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   }, []);
 
   useEffect(() => {
+    let disposed = false;
+
+    void (async () => {
+      try {
+        const response = await fetchImageFavorites();
+        if (!disposed && mountedRef.current) {
+          setFavoriteItems(Array.isArray(response.items) ? response.items : []);
+        }
+      } catch {
+        if (!disposed && mountedRef.current) {
+          setFavoriteItems([]);
+        }
+      }
+    })();
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (hasInitialConversations) {
         primeImageConversations(normalizedInitialConversations);
@@ -305,6 +351,20 @@ export function useImagePage(options: UseImagePageOptions = {}) {
           selectedConversationId: initialSelectedConversationId,
           isDraftSelection: initialSelectedConversationId === null,
         });
+        if (initialConversationState.changed) {
+          void normalizeConversationHistory(options.initialConversations ?? [])
+            .then((items) => {
+              if (!mountedRef.current) {
+                return;
+              }
+              primeImageConversations(items);
+              setConversations(items);
+            })
+            .catch((error) => {
+              const message = error instanceof Error ? error.message : "清理中断任务失败";
+              toast.error(message);
+            });
+        }
         syncRuntimeTaskState(initialSelectedConversationId);
         return;
       }
@@ -393,6 +453,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
           setImageCount,
           setImageSize,
           setImageQuality,
+          setImageFormat,
           setUpscaleQuality,
         },
         latestTurn,
@@ -536,6 +597,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     setImageModel,
     setImageSize,
     setImageQuality,
+    setImageFormat,
     setUpscaleQuality,
     setReuseLatestResultForGenerate,
     setSourceImages,
@@ -550,6 +612,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       preserveImageSize?: boolean;
       preserveImageQuality?: boolean;
       preserveUpscaleQuality?: boolean;
+      preserveImageFormat?: boolean;
     },
   ) => {
     resetWorkbenchComposer(composerContext, nextMode, options);
@@ -573,10 +636,12 @@ export function useImagePage(options: UseImagePageOptions = {}) {
 
   const handleDeleteConversation = async (id: string) => {
     await deleteWorkbenchConversation({ draftSelectionRef, setConversations, setSelectedConversationId }, conversations, id);
+    setFavoriteItems((prev) => prev.filter((item) => item.conversationId !== id));
   };
 
   const handleClearHistory = async () => {
     await clearWorkbenchHistory({ draftSelectionRef, setConversations, setSelectedConversationId });
+    setFavoriteItems([]);
   };
 
   const appendFiles = async (files: File[] | FileList | null, role: "image" | "mask") => {
@@ -597,6 +662,95 @@ export function useImagePage(options: UseImagePageOptions = {}) {
 
   const seedFromResult = (conversationId: string, image: StoredImage, nextMode: ImageMode) => {
     seedWorkbenchFromResult(composerContext, conversationId, image, nextMode);
+  };
+
+  const isImageFavorited = (conversationId: string, turnId: string, image: StoredImage) => {
+    return favoriteByImageKey.has(buildFavoriteImageKey(conversationId, turnId, image.id));
+  };
+
+  const handleToggleFavorite = async (conversationId: string, turn: ImageConversationTurn, image: StoredImage) => {
+    if (image.status !== "success" || (!image.image_id && !image.url && !image.b64_json)) {
+      toast.error("当前图片还没有可收藏的数据");
+      return;
+    }
+
+    const key = buildFavoriteImageKey(conversationId, turn.id, image.id);
+    const existing = favoriteByImageKey.get(key);
+    if (existing) {
+      setFavoriteItems((prev) => prev.filter((item) => item.favoriteId !== existing.favoriteId));
+      try {
+        await removeImageFavorite(existing.favoriteId);
+        toast.success("已取消收藏");
+      } catch (error) {
+        setFavoriteItems((prev) => [existing, ...prev.filter((item) => item.favoriteId !== existing.favoriteId)]);
+        toast.error(error instanceof Error ? error.message : "取消收藏失败");
+      }
+      return;
+    }
+
+    try {
+      const response = await createImageFavorite({
+        conversationId,
+        turnId: turn.id,
+        imageLocalId: image.id,
+        imageId: image.image_id,
+      });
+      setFavoriteItems((prev) => [
+        response.item,
+        ...prev.filter(
+          (item) =>
+            buildFavoriteImageKey(item.conversationId, item.turnId, item.imageLocalId) !== key,
+        ),
+      ]);
+      toast.success("已收藏到画廊");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "收藏失败");
+    }
+  };
+
+  const seedFavoriteItem = (item: GalleryImageItem) => {
+    if (isSubmitting) {
+      toast.error("当前任务处理中，暂时不能切换会话");
+      return;
+    }
+
+    openDraftConversation();
+    setMode("generate");
+    setImagePrompt(item.prompt || "");
+    setImageCount(String(Math.max(1, Number(item.count) || 1)));
+    setImageModel(item.model);
+    setImageSize(item.imageRatio ?? resolveImageRatioFromSize(item.imageSize));
+    setImageQuality(item.imageQuality ?? "medium");
+    setUpscaleQuality("medium");
+    setReuseLatestResultForGenerate(false);
+    setSourceImages([]);
+    setEditorTarget(null);
+
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      const length = item.prompt?.length ?? 0;
+      if (textareaRef.current) {
+        textareaRef.current.selectionStart = length;
+        textareaRef.current.selectionEnd = length;
+      }
+    });
+
+    toast.success("已用收藏配置打开新会话");
+  };
+
+  const seedFavoriteConfiguration = async (favoriteId: string) => {
+    const cached = favoriteItems.find((item) => item.favoriteId === favoriteId);
+    if (cached) {
+      seedFavoriteItem(cached);
+      return;
+    }
+
+    try {
+      const response = await fetchImageFavorite(favoriteId);
+      seedFavoriteItem(response.item);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "读取收藏配置失败");
+    }
   };
 
   const openSelectionEditor = (conversationId: string, turnId: string, image: StoredImage, imageName: string) => {
@@ -670,6 +824,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       imageModel,
       imageSize,
       imageQuality,
+      imageFormat,
     }, {
       prompt,
       mask,
@@ -683,10 +838,11 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       focusConversation,
       updateConversation,
       retryAbortControllersRef,
+      retractTurnAfterAbort,
     }, conversationId, retryTurn, imageId);
   };
 
-  const handleCancelRetry = (conversationId: string, turnId: string, imageId?: string) => {
+  const handleCancelRetry = async (conversationId: string, turnId: string, imageId?: string) => {
     for (const entry of retryAbortControllersRef.current.values()) {
       if (entry.conversationId !== conversationId || entry.turnId !== turnId) {
         continue;
@@ -697,6 +853,39 @@ export function useImagePage(options: UseImagePageOptions = {}) {
 
       entry.controller.abort();
       return;
+    }
+
+    let cancelled = false;
+    try {
+      await updateConversation(conversationId, (current) => ({
+        ...current,
+        turns: (current.turns ?? []).map((turn) => {
+          if (turn.id !== turnId) {
+            return turn;
+          }
+          const retryIndexes = imageId
+            ? turn.images.reduce<number[]>((indexes, image, index) => {
+              if (image.id === imageId) {
+                indexes.push(index);
+              }
+              return indexes;
+            }, [])
+            : undefined;
+          if (imageId && (!retryIndexes || retryIndexes.length === 0)) {
+            return turn;
+          }
+          cancelled = true;
+          return applyTurnCanceled(turn, retryIndexes);
+        }),
+      }));
+      if (cancelled) {
+        toast.success("已取消处理");
+        return;
+      }
+      toast.error("未找到可取消的图片任务");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "取消任务失败";
+      toast.error(message);
     }
   };
 
@@ -756,6 +945,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       imageModel,
       imageSize,
       imageQuality,
+      imageFormat,
       upscaleQuality,
       sourceImages,
     });
@@ -774,6 +964,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     textareaRef,
     isSubmitting,
     activeRequest,
+    retryAbortControllersRef,
     setConversations,
     setSelectedConversationId,
     setMode,
@@ -781,6 +972,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     setImageCount,
     setImageSize,
     setImageQuality,
+    setImageFormat,
     setUpscaleQuality,
     setReuseLatestResultForGenerate,
     setSourceImages,
@@ -834,7 +1026,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
 
   return {
     uploadInputRef,
-    maskInputRef,
     textareaRef,
     resultsViewportRef,
     mode,
@@ -848,6 +1039,8 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     setImageSize,
     imageQuality,
     setImageQuality,
+    imageFormat,
+    setImageFormat,
     upscaleQuality,
     setUpscaleQuality,
     historyCollapsed,
@@ -886,6 +1079,9 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     removeSourceImage,
     handleToggleLatestResultReference,
     seedFromResult,
+    isImageFavorited,
+    handleToggleFavorite,
+    seedFavoriteConfiguration,
     openSelectionEditor,
     handleSelectionEditSubmit,
     handleMaskEditorSubmit,

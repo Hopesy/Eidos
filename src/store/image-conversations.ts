@@ -2,9 +2,9 @@
 
 import localforage from "localforage";
 
-import type { ImageGenerationQuality, ImageGenerationSize, ImageModel } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type { ImageRatioOption } from "@/shared/image-generation";
-import { resolveImageRatioFromSize } from "@/shared/image-generation";
+import { normalizeImageOutputFormat, resolveImageRatioFromSize } from "@/shared/image-generation";
 import { httpRequest } from "@/lib/request";
 
 // ─────────────────────────────────────────────
@@ -73,6 +73,7 @@ export type ImageConversationTurn = {
   imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
+  imageFormat?: ImageOutputFormat;
   count: number;
   scale?: string;
   sourceImages?: StoredSourceImage[];
@@ -100,6 +101,7 @@ export type ImageConversation = {
   imageRatio?: ImageRatioOption;
   imageSize?: ImageGenerationSize;
   imageQuality?: ImageGenerationQuality;
+  imageFormat?: ImageOutputFormat;
   count: number;
   images: StoredImage[];
   createdAt: string;
@@ -184,9 +186,43 @@ export function normalizeTurn(turn: ImageConversationTurn): ImageConversationTur
     imageRatio: turn.imageRatio ?? resolveImageRatioFromSize(turn.imageSize),
     imageSize: turn.imageSize ?? "auto",
     imageQuality: turn.imageQuality ?? "auto",
+    imageFormat: normalizeImageOutputFormat(turn.imageFormat),
     sourceImages: turn.sourceImages ?? [],
     images: (turn.images || []).map(normalizeStoredImage),
   };
+}
+
+function deriveConversationStatus(
+  turns: ImageConversationTurn[],
+  fallback: ImageConversationStatus,
+): ImageConversationStatus {
+  if (turns.some((turn) => turn.status === "generating" || turn.images.some((image) => image.status === "loading"))) {
+    return "generating";
+  }
+  if (turns.some((turn) => turn.status === "error" || turn.images.some((image) => image.status === "error"))) {
+    return "error";
+  }
+  if (turns.length > 0 && turns.every((turn) => turn.status === "success")) {
+    return "success";
+  }
+  return fallback;
+}
+
+function deriveConversationError(
+  turns: ImageConversationTurn[],
+  status: ImageConversationStatus,
+  fallback?: string,
+) {
+  if (status !== "error") {
+    return undefined;
+  }
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (turn?.status === "error" && turn.error) {
+      return turn.error;
+    }
+  }
+  return fallback;
 }
 
 export function normalizeConversation(
@@ -205,6 +241,7 @@ export function normalizeConversation(
       imageRatio: conversation.imageRatio,
       imageSize: conversation.imageSize,
       imageQuality: conversation.imageQuality,
+      imageFormat: conversation.imageFormat,
       count: conversation.count,
       scale: conversation.scale,
       sourceImages: conversation.sourceImages ?? [],
@@ -214,6 +251,12 @@ export function normalizeConversation(
       error: conversation.error,
     })
     : null;
+  const turns = hasTurns
+    ? conversation.turns!.map(normalizeTurn)
+    : legacyTurn
+      ? [legacyTurn]
+      : [];
+  const status = deriveConversationStatus(turns, conversation.status ?? "success");
 
   return {
     ...conversation,
@@ -221,13 +264,12 @@ export function normalizeConversation(
     imageRatio: conversation.imageRatio ?? resolveImageRatioFromSize(conversation.imageSize),
     imageSize: conversation.imageSize ?? "auto",
     imageQuality: conversation.imageQuality ?? "auto",
+    imageFormat: normalizeImageOutputFormat(conversation.imageFormat),
     sourceImages: conversation.sourceImages ?? [],
     images: (conversation.images || []).map(normalizeStoredImage),
-    turns: hasTurns
-      ? conversation.turns!.map(normalizeTurn)
-      : legacyTurn
-        ? [legacyTurn]
-        : [],
+    status,
+    error: deriveConversationError(turns, status, conversation.error),
+    turns,
   };
 }
 
@@ -283,6 +325,7 @@ export async function updateImageConversation(
     imageRatio: "auto",
     imageSize: "auto",
     imageQuality: "auto",
+    imageFormat: "png",
     count: 1,
     scale: undefined,
     sourceImages: [],

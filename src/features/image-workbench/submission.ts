@@ -5,4 +5,5 @@ export type {
   ActiveRequestMeta,
   EditorTarget,
   PendingAbortAction,
+  RetryAbortControllerEntry,
 } from "./submission-types";

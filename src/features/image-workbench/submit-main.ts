@@ -120,6 +120,7 @@ export async function runSubmit(ctx: SubmitContext) {
     imageModel,
     imageSize,
     imageQuality,
+    imageFormat,
     upscaleQuality,
     sourceImages,
   } = ctx;
@@ -159,6 +160,7 @@ export async function runSubmit(ctx: SubmitContext) {
     imageRatio: turnImageRatio,
     imageSize: turnImageSize,
     imageQuality: turnImageQuality,
+    imageFormat,
     count: expectedCount,
     sourceImages,
     images: createLoadingImages(expectedCount, turnId, expectedCount === 1 ? startedAt : undefined),
@@ -197,6 +199,7 @@ export async function runSubmit(ctx: SubmitContext) {
         imageRatio: draftTurn.imageRatio,
         imageSize: draftTurn.imageSize,
         imageQuality: draftTurn.imageQuality,
+        imageFormat: draftTurn.imageFormat,
         count: draftTurn.count,
         scale: draftTurn.scale,
         sourceImages: draftTurn.sourceImages,
@@ -216,6 +219,7 @@ export async function runSubmit(ctx: SubmitContext) {
         imageRatio: draftTurn.imageRatio,
         imageSize: draftTurn.imageSize,
         imageQuality: draftTurn.imageQuality,
+        imageFormat: draftTurn.imageFormat,
         count: draftTurn.count,
         scale: draftTurn.scale,
         sourceImages: draftTurn.sourceImages,
@@ -242,6 +246,7 @@ export async function runSubmit(ctx: SubmitContext) {
           model: imageModel,
           size: turnImageSize,
           quality: turnImageQuality,
+          format: imageFormat,
           signal,
         });
         resultItems = mergeResultImages(turnId, data.data || [], 1);
@@ -296,6 +301,7 @@ export async function runSubmit(ctx: SubmitContext) {
                 const data = await generateImage(prompt, imageModel, 1, {
                   size: turnImageSize,
                   quality: turnImageQuality,
+                  format: imageFormat,
                   signal,
                 });
                 const resultImage = createResultImage(
@@ -400,6 +406,7 @@ export async function runSubmit(ctx: SubmitContext) {
           ctx.resetComposer("generate", {
             preserveImageSize: true,
             preserveImageQuality: true,
+            preserveImageFormat: true,
           });
           if (failedCount > 0) {
             toast.error(
@@ -416,6 +423,7 @@ export async function runSubmit(ctx: SubmitContext) {
         const data = await generateImage(prompt, imageModel, parsedCount, {
           size: turnImageSize,
           quality: turnImageQuality,
+          format: imageFormat,
           signal,
         });
         resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
@@ -435,6 +443,7 @@ export async function runSubmit(ctx: SubmitContext) {
         model: imageModel,
         size: turnImageSize,
         quality: turnImageQuality,
+        format: imageFormat,
         signal,
       });
       resultItems = mergeResultImages(turnId, data.data || [], 1);
@@ -447,6 +456,7 @@ export async function runSubmit(ctx: SubmitContext) {
         prompt,
         size: turnImageSize,
         quality: turnImageQuality,
+        format: imageFormat,
         model: imageModel,
         signal,
       });
@@ -466,6 +476,7 @@ export async function runSubmit(ctx: SubmitContext) {
       preserveImageSize: mode !== "upscale",
       preserveImageQuality: mode !== "upscale",
       preserveUpscaleQuality: mode === "upscale",
+      preserveImageFormat: true,
     });
     if (failedCount > 0) {
       toast.error(`已返回结果，但有 ${failedCount} 张处理失败`);

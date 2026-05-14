@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { applyTurnFailure, applyTurnSuccess } from "../src/features/image-workbench/turn-patches.ts";
+import { applyTurnCanceled, applyTurnFailure, applyTurnSuccess } from "../src/features/image-workbench/turn-patches.ts";
 import { buildSharedRecoverableRetryResult } from "../src/features/image-workbench/retry-recover.ts";
 import type { ImageConversationTurn } from "../src/store/image-conversations.ts";
 
@@ -95,5 +95,28 @@ describe("image turn recoverable failures", () => {
     assert.equal(result.images[1]?.status, "error");
     assert.equal(result.failedCount, 1);
     assert.deepEqual(result.remainingFileIds, ["file-b"]);
+  });
+
+  it("cancels only the requested loading image during retry fallback", () => {
+    const originalNow = Date.now;
+    Date.now = () => 20_000;
+    try {
+      const turn = createTurn({
+        images: [
+          { id: "turn-1-0", status: "success", b64_json: "ZmFrZQ==" },
+          { id: "turn-1-1", status: "loading", startedAt: 5_000 },
+        ],
+      });
+
+      const next = applyTurnCanceled(turn, [1]);
+
+      assert.equal(next.status, "error");
+      assert.equal(next.images[0]?.status, "success");
+      assert.equal(next.images[1]?.status, "error");
+      assert.equal(next.images[1]?.error, "已取消生成");
+      assert.equal(next.images[1]?.durationMs, 15_000);
+    } finally {
+      Date.now = originalNow;
+    }
   });
 });

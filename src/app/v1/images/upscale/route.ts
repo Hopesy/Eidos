@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 
 import { ensureAccountWatcherStarted, getImageApiServiceConfig, upscaleWithApiService, upscaleWithPool } from "@/server/account-service";
 import { createImageApiError } from "@/server/image/error-response";
@@ -10,7 +10,7 @@ import {
     getImageErrorMeta,
     ImageGenerationError,
 } from "@/server/providers/openai-client";
-import { buildUpscalePrompt, normalizeImageGenerationSize, resolveUpscaleQuality } from "@/shared/image-generation";
+import { buildUpscalePrompt, normalizeImageGenerationSize, normalizeImageOutputFormat, resolveUpscaleQuality } from "@/shared/image-generation";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
         let model = "gpt-image-1";
         let size: ImageGenerationSize = "auto";
         let quality: ImageGenerationQuality = "medium";
+        let outputFormat: ImageOutputFormat = "png";
         let image: File | null = null;
 
         if (contentType.includes("multipart/form-data")) {
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
             model = String(formData.get("model") || "gpt-image-1").trim() || "gpt-image-1";
             size = (String(formData.get("size") || "auto").trim() || "auto") as ImageGenerationSize;
             quality = resolveUpscaleQuality(formData.get("quality"), formData.get("scale"));
+            outputFormat = normalizeImageOutputFormat(formData.get("output_format"));
             const imageValue = formData.get("image");
             image = imageValue instanceof File ? imageValue : null;
         } else {
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
             model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
             size = (String(body.size || "auto").trim() || "auto") as ImageGenerationSize;
             quality = resolveUpscaleQuality(body.quality, body.scale);
+            outputFormat = normalizeImageOutputFormat(body.output_format);
         }
 
         if (!image) {
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
             model,
             size,
             quality,
+            outputFormat,
             prompt,
             effectivePrompt: upscalePrompt,
             promptLength: prompt.length,
@@ -62,15 +66,16 @@ export async function POST(request: NextRequest) {
         const imageApiService = getImageApiServiceConfig();
         let result;
         if (imageApiService) {
-            result = await upscaleWithApiService(upscalePrompt, model, image, { imageSize: size, imageQuality: quality });
+            result = await upscaleWithApiService(upscalePrompt, model, image, { imageSize: size, imageQuality: quality, imageFormat: outputFormat });
         } else {
-            result = await upscaleWithPool(upscalePrompt, model, image, { imageSize: size, imageQuality: quality });
+            result = await upscaleWithPool(upscalePrompt, model, image, { imageSize: size, imageQuality: quality, imageFormat: outputFormat });
         }
 
         logger.info("images.upscale.route", "request:success", {
             model,
             size,
             quality,
+            outputFormat,
             imageCount: Array.isArray(result.data) ? result.data.length : 0,
         });
         return jsonOk(result);

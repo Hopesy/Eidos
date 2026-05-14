@@ -6,6 +6,7 @@ import {
   buildUpscalePrompt,
   getUpscaleQualityLabel,
   normalizeImageGenerationSize,
+  normalizeImageOutputFormat,
   resolveImageGenerationSize,
   resolveImageRatioFromSize,
   resolveUpscaleQuality,
@@ -100,6 +101,14 @@ describe("image generation policies", () => {
     assert.equal(resolveUpscaleQuality(null, "4x"), "medium");
     assert.equal(resolveUpscaleQuality(undefined, "8x"), "high");
     assert.equal(resolveUpscaleQuality(undefined, "unknown"), "medium");
+  });
+
+  it("normalizes image output formats", () => {
+    assert.equal(normalizeImageOutputFormat("png"), "png");
+    assert.equal(normalizeImageOutputFormat("jpeg"), "jpeg");
+    assert.equal(normalizeImageOutputFormat("webp"), "webp");
+    assert.equal(normalizeImageOutputFormat("jpg"), "png");
+    assert.equal(normalizeImageOutputFormat(undefined), "png");
   });
 
   it("builds stable upscale labels and prompts", () => {

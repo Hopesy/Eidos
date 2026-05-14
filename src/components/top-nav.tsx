@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  GalleryVerticalEnd,
   ImageIcon,
   Moon,
   PanelLeftClose,
@@ -33,6 +34,7 @@ function formatVersionLabel(value: string) {
 
 const navItems = [
   { href: "/image", label: "图片", description: "生成、编辑与放大", pageTitle: "图片工作台", icon: ImageIcon },
+  { href: "/gallery", label: "画廊", description: "收藏图片与复用配置", pageTitle: "收藏画廊", icon: GalleryVerticalEnd },
   { href: "/accounts", label: "账号", description: "号池、额度与同步", pageTitle: "号池管理", icon: Shield },
   { href: "/requests", label: "请求", description: "查看调用状态与结果", pageTitle: "调用请求", icon: Activity },
   { href: "/settings", label: "设置", description: "模式、接口与后端配置", pageTitle: "配置管理", icon: Settings2 },
@@ -114,6 +116,7 @@ function DesktopTopNav({
         >
           <Link
             href="/image"
+            prefetch={false}
             className={cn(
               "flex items-center rounded-2xl transition",
               collapsed
@@ -156,6 +159,7 @@ function DesktopTopNav({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   "group relative flex transition-all duration-200",
                   collapsed
@@ -268,6 +272,7 @@ function MobileTopBar({ pathname, versionLabel }: MobileTopBarProps) {
                 </button>
                 <Link
                   href="/image"
+                  prefetch={false}
                   className="inline-flex items-center gap-2 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 transition hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
                 >
                   EIDOS
@@ -328,6 +333,7 @@ function MobileTopBar({ pathname, versionLabel }: MobileTopBarProps) {
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/image"
+              prefetch={false}
               className="inline-flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1 text-stone-900 dark:text-stone-100"
               onClick={() => setNavOpen(false)}
             >
@@ -355,6 +361,7 @@ function MobileTopBar({ pathname, versionLabel }: MobileTopBarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   onClick={() => setNavOpen(false)}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all duration-200",

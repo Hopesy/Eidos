@@ -1,4 +1,4 @@
-import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
+import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { resolveAccountId } from "@/server/account-id";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
@@ -22,6 +22,7 @@ export async function runAttachmentTaskWithPool(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    format?: ImageOutputFormat;
   },
   requestMeta: {
     endpoint: string;

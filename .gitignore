@@ -48,6 +48,7 @@ data/
 # AI assistant workspace metadata
 .tocodex/
 .claude/
+.playwright-cli/
 .tmp-node-ts-test/
 
 # Local notes / scratch docs

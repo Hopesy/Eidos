@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { fetchRequestLogs, type RequestLogItem } from "@/lib/api";
 
+import { REQUEST_LOG_PAGE_LIMIT } from "./request-limits";
 import {
   buildRequestsSummary,
   filterRequestLogs,
@@ -28,7 +29,7 @@ export function useRequestsPage(initialItems?: RequestLogItem[]) {
       setIsLoading(true);
     }
     try {
-      const data = await fetchRequestLogs();
+      const data = await fetchRequestLogs({ limit: REQUEST_LOG_PAGE_LIMIT });
       setItems(data.items);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "读取调用请求失败");

@@ -2,7 +2,7 @@ import { toast } from "sonner";
 
 import { editImage, generateImage, recoverImageTask, upscaleImage } from "@/lib/api";
 import type { ImageConversationTurn } from "@/store/image-conversations";
-import { resolveUpscaleQuality } from "@/shared/image-generation";
+import { normalizeImageOutputFormat, resolveUpscaleQuality } from "@/shared/image-generation";
 
 import type { RetryTurnContext } from "./submission-types";
 import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "./turn-patches";
@@ -143,6 +143,7 @@ export async function runRetryTurn(
   const turnUpscaleQuality = turnMode === "upscale" ? resolveUpscaleQuality(turn.imageQuality, turn.scale) : undefined;
   const turnImageSize = turn.imageSize || "auto";
   const turnImageQuality = turn.imageQuality || "auto";
+  const turnImageFormat = normalizeImageOutputFormat(turn.imageFormat);
   const isSharedRecoverableRetry =
     !targetImage &&
     (effectiveRetryAction === "resume_polling" || effectiveRetryAction === "retry_download") &&
@@ -245,6 +246,7 @@ export async function runRetryTurn(
           model: turn.model,
           size: turnImageSize,
           quality: turnImageQuality,
+          format: turnImageFormat,
           signal,
         });
         resultPayloadItems = data.data || [];
@@ -252,6 +254,7 @@ export async function runRetryTurn(
         const data = await generateImage(prompt, turn.model, retryIndexes.length, {
           size: turnImageSize,
           quality: turnImageQuality,
+          format: turnImageFormat,
           signal,
         });
         resultPayloadItems = data.data || [];
@@ -271,6 +274,7 @@ export async function runRetryTurn(
         model: turn.model,
         size: turnImageSize,
         quality: turnImageQuality,
+        format: turnImageFormat,
         signal,
       });
       resultPayloadItems = data.data || [];
@@ -283,6 +287,7 @@ export async function runRetryTurn(
         prompt,
         size: turnImageSize,
         quality: turnUpscaleQuality,
+        format: turnImageFormat,
         model: turn.model,
         signal,
       });
@@ -340,6 +345,10 @@ export async function runRetryTurn(
     }
   } catch (error) {
     if (isCanceledRequestError(error)) {
+      if (ctx.retryAbortControllersRef.current.get(retryKey)?.retractOnCancel) {
+        await ctx.retractTurnAfterAbort(conversationId, turnId);
+        return;
+      }
       await updateConversationBestEffort(ctx, conversationId, (current) => ({
         ...current,
         turns: (current.turns ?? []).map((item) => {

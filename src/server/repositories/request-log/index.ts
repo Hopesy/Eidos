@@ -38,6 +38,13 @@ export type RequestLogEntry = {
 
 const MAX_LOGS = 500;
 
+function normalizeLogLimit(limit = MAX_LOGS) {
+  if (!Number.isFinite(limit)) {
+    return MAX_LOGS;
+  }
+  return Math.max(1, Math.min(MAX_LOGS, Math.trunc(limit)));
+}
+
 export function addRequestLog(entry: Omit<RequestLogEntry, "id">): void {
   const record: RequestLogEntry = { id: randomUUID(), ...entry };
   const createdAt = record.finishedAt || new Date().toISOString();
@@ -75,10 +82,11 @@ export function addRequestLog(entry: Omit<RequestLogEntry, "id">): void {
   });
 }
 
-export function getRequestLogs(): RequestLogEntry[] {
+export function getRequestLogs(limit = MAX_LOGS): RequestLogEntry[] {
+  const normalizedLimit = normalizeLogLimit(limit);
   const rows = getDb()
     .prepare("SELECT data_json FROM request_logs ORDER BY created_at DESC LIMIT ?")
-    .all(MAX_LOGS) as Array<{ data_json?: string }>;
+    .all(normalizedLimit) as Array<{ data_json?: string }>;
 
   return rows
     .map((row) => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 import { ImageEditModal } from "@/components/image-edit-modal";
@@ -14,7 +15,7 @@ import {
   upscaleQualityOptions,
 } from "@/features/image-workbench/page-options";
 import { useImagePage } from "@/features/image-workbench/use-image-page";
-import type { RecoverableImageTaskItem } from "@/lib/api";
+import type { ImageOutputFormat, RecoverableImageTaskItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ImageFileListItem } from "@/server/repositories/image/file-repository";
 import type { ImageConversation } from "@/store/image-conversations";
@@ -31,6 +32,7 @@ type ImageClientProps = {
   initialRecoverableTasks: RecoverableImageTaskItem[];
   initialAvailableQuota: string;
   initialUsesImageApiService: boolean;
+  initialImageFormat: ImageOutputFormat;
 };
 
 export function ImageClient({
@@ -39,15 +41,19 @@ export function ImageClient({
   initialRecoverableTasks,
   initialAvailableQuota,
   initialUsesImageApiService,
+  initialImageFormat,
 }: ImageClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const isDesktopViewport = () =>
     typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
 
+  const seededFavoriteRef = useRef<string | null>(null);
+  const focusedConversationRef = useRef<string | null>(null);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
   const {
     uploadInputRef,
-    maskInputRef,
     textareaRef,
     resultsViewportRef,
     mode,
@@ -61,6 +67,7 @@ export function ImageClient({
     setImageSize,
     imageQuality,
     setImageQuality,
+    imageFormat,
     upscaleQuality,
     setUpscaleQuality,
     historyCollapsed,
@@ -98,6 +105,9 @@ export function ImageClient({
     removeSourceImage,
     handleToggleLatestResultReference,
     seedFromResult,
+    isImageFavorited,
+    handleToggleFavorite,
+    seedFavoriteConfiguration,
     openSelectionEditor,
     handleSelectionEditSubmit,
     handleMaskEditorSubmit,
@@ -116,6 +126,7 @@ export function ImageClient({
     initialRecoverableTasks,
     initialAvailableQuota,
     initialUsesImageApiService,
+    initialImageFormat,
   });
 
   useEffect(() => {
@@ -123,6 +134,33 @@ export function ImageClient({
       setMobileHistoryOpen(false);
     }
   }, [selectedConversationId]);
+
+  const seedFavoriteId = searchParams.get("favorite");
+  const targetConversationId = searchParams.get("conversation");
+
+  useEffect(() => {
+    if (!seedFavoriteId || seededFavoriteRef.current === seedFavoriteId) {
+      return;
+    }
+
+    seededFavoriteRef.current = seedFavoriteId;
+    void seedFavoriteConfiguration(seedFavoriteId).finally(() => {
+      router.replace("/image", { scroll: false });
+    });
+  }, [router, seedFavoriteId, seedFavoriteConfiguration]);
+
+  useEffect(() => {
+    if (!targetConversationId || focusedConversationRef.current === targetConversationId) {
+      return;
+    }
+    if (!conversations.some((item) => item.id === targetConversationId)) {
+      return;
+    }
+
+    focusedConversationRef.current = targetConversationId;
+    focusConversation(targetConversationId);
+    router.replace("/image", { scroll: false });
+  }, [conversations, focusConversation, router, targetConversationId]);
 
   return (
     <section
@@ -273,6 +311,10 @@ export function ImageClient({
                   onOpenImageInNewTab={openImageInNewTab}
                   onOpenSelectionEditor={openSelectionEditor}
                   onSeedFromResult={seedFromResult}
+                  isImageFavorited={isImageFavorited}
+                  onToggleFavorite={(conversationId, currentTurn, image) => {
+                    void handleToggleFavorite(conversationId, currentTurn, image);
+                  }}
                   onRetryTurn={(conversationId, currentTurn, imageId) => {
                     void handleRetryTurn(conversationId, currentTurn, imageId);
                   }}
@@ -306,6 +348,7 @@ export function ImageClient({
             imageQuality={imageQuality}
             imageQualityOptions={imageQualityOptions}
             onImageQualityChange={setImageQuality}
+            imageFormat={imageFormat}
             upscaleQuality={upscaleQuality}
             upscaleQualityOptions={upscaleQualityOptions}
             onUpscaleQualityChange={setUpscaleQuality}
@@ -315,7 +358,6 @@ export function ImageClient({
             canToggleLatestResultReference={canToggleLatestResultReference}
             useLatestResultAsReference={isLatestResultReferenceEnabled}
             onToggleLatestResultReference={handleToggleLatestResultReference}
-            onOpenImageInNewTab={openImageInNewTab}
             textareaRef={textareaRef}
             imagePrompt={imagePrompt}
             onImagePromptChange={setImagePrompt}
@@ -328,9 +370,8 @@ export function ImageClient({
             cancelButtonTitle={composerCancelTitle}
             isSubmitting={isSubmitting}
             uploadInputRef={uploadInputRef}
-            maskInputRef={maskInputRef}
-            onUploadFiles={(files, role) => {
-              void appendFiles(files, role);
+            onUploadFiles={(files) => {
+              void appendFiles(files, "image");
             }}
             onOpenMaskEditor={() => {
               void handleMaskEditorSubmit("open");
