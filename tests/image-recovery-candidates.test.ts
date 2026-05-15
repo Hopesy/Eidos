@@ -4,7 +4,6 @@ import { describe, it } from "node:test";
 import type { RecoverableImageTaskItem } from "../src/lib/api/types/index.ts";
 import type { ImageConversationTurn } from "../src/store/image-conversations.ts";
 import {
-  buildAutoRecoveryKey,
   findRecoverableTaskForTurn,
   mergeRecoverableTaskIntoTurn,
 } from "../src/features/image-workbench/recovery-candidates.ts";
@@ -84,19 +83,4 @@ describe("image recovery candidate helpers", () => {
     assert.equal(merged.prompt, "修订提示词");
   });
 
-  it("keeps auto recovery keys stable when only the task timestamp changes", () => {
-    const turn = mergeRecoverableTaskIntoTurn(createTurn(), createTask());
-    const first = buildAutoRecoveryKey({
-      conversationId: "conversation-1",
-      turn,
-      task: createTask({ updatedAt: "2026-05-04T00:01:00.000Z" }),
-    });
-    const second = buildAutoRecoveryKey({
-      conversationId: "conversation-1",
-      turn,
-      task: createTask({ updatedAt: "2026-05-04T00:02:00.000Z" }),
-    });
-
-    assert.equal(first, second);
-  });
 });

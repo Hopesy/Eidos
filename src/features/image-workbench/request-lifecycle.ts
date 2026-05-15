@@ -1,11 +1,12 @@
 import { startImageTask, finishImageTask } from "@/store/image-active-tasks";
 import { normalizeConversation, type ImageConversation, type ImageConversationTurn } from "@/store/image-conversations";
+import { sortImageConversationsByActivity } from "@/shared/image-conversation-order";
 
 import type { ActiveRequestState } from "./utils";
 import type { SubmissionContext } from "./submission-types";
 
 export function sortConversations(items: ImageConversation[]) {
-  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return sortImageConversationsByActivity(items);
 }
 
 export function beginRequest(
@@ -37,10 +38,23 @@ export function beginRequest(
 }
 
 export function finishRequest(ctx: SubmissionContext, conversationId: string, turnId: string) {
-  ctx.requestAbortControllerRef.current = null;
-  ctx.pendingAbortActionRef.current = null;
-  ctx.activeRequestMetaRef.current = null;
+  const isCurrentRequest =
+    ctx.activeRequestMetaRef.current?.conversationId === conversationId &&
+    ctx.activeRequestMetaRef.current?.turnId === turnId;
+  const isPendingAbortAction =
+    ctx.pendingAbortActionRef.current?.conversationId === conversationId &&
+    ctx.pendingAbortActionRef.current?.turnId === turnId;
+
   finishImageTask(conversationId, turnId);
+  if (isPendingAbortAction) {
+    ctx.pendingAbortActionRef.current = null;
+  }
+  if (!isCurrentRequest) {
+    return;
+  }
+
+  ctx.requestAbortControllerRef.current = null;
+  ctx.activeRequestMetaRef.current = null;
   ctx.setIsSubmitting(false);
   ctx.setActiveRequest(null);
   ctx.setSubmitStartedAt(null);

@@ -2,6 +2,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { toast } from "sonner";
 
 import { fetchRecoverableImageTasks, type RecoverableImageTaskItem } from "@/lib/api";
+import { sortImageConversationsByActivity } from "@/shared/image-conversation-order";
 import { clearImageConversations, deleteImageConversation, listImageConversations, normalizeConversation, saveImageConversation, updateImageConversation, type ImageConversation } from "@/store/image-conversations";
 import { listActiveImageTasks } from "@/store/image-active-tasks";
 
@@ -53,10 +54,6 @@ type ClearHistoryContext = {
 
 const conversationUpdateQueues = new Map<string, Promise<unknown>>();
 
-function sortConversations(items: ImageConversation[]) {
-  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
 export async function persistConversation(ctx: PersistConversationContext, conversation: ImageConversation) {
   const normalizedConversation = normalizeConversation(conversation);
   await saveImageConversation(normalizedConversation);
@@ -66,7 +63,7 @@ export async function persistConversation(ctx: PersistConversationContext, conve
 
   ctx.setConversations((prev) => {
     const next = [normalizedConversation, ...prev.filter((item) => item.id !== normalizedConversation.id)];
-    return sortConversations(next);
+    return sortImageConversationsByActivity(next);
   });
 }
 
@@ -96,7 +93,7 @@ export async function updateConversation(
 
   ctx.setConversations((prev) => {
     const next = [nextConversation, ...prev.filter((item) => item.id !== conversationId)];
-    return sortConversations(next);
+    return sortImageConversationsByActivity(next);
   });
 }
 

@@ -1,5 +1,5 @@
 import type { RecoverableImageTaskItem, ImageModel } from "@/lib/api";
-import type { ImageConversation, ImageConversationTurn } from "@/store/image-conversations";
+import type { ImageConversationTurn } from "@/store/image-conversations";
 
 export function mergeRecoverableTaskIntoTurn(
   turn: ImageConversationTurn,
@@ -39,70 +39,6 @@ export function findRecoverableTaskForTurn(
 
   return tasks.find((task) =>
     String(task.localConversationId || "").trim() === conversationId &&
-    String(task.localTurnId || "").trim() === turnId,
+      String(task.localTurnId || "").trim() === turnId,
   ) ?? null;
-}
-
-export function findRecoverableTurn(conversations: ImageConversation[]) {
-  return conversations
-    .flatMap((conversation) =>
-      (conversation.turns ?? []).map((turn) => ({
-        conversationId: conversation.id,
-        turn,
-      })),
-    )
-    .filter(({ turn }) =>
-      turn.status === "error" &&
-      Boolean(turn.retryable) &&
-      Boolean(turn.upstreamConversationId) &&
-      (turn.retryAction === "resume_polling" || turn.retryAction === "retry_download"),
-    )
-    .sort((a, b) => b.turn.createdAt.localeCompare(a.turn.createdAt))[0] ?? null;
-}
-
-export function findRecoverableTaskCandidate(tasks: RecoverableImageTaskItem[], conversations: ImageConversation[]) {
-  const byConversation = new Map(conversations.map((conversation) => [conversation.id, conversation]));
-  const sortedTasks = [...tasks].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
-
-  for (const task of sortedTasks) {
-    const conversationId = String(task.localConversationId || "").trim();
-    const turnId = String(task.localTurnId || "").trim();
-    if (!conversationId || !turnId) {
-      continue;
-    }
-    const conversation = byConversation.get(conversationId);
-    if (!conversation) {
-      continue;
-    }
-    const turn = (conversation.turns ?? []).find((item) => item.id === turnId);
-    if (!turn || turn.status !== "error") {
-      continue;
-    }
-    const mergedTurn = mergeRecoverableTaskIntoTurn(turn, task);
-    return {
-      task,
-      conversationId,
-      turn: mergedTurn,
-    };
-  }
-
-  return null;
-}
-
-export function buildAutoRecoveryKey(candidate: {
-  conversationId: string;
-  turn: ImageConversationTurn;
-  task?: RecoverableImageTaskItem;
-}) {
-  const taskId = String(candidate.task?.id || "").trim();
-  const turn = candidate.turn;
-  const parts = [
-    taskId ? `task:${taskId}` : `turn:${candidate.conversationId}:${turn.id}`,
-    String(turn.retryAction || "").trim(),
-    String(turn.upstreamConversationId || "").trim(),
-    String(turn.upstreamResponseId || "").trim(),
-    String(turn.imageGenerationCallId || "").trim(),
-    (turn.fileIds || []).join(","),
-  ];
-  return parts.join(":");
 }

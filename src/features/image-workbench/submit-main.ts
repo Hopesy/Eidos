@@ -125,6 +125,12 @@ export async function runSubmit(ctx: SubmitContext) {
     sourceImages,
   } = ctx;
 
+  const activeController = ctx.requestAbortControllerRef.current;
+  if (activeController && !activeController.signal.aborted) {
+    toast.error("当前任务正在处理中");
+    return;
+  }
+
   const prompt = imagePrompt.trim();
   if (mode === "generate" && !prompt) {
     toast.error("请输入提示词");

@@ -5,6 +5,7 @@ import { deleteImageFavoritesByConversationIds } from "@/server/repositories/ima
 import { cleanupOrphanedImageFiles, deleteImageFilesIfUnreferenced, getConversationImageReferences, normalizeConversationAssets } from "@/server/repositories/image/file-repository";
 import { deleteImageUpstreamTasksByConversationIds, upsertImageUpstreamTask } from "@/server/repositories/image/upstream-task-repository";
 import { normalizeImageConversationRuntimeState } from "@/shared/image-conversation-runtime";
+import { sortImageConversationsByActivity } from "@/shared/image-conversation-order";
 
 type ImageConversationRecord = Record<string, unknown> & {
   id: string;
@@ -102,9 +103,11 @@ function syncConversationUpstreamTasks(conversation: ImageConversationRecord) {
 
 export async function listImageConversationRecords() {
   const rows = getDb()
-    .prepare("SELECT data_json FROM image_conversations ORDER BY created_at DESC")
+    .prepare("SELECT data_json FROM image_conversations")
     .all() as Array<Record<string, unknown>>;
-  return rows.map(parseConversation).filter((item): item is ImageConversationRecord => Boolean(item));
+  return sortImageConversationsByActivity(
+    rows.map(parseConversation).filter((item): item is ImageConversationRecord => Boolean(item)),
+  );
 }
 
 export async function normalizeImageConversationRuntimeRecords() {

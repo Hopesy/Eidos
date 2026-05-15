@@ -81,6 +81,21 @@ export async function runSelectionEditSubmit(
   try {
     await ctx.updateConversation(conversationId, (current) => ({
       ...current,
+      title: draftTurn.title,
+      mode: draftTurn.mode,
+      prompt: draftTurn.prompt,
+      model: draftTurn.model,
+      imageRatio: draftTurn.imageRatio,
+      imageSize: draftTurn.imageSize,
+      imageQuality: draftTurn.imageQuality,
+      imageFormat: draftTurn.imageFormat,
+      count: draftTurn.count,
+      scale: draftTurn.scale,
+      sourceImages: draftTurn.sourceImages,
+      images: draftTurn.images,
+      createdAt: draftTurn.createdAt,
+      status: draftTurn.status,
+      error: draftTurn.error,
       turns: [...(current.turns ?? []), draftTurn],
     }));
 

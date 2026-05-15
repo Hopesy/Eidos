@@ -5,6 +5,7 @@ import localforage from "localforage";
 import type { ImageGenerationQuality, ImageGenerationSize, ImageModel, ImageOutputFormat } from "@/lib/api";
 import type { ImageRatioOption } from "@/shared/image-generation";
 import { normalizeImageOutputFormat, resolveImageRatioFromSize } from "@/shared/image-generation";
+import { sortImageConversationsByActivity } from "@/shared/image-conversation-order";
 import { httpRequest } from "@/lib/request";
 
 // ─────────────────────────────────────────────
@@ -128,16 +129,12 @@ const IMAGE_CONVERSATIONS_KEY = "items";
 let cachedConversations: ImageConversation[] | null = null;
 let legacyMigrationPromise: Promise<void> | null = null;
 
-function sortConversations(items: ImageConversation[]): ImageConversation[] {
-  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
 async function migrateLegacyLocalHistoryIfNeeded(serverItems: ImageConversation[]): Promise<ImageConversation[] | null> {
   if (serverItems.length > 0) return null;
   if (!legacyMigrationPromise) {
     legacyMigrationPromise = (async () => {
       const legacyItems = await legacyImageConversationStorage.getItem<ImageConversation[]>(IMAGE_CONVERSATIONS_KEY);
-      const normalized = sortConversations((legacyItems || []).map(normalizeConversation));
+      const normalized = sortImageConversationsByActivity((legacyItems || []).map(normalizeConversation));
       if (normalized.length === 0) return;
       for (const item of normalized) {
         await httpRequest<{ item: ImageConversation }>("/api/image-conversations", {
@@ -150,12 +147,12 @@ async function migrateLegacyLocalHistoryIfNeeded(serverItems: ImageConversation[
   }
   await legacyMigrationPromise;
   const migrated = await httpRequest<{ items: ImageConversation[] }>("/api/image-conversations");
-  return sortConversations((migrated.items || []).map(normalizeConversation));
+  return sortImageConversationsByActivity((migrated.items || []).map(normalizeConversation));
 }
 
 async function fetchConversations(): Promise<ImageConversation[]> {
   const response = await httpRequest<{ items: ImageConversation[] }>("/api/image-conversations");
-  const items = sortConversations((response.items || []).map(normalizeConversation));
+  const items = sortImageConversationsByActivity((response.items || []).map(normalizeConversation));
   const migrated = await migrateLegacyLocalHistoryIfNeeded(items);
   cachedConversations = migrated ?? items;
   return cachedConversations;
@@ -283,7 +280,7 @@ export async function listImageConversations(): Promise<ImageConversation[]> {
 }
 
 export function primeImageConversations(items: ImageConversation[]): void {
-  cachedConversations = sortConversations((items || []).map(normalizeConversation));
+  cachedConversations = sortImageConversationsByActivity((items || []).map(normalizeConversation));
 }
 
 export async function getImageConversation(
@@ -308,7 +305,7 @@ export async function saveImageConversation(
   });
   const saved = normalizeConversation(response.item);
   const items = cachedConversations ?? [];
-  cachedConversations = sortConversations([saved, ...items.filter((item) => item.id !== saved.id)]);
+  cachedConversations = sortImageConversationsByActivity([saved, ...items.filter((item) => item.id !== saved.id)]);
 }
 
 export async function updateImageConversation(
@@ -342,7 +339,7 @@ export async function updateImageConversation(
   });
   const saved = normalizeConversation(response.item);
   const items = cachedConversations ?? [];
-  cachedConversations = sortConversations([saved, ...items.filter((item) => item.id !== id)]);
+  cachedConversations = sortImageConversationsByActivity([saved, ...items.filter((item) => item.id !== id)]);
   return saved;
 }
 

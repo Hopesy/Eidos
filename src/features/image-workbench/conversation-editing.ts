@@ -165,7 +165,11 @@ export function restoreComposerFromTurn(
 
   applyComposerToolbarStateFromTurn(ctx, turn);
 
-  ctx.setReuseLatestResultForGenerate(false);
+  const shouldRestoreLatestResultReference =
+    turn.mode === "generate" &&
+    (turn.sourceImages ?? []).some((item) => item.role === "image" && item.hiddenInConversation === true);
+
+  ctx.setReuseLatestResultForGenerate(shouldRestoreLatestResultReference);
   ctx.setSourceImages(cloneSourceImagesForComposer(turn.sourceImages ?? []));
   ctx.setImagePrompt(turn.prompt || "");
   ctx.setEditorTarget(null);

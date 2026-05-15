@@ -53,10 +53,7 @@ import {
 } from "./conversation-editing";
 import { buildProcessingStatus } from "./processing-status";
 import {
-  buildAutoRecoveryKey,
-  findRecoverableTaskCandidate,
   findRecoverableTaskForTurn,
-  findRecoverableTurn,
   mergeRecoverableTaskIntoTurn,
 } from "./recovery-candidates";
 import {
@@ -127,7 +124,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const didLoadQuotaRef = useRef(false);
   const mountedRef = useRef(true);
   const draftSelectionRef = useRef(cachedWorkspaceState.isDraftSelection);
-  const autoRecoveredTurnKeysRef = useRef<Set<string>>(new Set());
   const restoredToolbarConversationIdRef = useRef<string | null>(null);
   const reuseLatestPreferenceScopeRef = useRef<string | null>(initialSelectedConversationId);
   const reuseLatestPreferenceRef = useRef<Map<string, boolean>>(new Map());
@@ -888,32 +884,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       toast.error(message);
     }
   };
-
-  useEffect(() => {
-    if (isSubmitting || conversations.length === 0) {
-      return;
-    }
-    const taskCandidate = findRecoverableTaskCandidate(recoverableTasks, conversations);
-    const candidate = taskCandidate ?? findRecoverableTurn(conversations);
-    if (!candidate) {
-      return;
-    }
-    const key = buildAutoRecoveryKey({
-      conversationId: candidate.conversationId,
-      turn: candidate.turn,
-      task: taskCandidate?.task,
-    });
-    if (autoRecoveredTurnKeysRef.current.has(key)) {
-      return;
-    }
-    autoRecoveredTurnKeysRef.current.add(key);
-    const frame = window.requestAnimationFrame(() => {
-      void handleRetryTurn(candidate.conversationId, candidate.turn);
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  }, [conversations, isSubmitting, recoverableTasks]);
 
   const handleSubmit = async () => {
     await runSubmit({

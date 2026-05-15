@@ -5,6 +5,7 @@ import { History, LoaderCircle, MessageSquarePlus, Sparkles, Trash2, X } from "l
 import { AppImage as Image } from "@/components/app-image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getImageConversationActivityAt } from "@/shared/image-conversation-order";
 import type { ImageConversation, ImageMode } from "@/store/image-conversations";
 
 // ─── 工具函数 ─────────────────────────────────────────────────────────────────
@@ -183,7 +184,7 @@ export function HistorySidebar({
                           {conversation.title}
                         </div>
                         <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-stone-500 dark:text-stone-400">
-                          <span>{formatConversationTime(conversation.createdAt)}</span>
+                          <span>{formatConversationTime(getImageConversationActivityAt(conversation))}</span>
                         </div>
                       </div>
                     </button>
