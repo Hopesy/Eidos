@@ -33,7 +33,7 @@ describe("server logger", () => {
 
     assert.equal(
       line,
-      '[2026-05-16 19:26:56.678 +08:00] [轮询异常] [上游服务] 轮询图片返回异常状态  {"status":429}\n',
+      '[2026-05-16 19:26:56.678 +08:00] [轮询异常] [openai-client] 轮询图片返回异常状态  {"status":429}\n',
     );
     assert.equal(line.includes("[WARN"), false);
     assert.equal(line.includes("poll-image-ids:non-ok"), false);

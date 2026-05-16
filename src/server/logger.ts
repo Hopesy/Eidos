@@ -1,7 +1,7 @@
 /**
  * 简单的按天滚动日志模块
  * 日志写入 <repo_root>/logs/YYYY-MM-DD.log
- * 格式：[北京时间] [步骤] [模块] message  {...data}
+ * 格式：[北京时间] [步骤] [module] message  {...data}
  */
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -9,17 +9,6 @@ import path from "node:path";
 type LogLevel = "INFO" | "WARN" | "ERROR";
 
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
-
-const moduleLabels: Record<string, string> = {
-    "account-service": "账号服务",
-    "image-file-store": "图片存储",
-    "image-tasks.recover.route": "恢复接口",
-    "images.edits.route": "编辑接口",
-    "images.file.route": "图片文件",
-    "images.generations.route": "生成接口",
-    "images.upscale.route": "增强接口",
-    "openai-client": "上游服务",
-};
 
 const messageLabels: Record<string, { step: string; text: string }> = {
     "api-service:done": { step: "图像API完成", text: "图像 API 请求完成" },
@@ -129,10 +118,6 @@ function inferChineseStep(level: LogLevel, message: string): string {
     return "处理中";
 }
 
-function formatModuleLabel(module: string): string {
-    return moduleLabels[module] ?? module;
-}
-
 function formatMessage(level: LogLevel, message: string): { step: string; text: string } {
     const labeled = messageLabels[message];
     if (labeled) {
@@ -156,7 +141,7 @@ export function formatLogLine(
     const ts = formatBeijingTimestamp(date);
     const display = formatMessage(level, message);
     const dataSuffix = data !== undefined ? "  " + JSON.stringify(data, null, 0) : "";
-    return `[${ts}] [${display.step}] [${formatModuleLabel(module)}] ${display.text}${dataSuffix}\n`;
+    return `[${ts}] [${display.step}] [${module}] ${display.text}${dataSuffix}\n`;
 }
 
 async function writeLog(level: LogLevel, module: string, message: string, data?: unknown): Promise<void> {
