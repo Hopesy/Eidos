@@ -289,7 +289,7 @@ export function ImageClient({
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
           ) : (
-            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-3 py-5 sm:gap-8 sm:px-5 sm:py-8 lg:px-6">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-6 py-5 sm:gap-8 sm:px-10 sm:py-8 lg:px-12">
               {selectedConversationTurns.map((turn) => (
                 <ConversationTurn
                   key={turn.id}
