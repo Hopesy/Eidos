@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 import { resolveAccountId } from "@/server/account-id";
+import { throwIfAborted } from "@/server/image/abort";
 import { logger } from "@/server/logger";
 import { uploadChatGptConversationFile, type UploadedMultimodalFile } from "@/server/providers/chatgpt/file-upload-adapter";
 import { collectGeneratedItems, recoverGeneratedItems } from "@/server/providers/chatgpt/generated-items";
@@ -123,7 +124,9 @@ async function sendConversation(
   proofToken: string | null,
   input: ConversationInput,
   model: string,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   logger.info("openai-client", "conversation:start", {
     deviceId,
     token: maskAccessToken(accessToken),
@@ -173,6 +176,7 @@ async function sendConversation(
       },
     }),
     timeoutMs: 180000,
+    signal,
   });
 
   if (!response.ok) {
@@ -196,11 +200,12 @@ async function sendConversation(
   return response;
 }
 
-async function prepareConversationContext(accessToken: string, account: AccountRecord | null) {
+async function prepareConversationContext(accessToken: string, account: AccountRecord | null, signal?: AbortSignal) {
+  throwIfAborted(signal);
   const fingerprint = resolveFingerprint(account);
   const session = createChatGptSession(fingerprint);
-  const deviceId = await bootstrapChatGptSession(session, fingerprint);
-  const { chatToken, pow, powConfig } = await getChatRequirements(session, accessToken, deviceId, fingerprint.userAgent);
+  const deviceId = await bootstrapChatGptSession(session, fingerprint, signal);
+  const { chatToken, pow, powConfig } = await getChatRequirements(session, accessToken, deviceId, fingerprint.userAgent, signal);
   const proofToken =
     pow.required && pow.seed && pow.difficulty
       ? getProofToken(String(pow.seed), String(pow.difficulty), fingerprint.userAgent, powConfig)
@@ -220,6 +225,7 @@ export async function generateImageResult(
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
   const effectivePrompt = buildImagePromptWithOptions(normalizedPrompt, options);
+  throwIfAborted(options.signal);
   if (!normalizedPrompt) {
     throw createImageError("prompt is required", {
       kind: "input_blocked",
@@ -249,7 +255,7 @@ export async function generateImageResult(
     accountEmail: account?.email ?? null,
   });
 
-  const { session, deviceId, chatToken, proofToken } = await prepareConversationContext(normalizedToken, account);
+  const { session, deviceId, chatToken, proofToken } = await prepareConversationContext(normalizedToken, account, options.signal);
   const response = await sendConversation(
     session,
     normalizedToken,
@@ -258,8 +264,10 @@ export async function generateImageResult(
     proofToken,
     { prompt: effectivePrompt },
     upstreamModel,
+    options.signal,
   );
-  return collectGeneratedItems(session, normalizedToken, deviceId, await response.text(), normalizedPrompt);
+  throwIfAborted(options.signal);
+  return collectGeneratedItems(session, normalizedToken, deviceId, await response.text(), normalizedPrompt, { signal: options.signal });
 }
 
 export async function generateImageResultWithAttachments(
@@ -272,6 +280,7 @@ export async function generateImageResultWithAttachments(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    signal?: AbortSignal;
   },
 ) {
   const normalizedPrompt = cleanToken(prompt);
@@ -296,13 +305,15 @@ export async function generateImageResultWithAttachments(
   const upstreamModel = resolveUpstreamModel(account, requestedModel);
   const size = params.size ?? "auto";
   const quality = params.quality ?? "auto";
-  const { session, deviceId, chatToken, proofToken } = await prepareConversationContext(normalizedToken, account);
+  throwIfAborted(params.signal);
+  const { session, deviceId, chatToken, proofToken } = await prepareConversationContext(normalizedToken, account, params.signal);
 
   const uploadedFiles = await Promise.all(
     [...params.images.filter(Boolean), ...(params.mask ? [params.mask] : [])].map((file) =>
-      uploadChatGptConversationFile(session, normalizedToken, deviceId, file),
+      uploadChatGptConversationFile(session, normalizedToken, deviceId, file, params.signal),
     ),
   );
+  throwIfAborted(params.signal);
   const promptWithOptions = buildImagePromptWithOptions(normalizedPrompt, params);
   const effectivePrompt = params.mask
     ? `${promptWithOptions}\n\n附加要求：第 1 张附件是源图，最后 1 张附件是遮罩图。请仅修改遮罩区域，未遮罩区域尽量保持与源图一致。`
@@ -330,9 +341,11 @@ export async function generateImageResultWithAttachments(
       attachments: uploadedFiles,
     },
     upstreamModel,
+    params.signal,
   );
 
-  return collectGeneratedItems(session, normalizedToken, deviceId, await response.text(), normalizedPrompt);
+  throwIfAborted(params.signal);
+  return collectGeneratedItems(session, normalizedToken, deviceId, await response.text(), normalizedPrompt, { signal: params.signal });
 }
 
 export async function recoverImageResult(
@@ -344,9 +357,11 @@ export async function recoverImageResult(
     fileIds?: string[];
     revisedPrompt?: string;
     waitMs?: number;
+    signal?: AbortSignal;
   },
 ) {
   const normalizedToken = cleanToken(accessToken);
+  throwIfAborted(recovery.signal);
   if (!normalizedToken) {
     throw createImageError("token is required", {
       kind: "account_blocked",
@@ -358,9 +373,12 @@ export async function recoverImageResult(
 
   const fingerprint = resolveFingerprint(account);
   const session = createChatGptSession(fingerprint);
-  const deviceId = await bootstrapChatGptSession(session, fingerprint);
-  const result = await recoverGeneratedItems(session, normalizedToken, deviceId, recovery);
+  const deviceId = await bootstrapChatGptSession(session, fingerprint, recovery.signal);
   const sourceAccountId = resolveAccountId(account);
+  const result = await recoverGeneratedItems(session, normalizedToken, deviceId, {
+    ...recovery,
+    sourceAccountId,
+  });
   result.data = result.data.map((item) => ({
     ...item,
     source_account_id: sourceAccountId || undefined,

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { applyTurnCanceled, applyTurnFailure, applyTurnSuccess } from "../src/features/image-workbench/turn-patches.ts";
+import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "../src/features/image-workbench/turn-patches.ts";
 import { buildSharedRecoverableRetryResult } from "../src/features/image-workbench/retry-recover.ts";
 import type { ImageConversationTurn } from "../src/store/image-conversations.ts";
 
@@ -27,6 +27,60 @@ function createTurn(overrides: Partial<ImageConversationTurn> = {}): ImageConver
 }
 
 describe("image turn recoverable failures", () => {
+  it("keeps retry recovery context while a manual retry is loading", () => {
+    const next = applyTurnGenerating(
+      createTurn({
+        status: "error",
+        failureKind: "accepted_pending",
+        retryAction: "resume_polling",
+        retryable: true,
+        stage: "poll",
+        upstreamConversationId: "conversation-1",
+        sourceAccountId: "account-1",
+      }),
+      [{ id: "turn-1-0", status: "loading" }],
+      {
+        failureKind: "accepted_pending",
+        retryAction: "resume_polling",
+        retryable: true,
+        stage: "poll",
+        upstreamConversationId: "conversation-1",
+        sourceAccountId: "account-1",
+      },
+    );
+
+    assert.equal(next.status, "generating");
+    assert.equal(next.retryAction, "resume_polling");
+    assert.equal(next.upstreamConversationId, "conversation-1");
+    assert.equal(next.sourceAccountId, "account-1");
+  });
+
+  it("preserves recovery source account when a retry-later response omits it", () => {
+    const turn = createTurn({
+      status: "generating",
+      failureKind: "accepted_pending",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+      upstreamConversationId: "conversation-1",
+      sourceAccountId: "account-1",
+      images: [{ id: "turn-1-0", status: "loading", startedAt: 5_000 }],
+    });
+
+    const next = applyTurnFailure(turn, "任务仍在处理中", {
+      failureKind: "accepted_pending",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+      upstreamConversationId: "conversation-1",
+    }, [0]);
+
+    assert.equal(next.status, "error");
+    assert.equal(next.retryAction, "resume_polling");
+    assert.equal(next.sourceAccountId, "account-1");
+    assert.equal(next.images[0]?.sourceAccountId, "account-1");
+  });
+
   it("preserves per-image durations when multi-image results settle at different times", () => {
     const originalNow = Date.now;
     Date.now = () => 20_000;

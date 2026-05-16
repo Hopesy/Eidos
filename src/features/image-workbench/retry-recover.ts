@@ -144,6 +144,17 @@ export async function runRetryTurn(
   const turnImageSize = turn.imageSize || "auto";
   const turnImageQuality = turn.imageQuality || "auto";
   const turnImageFormat = normalizeImageOutputFormat(turn.imageFormat);
+  const retryMeta = {
+    failureKind: targetImage?.failureKind ?? turn.failureKind,
+    retryAction: effectiveRetryAction,
+    retryable: targetImage?.retryable ?? turn.retryable,
+    stage: targetImage?.stage ?? turn.stage,
+    upstreamConversationId: effectiveUpstreamConversationId,
+    upstreamResponseId: effectiveUpstreamResponseId,
+    imageGenerationCallId: effectiveImageGenerationCallId,
+    sourceAccountId: effectiveSourceAccountId,
+    fileIds: effectiveFileIds,
+  };
   const isSharedRecoverableRetry =
     !targetImage &&
     (effectiveRetryAction === "resume_polling" || effectiveRetryAction === "retry_download") &&
@@ -211,13 +222,15 @@ export async function runRetryTurn(
         const loadingImages = item.images.map((image, index) =>
           retryIndexes.includes(index)
             ? {
-              id: image.id,
+              ...image,
               status: "loading" as const,
               startedAt,
+              error: undefined,
+              ...retryMeta,
             }
             : image,
         );
-        return applyTurnGenerating(item, loadingImages);
+        return applyTurnGenerating(item, loadingImages, retryMeta);
       }),
     }));
 
@@ -228,7 +241,7 @@ export async function runRetryTurn(
         sourceAccountId: effectiveSourceAccountId,
         revisedPrompt: prompt,
         fileIds: effectiveFileIds,
-        waitMs: effectiveRetryAction === "resume_polling" ? 60000 : 15000,
+        waitMs: effectiveRetryAction === "resume_polling" ? 180000 : 15000,
         model: turn.model,
         mode: turnMode,
         signal,

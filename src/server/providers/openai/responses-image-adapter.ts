@@ -1,4 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import { createAbortError, createLinkedAbortController, isAbortError, throwIfAborted } from "@/server/image/abort";
 import { logger } from "@/server/logger";
 import {
   ImageGenerationError,
@@ -56,6 +57,7 @@ export async function generateImageResultWithResponsesApiService(
   const size = options.size ?? "auto";
   const quality = options.quality ?? "auto";
   const outputFormat = options.format ?? "png";
+  throwIfAborted(options.signal);
   if (!apiKey) {
     throw createImageError("image api key is required", {
       kind: "input_blocked",
@@ -75,8 +77,7 @@ export async function generateImageResultWithResponsesApiService(
 
   const endpoint = resolveResponsesEndpoint(serviceConfig.baseUrl);
   const requests = Array.from({ length: count }).map(async (_, index) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000);
+    const controller = createLinkedAbortController(options.signal, 120000);
     try {
       logger.info("openai-client", "responses-service:generate:start", {
         endpoint,
@@ -133,7 +134,10 @@ export async function generateImageResultWithResponsesApiService(
       if (error instanceof ImageGenerationError) {
         throw error;
       }
-      const isAbort = error instanceof Error && error.name === "AbortError";
+      if (controller.parentAborted() || (isAbortError(error) && !controller.timedOut())) {
+        throw createAbortError();
+      }
+      const isAbort = isAbortError(error);
       const message = error instanceof Error ? error.message : String(error);
       throw createImageError(isAbort ? "responses image request timed out" : message, {
         kind: "submit_failed",
@@ -142,11 +146,12 @@ export async function generateImageResultWithResponsesApiService(
         stage: "api_service",
       });
     } finally {
-      clearTimeout(timeout);
+      controller.cleanup();
     }
   });
 
   const settled = await Promise.allSettled(requests);
+  throwIfAborted(options.signal);
   const fulfilled = settled
     .filter((entry): entry is PromiseFulfilledResult<ParsedResponsesImageItem[]> => entry.status === "fulfilled")
     .flatMap((entry) => entry.value);
@@ -179,6 +184,7 @@ export async function editImageResultWithResponsesApiService(
     quality?: ImageGenerationQuality;
     format?: ImageOutputFormat;
     continuation?: ResponsesContinuationOptions | null;
+    signal?: AbortSignal;
   },
 ) {
   const apiKey = cleanToken(serviceConfig.apiKey);
@@ -190,6 +196,7 @@ export async function editImageResultWithResponsesApiService(
   const quality = params.quality ?? "auto";
   const outputFormat = params.format ?? "png";
   const images = params.images.filter(Boolean);
+  throwIfAborted(params.signal);
   if (!apiKey) {
     throw createImageError("image api key is required", {
       kind: "input_blocked",
@@ -217,8 +224,9 @@ export async function editImageResultWithResponsesApiService(
 
   const endpoint = resolveResponsesEndpoint(serviceConfig.baseUrl);
   const useDataUrlInputs = !params.mask;
-  const uploadedImageIds = useDataUrlInputs ? [] : await Promise.all(images.map((image) => uploadInputFile(serviceConfig, image)));
-  const maskFileId = params.mask ? await uploadInputFile(serviceConfig, params.mask) : null;
+  const uploadedImageIds = useDataUrlInputs ? [] : await Promise.all(images.map((image) => uploadInputFile(serviceConfig, image, params.signal)));
+  const maskFileId = params.mask ? await uploadInputFile(serviceConfig, params.mask, params.signal) : null;
+  throwIfAborted(params.signal);
   const inputContent = [
     {
       type: "input_text",
@@ -237,8 +245,7 @@ export async function editImageResultWithResponsesApiService(
       }))),
   ];
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000);
+  const controller = createLinkedAbortController(params.signal, 120000);
   try {
     logger.info("openai-client", "responses-service:edit:start", {
       endpoint,
@@ -318,7 +325,10 @@ export async function editImageResultWithResponsesApiService(
     if (error instanceof ImageGenerationError) {
       throw error;
     }
-    const isAbort = error instanceof Error && error.name === "AbortError";
+    if (controller.parentAborted() || (isAbortError(error) && !controller.timedOut())) {
+      throw createAbortError();
+    }
+    const isAbort = isAbortError(error);
     const message = error instanceof Error ? error.message : String(error);
     throw createImageError(isAbort ? "responses edit request timed out" : message, {
       kind: "submit_failed",
@@ -327,6 +337,6 @@ export async function editImageResultWithResponsesApiService(
       stage: "api_service",
     });
   } finally {
-    clearTimeout(timeout);
+    controller.cleanup();
   }
 }

@@ -19,6 +19,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
   edit(
@@ -30,6 +31,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
   upscale(
@@ -40,6 +42,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
 };

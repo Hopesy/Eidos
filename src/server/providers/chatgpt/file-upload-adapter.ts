@@ -1,3 +1,4 @@
+import { throwIfAborted } from "@/server/image/abort";
 import {
   buildHttpImageError,
   createImageError,
@@ -78,6 +79,7 @@ async function registerChatGptFileUpload(
   deviceId: string,
   fileName: string,
   fileSize: number,
+  signal?: AbortSignal,
 ) {
   const candidates = [
     `${BASE_URL}/backend-api/files`,
@@ -86,6 +88,7 @@ async function registerChatGptFileUpload(
   let lastError = "";
 
   for (const endpoint of candidates) {
+    throwIfAborted(signal);
     const response = await session.fetch(endpoint, {
       method: "POST",
       headers: {
@@ -101,6 +104,7 @@ async function registerChatGptFileUpload(
         reset_rate_limits: false,
       }),
       timeoutMs: 30000,
+      signal,
     });
 
     if (!response.ok) {
@@ -125,7 +129,8 @@ async function registerChatGptFileUpload(
   });
 }
 
-async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType: string) {
+async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType: string, signal?: AbortSignal) {
+  throwIfAborted(signal);
   const response = await fetch(uploadUrl, {
     method: "PUT",
     headers: {
@@ -133,6 +138,7 @@ async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType
       "x-ms-blob-type": "BlockBlob",
     },
     body: new Uint8Array(bytes),
+    signal,
     cache: "no-store",
   });
 
@@ -149,6 +155,7 @@ async function finalizeChatGptFileUpload(
   fileId: string,
   fileName: string,
   fileSize: number,
+  signal?: AbortSignal,
 ) {
   const candidates = [
     {
@@ -181,6 +188,7 @@ async function finalizeChatGptFileUpload(
   let lastError = "";
 
   for (const candidate of candidates) {
+    throwIfAborted(signal);
     const response = await session.fetch(candidate.endpoint, {
       method: "POST",
       headers: {
@@ -191,6 +199,7 @@ async function finalizeChatGptFileUpload(
       },
       body: JSON.stringify(candidate.body),
       timeoutMs: 30000,
+      signal,
     });
 
     if (response.ok) {
@@ -213,13 +222,16 @@ export async function uploadChatGptConversationFile(
   accessToken: string,
   deviceId: string,
   file: File,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   const fileName = file.name || "image.png";
   const mimeType = cleanToken(file.type) || "application/octet-stream";
   const bytes = Buffer.from(await file.arrayBuffer());
-  const { fileId, uploadUrl } = await registerChatGptFileUpload(session, accessToken, deviceId, fileName, bytes.length);
-  await uploadChatGptFileBytes(uploadUrl, bytes, mimeType);
-  await finalizeChatGptFileUpload(session, accessToken, deviceId, fileId, fileName, bytes.length);
+  throwIfAborted(signal);
+  const { fileId, uploadUrl } = await registerChatGptFileUpload(session, accessToken, deviceId, fileName, bytes.length, signal);
+  await uploadChatGptFileBytes(uploadUrl, bytes, mimeType, signal);
+  await finalizeChatGptFileUpload(session, accessToken, deviceId, fileId, fileName, bytes.length, signal);
   const dimensions = getImageDimensions(bytes, mimeType);
 
   return {

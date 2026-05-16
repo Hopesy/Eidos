@@ -119,7 +119,6 @@ export function ImageClient({
     composerCancelTitle,
     handleEditTurn,
     handleCopyTurnPrompt,
-    openImageInNewTab,
     downloadImageFile,
   } = useImagePage({
     initialConversations,
@@ -290,7 +289,7 @@ export function ImageClient({
           {!selectedConversation ? (
             <EmptyState examples={inspirationExamples} onApplyExample={applyPromptExample} />
           ) : (
-            <div className="mx-auto flex w-full max-w-[980px] flex-col gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-8">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-3 py-5 sm:gap-8 sm:px-5 sm:py-8 lg:px-6">
               {selectedConversationTurns.map((turn) => (
                 <ConversationTurn
                   key={turn.id}
@@ -308,7 +307,6 @@ export function ImageClient({
                   retryingImageId={
                     turn.images.find((image) => image.status === "loading")?.id ?? null
                   }
-                  onOpenImageInNewTab={openImageInNewTab}
                   onOpenSelectionEditor={openSelectionEditor}
                   onSeedFromResult={seedFromResult}
                   isImageFavorited={isImageFavorited}

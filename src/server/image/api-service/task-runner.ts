@@ -31,6 +31,7 @@ export function runApiEditTask(
     } | null;
     startedAt: string;
     startedAtMs: number;
+    signal?: AbortSignal;
   },
 ) {
   return runApiSingleTask(
@@ -43,6 +44,7 @@ export function runApiEditTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        signal: options.signal,
         continuation: options.sourceReference
           ? {
             previousResponseId: options.sourceReference.previousResponseId || options.sourceReference.originalGenId,
@@ -58,6 +60,7 @@ export function runApiEditTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        signal: options.signal,
       }),
     {
       endpoint: "POST /v1/images/edits",
@@ -68,6 +71,7 @@ export function runApiEditTask(
       count: 1,
       startedAt: options.startedAt,
       startedAtMs: options.startedAtMs,
+      signal: options.signal,
     },
   );
 }
@@ -83,6 +87,7 @@ export function runApiUpscaleTask(
     imageFormat?: ImageOutputFormat;
     startedAt: string;
     startedAtMs: number;
+    signal?: AbortSignal;
   },
 ) {
   return runApiSingleTask(
@@ -94,6 +99,7 @@ export function runApiUpscaleTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        signal: options.signal,
       })
       : editImageResultWithApiService(imageApiService, {
         prompt,
@@ -102,6 +108,7 @@ export function runApiUpscaleTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        signal: options.signal,
       }),
     {
       endpoint: "POST /v1/images/upscale",
@@ -112,6 +119,7 @@ export function runApiUpscaleTask(
       count: 1,
       startedAt: options.startedAt,
       startedAtMs: options.startedAtMs,
+      signal: options.signal,
       successLogMessage: "图像 API 图片增强完成",
       successLogData: { model, size: options.imageSize ?? "auto", quality: options.imageQuality ?? "medium", format: options.imageFormat ?? "png" },
     },

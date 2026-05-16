@@ -1,4 +1,5 @@
 import { logger } from "@/server/logger";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import {
   createImageError,
   getImageErrorMeta,
@@ -55,12 +56,14 @@ async function downloadGeneratedItemWithRetry(
   conversationId: string,
   fileId: string,
   revisedPrompt?: string,
+  signal?: AbortSignal,
 ) {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= MAX_DOWNLOAD_RETRIES; attempt += 1) {
+    throwIfAborted(signal);
     try {
-      const url = await fetchDownloadUrl(session, accessToken, deviceId, conversationId, fileId);
+      const url = await fetchDownloadUrl(session, accessToken, deviceId, conversationId, fileId, signal);
       if (!url) {
         throw createImageError(`failed to get download url for file ${fileId}`, {
           kind: "result_fetch_failed",
@@ -71,7 +74,7 @@ async function downloadGeneratedItemWithRetry(
           fileIds: [fileId],
         });
       }
-      const b64 = await downloadAsBase64(session, url, accessToken, deviceId);
+      const b64 = await downloadAsBase64(session, url, accessToken, deviceId, signal);
       logger.info("openai-client", "generate-image:file-downloaded", {
         conversationId,
         fileId,
@@ -86,6 +89,9 @@ async function downloadGeneratedItemWithRetry(
         conversation_id: conversationId || undefined,
       };
     } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
       lastError = error;
       const message = getFailureMessage(error);
       const errorMeta = getImageErrorMeta(error);
@@ -114,12 +120,20 @@ async function downloadGeneratedItems(
   conversationId: string,
   fileIds: string[],
   revisedPrompt?: string,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   const downloadResults = await Promise.allSettled(
     fileIds.map((fileId) =>
-      downloadGeneratedItemWithRetry(session, accessToken, deviceId, conversationId, fileId, revisedPrompt),
+      downloadGeneratedItemWithRetry(session, accessToken, deviceId, conversationId, fileId, revisedPrompt, signal),
     ),
   );
+
+  const aborted = downloadResults.find((result) => result.status === "rejected" && isAbortError(result.reason));
+  if (aborted?.status === "rejected") {
+    throw aborted.reason;
+  }
+  throwIfAborted(signal);
 
   const failures: GeneratedDownloadFailure[] = [];
   const items = downloadResults
@@ -158,6 +172,7 @@ async function downloadGeneratedItemsWithConversationFallback(
   fileIds: string[],
   revisedPrompt?: string,
   fallbackWaitMs = DOWNLOAD_FALLBACK_POLL_MS,
+  signal?: AbortSignal,
 ) {
   const firstAttempt = await downloadGeneratedItems(
     session,
@@ -166,6 +181,7 @@ async function downloadGeneratedItemsWithConversationFallback(
     conversationId,
     fileIds,
     revisedPrompt,
+    signal,
   );
   if (firstAttempt.items.length > 0 || !conversationId) {
     return {
@@ -182,8 +198,11 @@ async function downloadGeneratedItemsWithConversationFallback(
 
   let polledFileIds: string[];
   try {
-    polledFileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs });
+    polledFileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs, signal });
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     logger.warn("openai-client", "generate-image:file-download-fallback-poll-failed", {
       conversationId,
       error: getFailureMessage(error).slice(0, 300),
@@ -216,6 +235,7 @@ async function downloadGeneratedItemsWithConversationFallback(
     conversationId,
     fallbackFileIds,
     revisedPrompt,
+    signal,
   );
   return {
     items: fallbackAttempt.items,
@@ -232,7 +252,9 @@ export async function collectGeneratedItems(
   deviceId: string,
   rawResponseText: string,
   revisedPrompt: string,
+  options: { signal?: AbortSignal } = {},
 ) {
+  throwIfAborted(options.signal);
   const parsed = parseSsePayload(rawResponseText);
   const conversationId = parsed.conversationId || "";
   let fileIds = parsed.fileIds;
@@ -256,7 +278,7 @@ export async function collectGeneratedItems(
     }
   }
   if (conversationId && fileIds.length === 0) {
-    fileIds = await pollImageIds(session, accessToken, deviceId, conversationId);
+    fileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { signal: options.signal });
   }
   if (fileIds.length === 0) {
     logger.error("openai-client", "generate-image:no-file-ids", {
@@ -289,6 +311,8 @@ export async function collectGeneratedItems(
     conversationId,
     fileIds,
     revisedPrompt,
+    undefined,
+    options.signal,
   );
 
   logger.info("openai-client", "generate-image:done", {
@@ -325,10 +349,13 @@ export async function recoverGeneratedItems(
     fileIds?: string[];
     revisedPrompt?: string;
     waitMs?: number;
+    sourceAccountId?: string;
+    signal?: AbortSignal;
   },
 ) {
   const conversationId = cleanToken(recovery.conversationId);
   const waitMs = Math.max(3000, recovery.waitMs ?? 60000);
+  throwIfAborted(recovery.signal);
   if (!conversationId) {
     throw createImageError("conversation id is required", {
       kind: "input_blocked",
@@ -342,8 +369,10 @@ export async function recoverGeneratedItems(
   if (fileIds.length === 0) {
     const started = Date.now();
     while (Date.now() - started < waitMs) {
+      throwIfAborted(recovery.signal);
       fileIds = await pollImageIds(session, accessToken, deviceId, conversationId, {
         maxWaitMs: Math.max(3000, waitMs - (Date.now() - started)),
+        signal: recovery.signal,
       });
       if (fileIds.length > 0) {
         break;
@@ -358,6 +387,7 @@ export async function recoverGeneratedItems(
       retryable: true,
       stage: "poll",
       upstreamConversationId: conversationId,
+      sourceAccountId: recovery.sourceAccountId,
     });
   }
 
@@ -373,6 +403,7 @@ export async function recoverGeneratedItems(
     fileIds,
     recovery.revisedPrompt,
     waitMs,
+    recovery.signal,
   );
 
   if (successItems.length === 0) {
@@ -383,6 +414,7 @@ export async function recoverGeneratedItems(
       retryable: true,
       stage: "download",
       upstreamConversationId: conversationId,
+      sourceAccountId: recovery.sourceAccountId,
       fileIds: attemptedFileIds,
     });
   }

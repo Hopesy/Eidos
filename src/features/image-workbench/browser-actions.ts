@@ -61,14 +61,6 @@ async function buildDownloadFileName(blob: Blob, options?: DownloadImageFileOpti
   return `${prompt}-${model}-${resolution}.${extension}`;
 }
 
-export function openImageInNewTab(dataUrl: string) {
-  const w = window.open("", "_blank");
-  if (w) {
-    w.document.write(`<html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUrl}" style="max-width:100%;max-height:100vh;object-fit:contain" /></body></html>`);
-    w.document.close();
-  }
-}
-
 export async function downloadImageFile(image: StoredImage, options?: DownloadImageFileOptions) {
   const href = image.url || buildImageDataUrl(image);
   if (!href) {

@@ -1,4 +1,5 @@
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import { logger } from "@/server/logger";
 import {
   getImageErrorMeta,
@@ -26,6 +27,7 @@ export async function runApiSingleTask<T extends ImageApiTaskResult>(
     count: number;
     startedAt: string;
     startedAtMs: number;
+    signal?: AbortSignal;
     successLogMessage?: string;
     successLogData?: Record<string, unknown>;
   },
@@ -35,6 +37,7 @@ export async function runApiSingleTask<T extends ImageApiTaskResult>(
   let attemptCount = 0;
 
   for (let attempt = 1; attempt <= API_MAX_ATTEMPTS; attempt += 1) {
+    throwIfAborted(options.signal);
     attemptCount = attempt;
     logger.info("account-service", `图像 API ${options.operation} 第 ${attempt} 次请求开始`, {
       model: options.model,
@@ -44,6 +47,7 @@ export async function runApiSingleTask<T extends ImageApiTaskResult>(
 
     try {
       const result = await invoke();
+      throwIfAborted(options.signal);
       result.data = await persistImageResponseItems(result.data, {
         route: options.route,
         operation: options.operation,
@@ -80,6 +84,13 @@ export async function runApiSingleTask<T extends ImageApiTaskResult>(
 
       return result;
     } catch (error) {
+      if (isAbortError(error)) {
+        logger.warn("account-service", `图像 API ${options.operation} 请求已取消`, {
+          model: options.model,
+          attempt,
+        });
+        throw error;
+      }
       const message = error instanceof Error ? error.message : String(error);
       lastErrors.push(message);
       lastImageError = error instanceof ImageGenerationError ? error : lastImageError;
@@ -97,7 +108,7 @@ export async function runApiSingleTask<T extends ImageApiTaskResult>(
           nextWaitMs: waitMs,
           ...getImageErrorMeta(error),
         });
-        await delay(waitMs);
+        await delay(waitMs, options.signal);
         continue;
       }
 

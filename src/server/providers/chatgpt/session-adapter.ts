@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { logger } from "@/server/logger";
+import { createAbortError, createLinkedAbortController, isAbortError } from "@/server/image/abort";
 import {
   buildHttpImageError,
   createImageError,
@@ -59,10 +60,11 @@ export class CookieSession {
   }
 
   async fetch(url: string, options: FetchOptions = {}) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30000);
+    const { timeoutMs = 30000, signal: inputSignal, ...fetchOptions } = options;
+    const parentSignal = inputSignal ?? undefined;
+    const controller = createLinkedAbortController(parentSignal, timeoutMs);
     const headers = new Headers(this.defaultHeaders);
-    const nextHeaders = new Headers(options.headers ?? {});
+    const nextHeaders = new Headers(fetchOptions.headers ?? {});
     for (const [key, value] of nextHeaders.entries()) {
       headers.set(key, value);
     }
@@ -73,7 +75,7 @@ export class CookieSession {
 
     try {
       const response = await fetch(url, {
-        ...options,
+        ...fetchOptions,
         headers,
         signal: controller.signal,
         cache: "no-store",
@@ -81,8 +83,11 @@ export class CookieSession {
       this.applyResponseCookies(response);
       return response;
     } catch (err) {
+      if (controller.parentAborted() || (isAbortError(err) && !controller.timedOut())) {
+        throw createAbortError();
+      }
       const message = err instanceof Error ? err.message : String(err);
-      const isAbort = err instanceof Error && err.name === "AbortError";
+      const isAbort = isAbortError(err);
       const label = isAbort ? "request timed out" : `network error: ${message}`;
       throw createImageError(label, {
         kind: "submit_failed",
@@ -91,7 +96,7 @@ export class CookieSession {
         stage: "submit",
       });
     } finally {
-      clearTimeout(timeout);
+      controller.cleanup();
     }
   }
 }
@@ -150,12 +155,12 @@ export function resolveUpstreamModel(account: AccountRecord | null, requestedMod
   return normalized || DEFAULT_CHATGPT_IMAGE_MODEL;
 }
 
-export async function bootstrapChatGptSession(session: CookieSession, fingerprint: ChatGptFingerprint) {
+export async function bootstrapChatGptSession(session: CookieSession, fingerprint: ChatGptFingerprint, signal?: AbortSignal) {
   logger.info("openai-client", "bootstrap:start", {
     deviceId: fingerprint.deviceId,
     hasSessionId: Boolean(fingerprint.sessionId),
   });
-  const response = await session.fetch(`${CHATGPT_BASE_URL}/`, { timeoutMs: 30000 });
+  const response = await session.fetch(`${CHATGPT_BASE_URL}/`, { timeoutMs: 30000, signal });
   const html = await response.text();
   if (!response.ok) {
     logger.warn("openai-client", "bootstrap:non-ok", {
@@ -176,6 +181,7 @@ export async function getChatRequirements(
   accessToken: string,
   deviceId: string,
   userAgent: string,
+  signal?: AbortSignal,
 ) {
   const config = getPowConfig(userAgent);
   logger.info("openai-client", "chat-requirements:start", {
@@ -191,6 +197,7 @@ export async function getChatRequirements(
     },
     body: JSON.stringify({ p: getRequirementsToken(config) }),
     timeoutMs: 30000,
+    signal,
   });
 
   if (!response.ok) {

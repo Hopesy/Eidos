@@ -153,6 +153,7 @@ export async function generateWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   const route = options.route ?? "generations";
@@ -188,6 +189,7 @@ export async function generateWithPool(
       imageFormat,
       startedAt,
       startedAtMs: startTime,
+      signal: options.signal,
     });
   }
 
@@ -202,6 +204,7 @@ export async function generateWithPool(
     imageSize,
     imageQuality,
     imageFormat,
+    signal: options.signal,
   });
 }
 
@@ -214,6 +217,7 @@ export async function editWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   return accountPoolImageRunner.edit(prompt, model, images, mask, options);
@@ -237,6 +241,7 @@ export async function editWithApiService(
       parentMessageId?: string;
       sourceAccountId?: string;
     } | null;
+    signal?: AbortSignal;
   } = {},
 ) {
   const imageApiService = getImageApiServiceConfig();
@@ -260,6 +265,7 @@ export async function editWithApiService(
       sourceReference: options.sourceReference,
       startedAt,
       startedAtMs,
+      signal: options.signal,
     },
   );
 }
@@ -272,6 +278,7 @@ export async function upscaleWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   return accountPoolImageRunner.upscale(prompt, model, image, options);
@@ -285,6 +292,7 @@ export async function upscaleWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   const imageApiService = getImageApiServiceConfig();
@@ -306,6 +314,7 @@ export async function upscaleWithApiService(
       imageFormat: options.imageFormat,
       startedAt,
       startedAtMs,
+      signal: options.signal,
     },
   );
 }
@@ -344,6 +353,7 @@ export async function recoverImageTaskWithAccount(
     fileIds?: string[];
     waitMs?: number;
     model: string;
+    signal?: AbortSignal;
   },
   requestMeta: {
     endpoint: string;

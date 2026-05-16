@@ -1,5 +1,6 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { resolveAccountId } from "@/server/account-id";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
@@ -24,6 +25,7 @@ export async function runGenerateTaskWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   const startedAt = new Date().toISOString();
@@ -43,6 +45,7 @@ export async function runGenerateTaskWithPool(
 
   let requestIndex = 1;
   while (data.length < count) {
+    throwIfAborted(options.signal);
     attemptCount = requestIndex;
     const attempted = new Set<string>();
     const needed = count - data.length;
@@ -73,7 +76,9 @@ export async function runGenerateTaskWithPool(
         const result = await generateImageResult(requestToken, prompt, model, account, {
           size: imageSize,
           quality: imageQuality,
+          signal: options.signal,
         }) as { created: number; data: Array<Record<string, unknown>> };
+        throwIfAborted(options.signal);
         result.data = result.data.map((item) => ({
           ...item,
           source_account_id: sourceAccountId,
@@ -100,6 +105,13 @@ export async function runGenerateTaskWithPool(
         succeeded = true;
         break;
       } catch (error) {
+        if (isAbortError(error)) {
+          logger.warn("account-service", `第 ${requestIndex} 次请求：已取消`, {
+            token: tokenHint,
+            model,
+          });
+          throw error;
+        }
         await dependencies.markImageResult(requestToken, false);
         const message = error instanceof Error ? error.message : String(error);
         lastErrors.push(message);

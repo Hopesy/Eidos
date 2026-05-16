@@ -1,4 +1,5 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import { throwIfAborted } from "@/server/image/abort";
 import {
   buildHttpImageError,
   createImageError,
@@ -16,6 +17,7 @@ export type ImageGenerationOptions = {
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
   format?: ImageOutputFormat;
+  signal?: AbortSignal;
 };
 
 export type ResponsesContinuationOptions = {
@@ -53,7 +55,9 @@ export function resolveFilesEndpoint(baseUrl?: string) {
 export async function uploadInputFile(
   serviceConfig: ImageApiServiceConfig,
   file: File,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   const apiKey = cleanToken(serviceConfig.apiKey);
   if (!apiKey) {
     throw createImageError("image api key is required", {
@@ -74,6 +78,7 @@ export async function uploadInputFile(
       authorization: `Bearer ${apiKey}`,
     },
     body: formData,
+    signal,
     cache: "no-store",
   });
 

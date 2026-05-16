@@ -1,4 +1,6 @@
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
+import { resolveImageErrorStatus } from "@/server/image/error-status";
 import {
   getImageErrorMeta,
   ImageGenerationError,
@@ -20,6 +22,7 @@ export type ImageRecoveryService = {
       fileIds?: string[];
       waitMs?: number;
       model: string;
+      signal?: AbortSignal;
     },
     requestMeta: {
       endpoint: string;
@@ -42,6 +45,7 @@ export function createImageRecoveryService(
       const startedAt = new Date().toISOString();
       const startTime = Date.now();
       const conversationId = cleanToken(params.conversationId);
+      throwIfAborted(params.signal);
       if (!conversationId) {
         throw new ImageGenerationError("conversation id is required", {
           kind: "input_blocked",
@@ -80,39 +84,70 @@ export function createImageRecoveryService(
         throw error;
       }
 
-      const result = await recoverImageResult(account.access_token, params.model, account, {
-        conversationId,
-        fileIds: params.fileIds,
-        revisedPrompt: params.revisedPrompt,
-        waitMs: params.waitMs,
-      }) as { created: number; data: Array<Record<string, unknown>> };
+      try {
+        const result = await recoverImageResult(account.access_token, params.model, account, {
+          conversationId,
+          fileIds: params.fileIds,
+          revisedPrompt: params.revisedPrompt,
+          waitMs: params.waitMs,
+          signal: params.signal,
+        }) as { created: number; data: Array<Record<string, unknown>> };
 
-      result.data = await persistImageResponseItems(result.data, {
-        route: requestMeta.route,
-        operation: requestMeta.operation,
-        model: params.model,
-        prompt: params.revisedPrompt ?? "",
-        accountEmail: account.email ?? null,
-        accountType: account.type ?? null,
-      }, { keepBase64: true });
+        throwIfAborted(params.signal);
+        result.data = await persistImageResponseItems(result.data, {
+          route: requestMeta.route,
+          operation: requestMeta.operation,
+          model: params.model,
+          prompt: params.revisedPrompt ?? "",
+          accountEmail: account.email ?? null,
+          accountType: account.type ?? null,
+        }, { keepBase64: true });
 
-      addRequestLog({
-        startedAt,
-        finishedAt: new Date().toISOString(),
-        endpoint: requestMeta.endpoint,
-        operation: requestMeta.operation,
-        route: requestMeta.route,
-        model: params.model,
-        count: requestMeta.count,
-        success: true,
-        durationMs: Date.now() - startTime,
-        accountEmail: account.email ?? undefined,
-        accountType: account.type ?? undefined,
-        attemptCount: 1,
-        finalStatus: "success",
-      });
+        addRequestLog({
+          startedAt,
+          finishedAt: new Date().toISOString(),
+          endpoint: requestMeta.endpoint,
+          operation: requestMeta.operation,
+          route: requestMeta.route,
+          model: params.model,
+          count: requestMeta.count,
+          success: true,
+          durationMs: Date.now() - startTime,
+          accountEmail: account.email ?? undefined,
+          accountType: account.type ?? undefined,
+          attemptCount: 1,
+          finalStatus: "success",
+        });
 
-      return result;
+        return result;
+      } catch (error) {
+        if (isAbortError(error)) {
+          throw error;
+        }
+        if (error instanceof ImageGenerationError && !error.sourceAccountId) {
+          error.sourceAccountId = cleanToken(params.sourceAccountId);
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        addRequestLog({
+          startedAt,
+          finishedAt: new Date().toISOString(),
+          endpoint: requestMeta.endpoint,
+          operation: requestMeta.operation,
+          route: requestMeta.route,
+          model: params.model,
+          count: requestMeta.count,
+          success: false,
+          error: message.slice(0, 300),
+          durationMs: Date.now() - startTime,
+          accountEmail: account.email ?? undefined,
+          accountType: account.type ?? undefined,
+          attemptCount: 1,
+          finalStatus: "failed",
+          statusCode: error instanceof ImageGenerationError ? error.statusCode ?? resolveImageErrorStatus(error) : undefined,
+          ...getImageErrorMeta(error),
+        });
+        throw error;
+      }
     },
   };
 }

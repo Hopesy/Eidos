@@ -11,6 +11,7 @@ import {
   isInputBlockedMessage,
   normalizeUpstreamErrorMessage,
 } from "../src/server/providers/openai/image-errors.ts";
+import { resolveImageErrorStatus } from "../src/server/image/error-status.ts";
 
 describe("openai image error policy", () => {
   it("normalizes structured upstream content policy errors", () => {
@@ -103,5 +104,16 @@ describe("openai image error policy", () => {
       fileIds: ["file-1"],
     });
     assert.deepEqual(getImageErrorMeta(new Error("plain")), {});
+  });
+
+  it("maps accepted pending work to a non-5xx retry-later response", () => {
+    const error = createImageError("pending", {
+      kind: "accepted_pending",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+    });
+
+    assert.equal(resolveImageErrorStatus(error), 425);
   });
 });

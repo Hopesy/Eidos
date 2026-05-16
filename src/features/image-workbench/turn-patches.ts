@@ -26,6 +26,25 @@ function clearFailureMeta() {
   };
 }
 
+function mergeFailureMeta(
+  failureMeta: RequestFailureMeta,
+  fallback?: RequestFailureMeta,
+): RequestFailureMeta {
+  const retryAction = failureMeta.retryAction ?? fallback?.retryAction;
+  const canPreserveRecoveryContext = retryAction === "resume_polling" || retryAction === "retry_download";
+  return {
+    failureKind: failureMeta.failureKind ?? fallback?.failureKind,
+    retryAction,
+    retryable: failureMeta.retryable ?? fallback?.retryable,
+    stage: failureMeta.stage ?? fallback?.stage,
+    upstreamConversationId: failureMeta.upstreamConversationId ?? (canPreserveRecoveryContext ? fallback?.upstreamConversationId : undefined),
+    upstreamResponseId: failureMeta.upstreamResponseId ?? (canPreserveRecoveryContext ? fallback?.upstreamResponseId : undefined),
+    imageGenerationCallId: failureMeta.imageGenerationCallId ?? (canPreserveRecoveryContext ? fallback?.imageGenerationCallId : undefined),
+    sourceAccountId: failureMeta.sourceAccountId ?? (canPreserveRecoveryContext ? fallback?.sourceAccountId : undefined),
+    fileIds: failureMeta.fileIds ?? (canPreserveRecoveryContext ? fallback?.fileIds : undefined),
+  };
+}
+
 function shouldPatchImage(index: number, retryIndexes?: number[]) {
   return !retryIndexes || retryIndexes.includes(index);
 }
@@ -47,12 +66,17 @@ function shouldCollapseSharedRecoverableFailure(
   return !turn.images.some((image) => image.status === "success");
 }
 
-export function applyTurnGenerating(turn: ImageConversationTurn, images: StoredImage[]) {
+export function applyTurnGenerating(
+  turn: ImageConversationTurn,
+  images: StoredImage[],
+  preserveMeta?: RequestFailureMeta,
+) {
   return {
     ...turn,
     status: "generating" as const,
     error: undefined,
     ...clearFailureMeta(),
+    ...(preserveMeta ? mergeFailureMeta(preserveMeta) : {}),
     images,
   };
 }
@@ -108,20 +132,21 @@ export function applyTurnFailure(
   failureMeta: RequestFailureMeta,
   retryIndexes?: number[],
 ) {
-  if (shouldCollapseSharedRecoverableFailure(turn, failureMeta, retryIndexes)) {
+  const meta = mergeFailureMeta(failureMeta, turn);
+  if (shouldCollapseSharedRecoverableFailure(turn, meta, retryIndexes)) {
     return {
       ...turn,
       status: "error" as const,
       error: message,
-      failureKind: failureMeta.failureKind,
-      retryAction: failureMeta.retryAction,
-      retryable: failureMeta.retryable,
-      stage: failureMeta.stage,
-      upstreamConversationId: failureMeta.upstreamConversationId,
-      upstreamResponseId: failureMeta.upstreamResponseId,
-      imageGenerationCallId: failureMeta.imageGenerationCallId,
-      sourceAccountId: failureMeta.sourceAccountId,
-      fileIds: failureMeta.fileIds,
+      failureKind: meta.failureKind,
+      retryAction: meta.retryAction,
+      retryable: meta.retryable,
+      stage: meta.stage,
+      upstreamConversationId: meta.upstreamConversationId,
+      upstreamResponseId: meta.upstreamResponseId,
+      imageGenerationCallId: meta.imageGenerationCallId,
+      sourceAccountId: meta.sourceAccountId,
+      fileIds: meta.fileIds,
       images: [
         {
           id: turn.images[0]?.id || `${turn.id}-shared-error`,
@@ -129,13 +154,15 @@ export function applyTurnFailure(
           startedAt: turn.images[0]?.startedAt,
           durationMs: turn.images[0]?.startedAt ? Date.now() - turn.images[0].startedAt : undefined,
           error: message,
-          failureKind: failureMeta.failureKind,
-          retryAction: failureMeta.retryAction,
-          retryable: failureMeta.retryable,
-          stage: failureMeta.stage,
-          upstreamConversationId: failureMeta.upstreamConversationId,
-          upstreamResponseId: failureMeta.upstreamResponseId,
-          imageGenerationCallId: failureMeta.imageGenerationCallId,
+          failureKind: meta.failureKind,
+          retryAction: meta.retryAction,
+          retryable: meta.retryable,
+          stage: meta.stage,
+          upstreamConversationId: meta.upstreamConversationId,
+          upstreamResponseId: meta.upstreamResponseId,
+          imageGenerationCallId: meta.imageGenerationCallId,
+          sourceAccountId: meta.sourceAccountId,
+          fileIds: meta.fileIds,
         },
       ],
     };
@@ -145,15 +172,15 @@ export function applyTurnFailure(
     ...turn,
     status: "error" as const,
     error: message,
-    failureKind: failureMeta.failureKind,
-    retryAction: failureMeta.retryAction,
-    retryable: failureMeta.retryable,
-    stage: failureMeta.stage,
-    upstreamConversationId: failureMeta.upstreamConversationId,
-    upstreamResponseId: failureMeta.upstreamResponseId,
-    imageGenerationCallId: failureMeta.imageGenerationCallId,
-    sourceAccountId: failureMeta.sourceAccountId,
-    fileIds: failureMeta.fileIds,
+    failureKind: meta.failureKind,
+    retryAction: meta.retryAction,
+    retryable: meta.retryable,
+    stage: meta.stage,
+    upstreamConversationId: meta.upstreamConversationId,
+    upstreamResponseId: meta.upstreamResponseId,
+    imageGenerationCallId: meta.imageGenerationCallId,
+    sourceAccountId: meta.sourceAccountId,
+    fileIds: meta.fileIds,
     images: turn.images.map((image, index) =>
       shouldPatchImage(index, retryIndexes)
         ? {
@@ -161,15 +188,15 @@ export function applyTurnFailure(
           status: "error" as const,
           durationMs: image.startedAt ? Date.now() - image.startedAt : image.durationMs,
           error: message,
-          failureKind: failureMeta.failureKind,
-          retryAction: failureMeta.retryAction,
-          retryable: failureMeta.retryable,
-          stage: failureMeta.stage,
-          upstreamConversationId: failureMeta.upstreamConversationId,
-          upstreamResponseId: failureMeta.upstreamResponseId,
-          imageGenerationCallId: failureMeta.imageGenerationCallId,
-          sourceAccountId: failureMeta.sourceAccountId,
-          fileIds: failureMeta.fileIds,
+          failureKind: meta.failureKind,
+          retryAction: meta.retryAction,
+          retryable: meta.retryable,
+          stage: meta.stage,
+          upstreamConversationId: meta.upstreamConversationId,
+          upstreamResponseId: meta.upstreamResponseId,
+          imageGenerationCallId: meta.imageGenerationCallId,
+          sourceAccountId: meta.sourceAccountId,
+          fileIds: meta.fileIds,
         }
         : image,
     ),

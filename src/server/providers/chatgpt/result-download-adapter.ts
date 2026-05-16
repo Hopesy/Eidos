@@ -1,4 +1,5 @@
 import { logger } from "@/server/logger";
+import { abortableDelay, isAbortError, throwIfAborted } from "@/server/image/abort";
 import {
   createImageError,
 } from "@/server/providers/openai/image-errors";
@@ -15,8 +16,9 @@ export async function pollImageIds(
   accessToken: string,
   deviceId: string,
   conversationId: string,
-  options: { maxWaitMs?: number } = {},
+  options: { maxWaitMs?: number; signal?: AbortSignal } = {},
 ) {
+  throwIfAborted(options.signal);
   const started = Date.now();
   const maxWaitMs = Math.max(3000, options.maxWaitMs ?? 180000);
   logger.info("openai-client", "poll-image-ids:start", {
@@ -26,6 +28,7 @@ export async function pollImageIds(
     maxWaitMs,
   });
   while (Date.now() - started < maxWaitMs) {
+    throwIfAborted(options.signal);
     let response: Response;
     try {
       response = await session.fetch(`${BASE_URL}/backend-api/conversation/${conversationId}`, {
@@ -35,8 +38,12 @@ export async function pollImageIds(
           accept: "*/*",
         },
         timeoutMs: 30000,
+        signal: options.signal,
       });
     } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
       const message = error instanceof Error ? error.message : "poll image ids failed";
       logger.warn("openai-client", "poll-image-ids:error", {
         conversationId,
@@ -70,7 +77,7 @@ export async function pollImageIds(
       });
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await abortableDelay(3000, options.signal);
   }
 
   logger.warn("openai-client", "poll-image-ids:timeout", {
@@ -87,7 +94,9 @@ export async function fetchDownloadUrl(
   deviceId: string,
   conversationId: string,
   fileId: string,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   const isSediment = fileId.startsWith("sed:");
   const rawId = isSediment ? fileId.slice(4) : fileId;
   const endpoint = isSediment
@@ -101,8 +110,12 @@ export async function fetchDownloadUrl(
         "oai-device-id": deviceId,
       },
       timeoutMs: 30000,
+      signal,
     });
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : "failed to get download url";
     logger.warn("openai-client", "download-url:error", {
       conversationId,
@@ -159,14 +172,20 @@ export async function downloadAsBase64(
   downloadUrl: string,
   accessToken: string,
   deviceId: string,
+  signal?: AbortSignal,
 ) {
+  throwIfAborted(signal);
   let response: Response;
   try {
     response = await session.fetch(downloadUrl, {
       headers: buildDownloadHeaders(downloadUrl, accessToken, deviceId),
       timeoutMs: 60000,
+      signal,
     });
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     throw createImageError(error instanceof Error ? error.message : "download image failed", {
       kind: "result_fetch_failed",
       retryAction: "retry_download",

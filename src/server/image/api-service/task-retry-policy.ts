@@ -1,6 +1,7 @@
 import {
   ImageGenerationError,
 } from "@/server/providers/openai-client";
+import { abortableDelay } from "@/server/image/abort";
 
 export const API_MAX_ATTEMPTS = 3;
 const API_RETRY_BASE_DELAY_MS = 1500;
@@ -61,6 +62,6 @@ export function getApiRetryDelayMs(attempt: number, error: unknown) {
   return API_RETRY_BASE_DELAY_MS * (2 ** (normalizedAttempt - 1));
 }
 
-export async function delay(ms: number) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+export async function delay(ms: number, signal?: AbortSignal) {
+  await abortableDelay(ms, signal);
 }

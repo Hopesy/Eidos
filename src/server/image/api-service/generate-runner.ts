@@ -1,5 +1,6 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import { logger } from "@/server/logger";
 import {
   generateImageResultWithApiService,
@@ -26,6 +27,7 @@ async function invokeGenerateWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    signal?: AbortSignal;
   } = {},
 ) {
   return imageApiService.apiStyle === "responses"
@@ -33,11 +35,13 @@ async function invokeGenerateWithApiService(
       size: options.imageSize,
       quality: options.imageQuality,
       format: options.imageFormat,
+      signal: options.signal,
     })
     : generateImageResultWithApiService(imageApiService, prompt, model, count, {
       size: options.imageSize,
       quality: options.imageQuality,
       format: options.imageFormat,
+      signal: options.signal,
     });
 }
 
@@ -54,6 +58,7 @@ export async function runApiGenerateTask(
     imageFormat?: ImageOutputFormat;
     startedAt: string;
     startedAtMs: number;
+    signal?: AbortSignal;
   },
 ) {
   let created: number | null = null;
@@ -63,6 +68,7 @@ export async function runApiGenerateTask(
   let attemptCount = 0;
 
   for (let attempt = 1; attempt <= API_MAX_ATTEMPTS && collected.length < count; attempt += 1) {
+    throwIfAborted(options.signal);
     attemptCount = attempt;
     const needed = count - collected.length;
     logger.info("account-service", `图像 API 第 ${attempt} 次请求，还需 ${needed} 张`, {
@@ -76,7 +82,9 @@ export async function runApiGenerateTask(
         imageSize: options.imageSize,
         imageQuality: options.imageQuality,
         imageFormat: options.imageFormat,
+        signal: options.signal,
       }) as ImageApiTaskResult;
+      throwIfAborted(options.signal);
 
       if (created === null) {
         created = Number(result.created || Math.floor(Date.now() / 1000));
@@ -107,9 +115,17 @@ export async function runApiGenerateTask(
           accumulated: collected.length,
           nextWaitMs: waitMs,
         });
-        await delay(waitMs);
+        await delay(waitMs, options.signal);
       }
     } catch (error) {
+      if (isAbortError(error)) {
+        logger.warn("account-service", "图像 API 生成请求已取消", {
+          model,
+          count,
+          attempt,
+        });
+        throw error;
+      }
       const message = error instanceof Error ? error.message : String(error);
       lastErrors.push(message);
       lastImageError = error instanceof ImageGenerationError ? error : lastImageError;
@@ -129,13 +145,14 @@ export async function runApiGenerateTask(
           nextWaitMs: waitMs,
           ...getImageErrorMeta(error),
         });
-        await delay(waitMs);
+        await delay(waitMs, options.signal);
         continue;
       }
       break;
     }
   }
 
+  throwIfAborted(options.signal);
   const persisted = await persistImageResponseItems(collected, {
     route: options.route,
     operation: options.operation,

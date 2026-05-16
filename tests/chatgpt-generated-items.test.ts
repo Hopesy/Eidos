@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { collectGeneratedItems } from "../src/server/providers/chatgpt/generated-items.ts";
+import { collectGeneratedItems, recoverGeneratedItems } from "../src/server/providers/chatgpt/generated-items.ts";
 import { ImageGenerationError } from "../src/server/providers/openai/image-errors.ts";
 
 describe("chatgpt generated item collection", () => {
@@ -197,6 +197,61 @@ describe("chatgpt generated item collection", () => {
         assert.equal(error.retryAction, "resume_polling");
         assert.equal(error.stage, "poll");
         assert.equal(error.upstreamConversationId, "conv-pending");
+        return true;
+      },
+    );
+  });
+
+  it("stops polling when the caller aborts the image request", async () => {
+    const controller = new AbortController();
+    let fetchCalls = 0;
+    const session = {
+      async fetch() {
+        fetchCalls += 1;
+        controller.abort();
+        return new Response(JSON.stringify({ mapping: {} }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-abort","message":{"content":{"content_type":"text","parts":["still rendering"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    await assert.rejects(
+      () => collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a", { signal: controller.signal }),
+      (error) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.name, "AbortError");
+        assert.equal(error.message, "request canceled");
+        return true;
+      },
+    );
+    assert.equal(fetchCalls, 1);
+  });
+
+  it("keeps the source account id on recoverable recovery download failures", async () => {
+    const session = {
+      async fetch() {
+        throw new Error("socket hang up");
+      },
+    };
+
+    await assert.rejects(
+      () => recoverGeneratedItems(session, "token-a", "device-a", {
+        conversationId: "conv-recover",
+        fileIds: ["sed:file_1"],
+        sourceAccountId: "account-1",
+      }),
+      (error) => {
+        assert.ok(error instanceof ImageGenerationError);
+        assert.equal(error.kind, "result_fetch_failed");
+        assert.equal(error.retryAction, "retry_download");
+        assert.equal(error.stage, "download");
+        assert.equal(error.upstreamConversationId, "conv-recover");
+        assert.equal(error.sourceAccountId, "account-1");
         return true;
       },
     );

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
+import { isAbortError } from "@/server/image/abort";
 import { createImageApiError } from "@/server/image/error-response";
 import { logger } from "@/server/logger";
 import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
@@ -106,12 +107,14 @@ export async function POST(request: NextRequest) {
                     parentMessageId: sourceReference.parentMessageId,
                     sourceAccountId: sourceReference.sourceAccountId,
                 } : null,
+                signal: request.signal,
             });
         } else {
             result = await editWithPool(prompt, model, images, mask, {
                 imageSize: size,
                 imageQuality: quality,
                 imageFormat: outputFormat,
+                signal: request.signal,
             });
         }
 
@@ -121,14 +124,32 @@ export async function POST(request: NextRequest) {
         });
         return jsonOk(result);
     } catch (error) {
+        if (isAbortError(error)) {
+            logger.warn("images.edits.route", "request:canceled", {
+                message: error instanceof Error ? error.message : String(error),
+            });
+            return jsonError(new ApiError(499, "request canceled"));
+        }
+        if (error instanceof ImageGenerationError) {
+            const meta = getImageErrorMeta(error);
+            if (error.kind === "accepted_pending") {
+                logger.warn("images.edits.route", "request:pending", {
+                    message: error.message,
+                    ...meta,
+                });
+            } else {
+                logger.error("images.edits.route", "request:failed", {
+                    message: error.message,
+                    name: error.name,
+                    ...meta,
+                });
+            }
+            return jsonError(createImageApiError(error));
+        }
         logger.error("images.edits.route", "request:failed", {
             message: error instanceof Error ? error.message : String(error),
             name: error instanceof Error ? error.name : typeof error,
-            ...getImageErrorMeta(error),
         });
-        if (error instanceof ImageGenerationError) {
-            return jsonError(createImageApiError(error));
-        }
         return jsonError(error);
     }
 }

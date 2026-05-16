@@ -28,7 +28,7 @@ import {
 } from "@/store/image-conversations";
 import { getCachedImageWorkspaceState, setCachedImageWorkspaceState } from "@/store/image-workspace-cache";
 
-import { downloadImageFile, openImageInNewTab } from "./browser-actions";
+import { downloadImageFile } from "./browser-actions";
 import {
   applyPromptExample as applyWorkbenchPromptExample,
   appendFiles as appendWorkbenchFiles,
@@ -1063,7 +1063,6 @@ export function useImagePage(options: UseImagePageOptions = {}) {
     composerCancelTitle,
     handleEditTurn,
     handleCopyTurnPrompt,
-    openImageInNewTab,
     downloadImageFile,
   };
 }

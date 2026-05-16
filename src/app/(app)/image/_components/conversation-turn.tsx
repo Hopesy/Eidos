@@ -40,10 +40,6 @@ function formatConversationTime(value: string) {
     }).format(date);
 }
 
-function buildConversationSourceLabel(source: StoredSourceImage) {
-    return source.role === "mask" ? "选区 / 遮罩" : "源图";
-}
-
 function buildImageDataUrl(image: StoredImage) {
     if (image.url) return image.url;
     if (!image.b64_json) return "";
@@ -154,7 +150,6 @@ export type ConversationTurnProps = {
     submitElapsedSeconds: number;
     isSubmitting: boolean;
     retryingImageId?: string | null;
-    onOpenImageInNewTab: (dataUrl: string) => void;
     onOpenSelectionEditor: (conversationId: string, turnId: string, image: StoredImage, imageName: string) => void;
     onSeedFromResult: (conversationId: string, image: StoredImage, nextMode: ImageMode) => void;
     isImageFavorited: (conversationId: string, turnId: string, image: StoredImage) => boolean;
@@ -177,7 +172,6 @@ export function ConversationTurn({
     submitElapsedSeconds,
     isSubmitting,
     retryingImageId,
-    onOpenImageInNewTab,
     onOpenSelectionEditor,
     onSeedFromResult,
     isImageFavorited,
@@ -209,29 +203,16 @@ export function ConversationTurn({
         <div className="space-y-4">
             {/* 用户消息 */}
             <div className="flex justify-end">
-                <div className="flex w-full max-w-full flex-col items-end gap-3 sm:max-w-[94%]">
+                <div className="flex w-full max-w-full flex-col items-end gap-2.5 sm:max-w-[96%]">
                     {turn.sourceImages && turn.sourceImages.filter((s) => !s.hiddenInConversation).length > 0 ? (
-                        <div className="flex flex-wrap justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-1.5">
                             {turn.sourceImages.filter((s) => !s.hiddenInConversation).map((source) => (
-                                <div
+                                <Image
                                     key={source.id}
-                                    className="w-[118px] overflow-hidden rounded-[14px] border border-stone-200/80 bg-stone-50/75 shadow-sm dark:border-stone-700 dark:bg-stone-800/75"
-                                >
-                                    <div className="border-b border-stone-200/70 px-2 py-[3px] text-left text-[9px] font-medium leading-none text-stone-500 dark:border-stone-700 dark:text-stone-400">
-                                        {buildConversationSourceLabel(source)}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="block w-full cursor-zoom-in"
-                                        onClick={() => onOpenImageInNewTab(source.dataUrl)}
-                                    >
-                                        <Image
-                                            src={source.dataUrl}
-                                            alt={source.name}
-                                            className="block h-[74px] w-full bg-transparent object-contain p-1"
-                                        />
-                                    </button>
-                                </div>
+                                    src={source.dataUrl}
+                                    alt={source.name}
+                                    className="block h-[82px] w-auto max-w-[min(42vw,168px)] rounded-[12px] object-contain shadow-[0_4px_14px_rgba(15,23,42,0.16)] dark:shadow-[0_4px_14px_rgba(0,0,0,0.35)]"
+                                />
                             ))}
                         </div>
                     ) : null}

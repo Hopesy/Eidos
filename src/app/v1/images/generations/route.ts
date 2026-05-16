@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 
 import { ensureAccountWatcherStarted, generateWithPool } from "@/server/account-service";
+import { isAbortError } from "@/server/image/abort";
 import { createImageApiError } from "@/server/image/error-response";
 import { parseImageCount } from "@/server/image/request";
 import { logger } from "@/server/logger";
 import { getImageErrorMeta, ImageGenerationError } from "@/server/providers/openai-client";
 import { imageGenerationBodySchema, parseJsonBody } from "@/server/request-validation";
-import { jsonError, jsonOk } from "@/server/response";
+import { ApiError, jsonError, jsonOk } from "@/server/response";
 import type { ImageGenerationQuality, ImageGenerationSize } from "@/lib/api";
 import { normalizeImageGenerationSize, normalizeImageOutputFormat, resolveImageGenerationSize } from "@/shared/image-generation";
 
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
       imageSize: size,
       imageQuality: quality,
       imageFormat: outputFormat,
+      signal: request.signal,
     });
 
     logger.info("images.generations.route", "request:success", {
@@ -52,14 +54,32 @@ export async function POST(request: NextRequest) {
     });
     return jsonOk(result);
   } catch (error) {
+    if (isAbortError(error)) {
+      logger.warn("images.generations.route", "request:canceled", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return jsonError(new ApiError(499, "request canceled"));
+    }
+    if (error instanceof ImageGenerationError) {
+      const meta = getImageErrorMeta(error);
+      if (error.kind === "accepted_pending") {
+        logger.warn("images.generations.route", "request:pending", {
+          message: error.message,
+          ...meta,
+        });
+      } else {
+        logger.error("images.generations.route", "request:failed", {
+          message: error.message,
+          name: error.name,
+          ...meta,
+        });
+      }
+      return jsonError(createImageApiError(error));
+    }
     logger.error("images.generations.route", "request:failed", {
       message: error instanceof Error ? error.message : String(error),
       name: error instanceof Error ? error.name : typeof error,
-      ...getImageErrorMeta(error),
     });
-    if (error instanceof ImageGenerationError) {
-      return jsonError(createImageApiError(error));
-    }
     return jsonError(error);
   }
 }

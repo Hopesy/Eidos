@@ -1,5 +1,6 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { resolveAccountId } from "@/server/account-id";
+import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { logger } from "@/server/logger";
 import {
@@ -23,6 +24,7 @@ export async function runAttachmentTaskWithPool(
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
     format?: ImageOutputFormat;
+    signal?: AbortSignal;
   },
   requestMeta: {
     endpoint: string;
@@ -43,6 +45,7 @@ export async function runAttachmentTaskWithPool(
 
   const attempted = new Set<string>();
   while (true) {
+    throwIfAborted(params.signal);
     attemptCount += 1;
     let requestToken = "";
     try {
@@ -66,6 +69,7 @@ export async function runAttachmentTaskWithPool(
         created: number;
         data: Array<Record<string, unknown>>;
       };
+      throwIfAborted(params.signal);
       result.data = result.data.map((item) => ({
         ...item,
         source_account_id: sourceAccountId,
@@ -105,6 +109,13 @@ export async function runAttachmentTaskWithPool(
       }
       return result;
     } catch (error) {
+      if (isAbortError(error)) {
+        logger.warn("account-service", `${requestMeta.operation} 请求已取消`, {
+          token: tokenHint,
+          accountEmail: lastAccountEmail ?? null,
+        });
+        throw error;
+      }
       await dependencies.markImageResult(requestToken, false);
       const message = error instanceof Error ? error.message : String(error);
       lastErrors.push(message);
