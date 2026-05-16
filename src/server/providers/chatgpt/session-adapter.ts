@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 
 import { logger } from "@/server/logger";
 import { createAbortError, createLinkedAbortController, isAbortError } from "@/server/image/abort";
@@ -19,6 +19,21 @@ export type FetchOptions = RequestInit & {
 };
 
 export type ChatGptFingerprint = ReturnType<typeof resolveFingerprint>;
+
+export function createStableDeviceId(seed: unknown) {
+  const normalized = cleanToken(seed) || "eidos-device";
+  const hex = createHash("sha256").update(normalized).digest("hex");
+  const variant = ((Number.parseInt(hex.slice(16, 18), 16) & 0x3f) | 0x80)
+    .toString(16)
+    .padStart(2, "0");
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    `4${hex.slice(13, 16)}`,
+    `${variant}${hex.slice(18, 20)}`,
+    hex.slice(20, 32),
+  ].join("-");
+}
 
 export function cleanToken(value: unknown) {
   return String(value || "").trim();
@@ -105,7 +120,7 @@ export function resolveFingerprint(account?: AccountRecord | null) {
   const fp = ((account?.fp as Record<string, unknown> | undefined) ?? {}) as Record<string, unknown>;
   return {
     userAgent: cleanToken(fp["user-agent"] || account?.["user-agent"]) || CHATGPT_USER_AGENT,
-    deviceId: cleanToken(fp["oai-device-id"] || account?.["oai-device-id"]) || randomUUID(),
+    deviceId: cleanToken(fp["oai-device-id"] || account?.["oai-device-id"]) || createStableDeviceId(account?.id || account?.access_token),
     secChUa:
       cleanToken(fp["sec-ch-ua"] || account?.["sec-ch-ua"]) ||
       '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',

@@ -4,6 +4,7 @@ function cleanToken(value: unknown) {
 export type ImageFailureKind =
   | "submit_failed"
   | "accepted_pending"
+  | "poll_rate_limited"
   | "source_invalid"
   | "result_fetch_failed"
   | "service_unavailable"
@@ -34,6 +35,11 @@ export type ImageGenerationErrorOptions = {
   imageGenerationCallId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 export class ImageGenerationError extends Error {
@@ -47,6 +53,11 @@ export class ImageGenerationError extends Error {
   imageGenerationCallId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 
   constructor(message: string, options: ImageGenerationErrorOptions = {}) {
     super(message);
@@ -61,6 +72,11 @@ export class ImageGenerationError extends Error {
     this.imageGenerationCallId = options.imageGenerationCallId;
     this.sourceAccountId = options.sourceAccountId;
     this.fileIds = options.fileIds;
+    this.lastPollStatus = options.lastPollStatus;
+    this.pollStatusCounts = options.pollStatusCounts;
+    this.pollAttempts = options.pollAttempts;
+    this.retryAfterMs = options.retryAfterMs;
+    this.upstreamBodyPreview = options.upstreamBodyPreview;
   }
 }
 
@@ -150,6 +166,12 @@ export function isInputBlockedMessage(message: string) {
     normalized.includes("抱歉，我无法") ||
     normalized.includes("无法生成") ||
     normalized.includes("不能生成") ||
+    normalized.includes("可能违反") ||
+    normalized.includes("防护限制") ||
+    normalized.includes("修改提示词") ||
+    normalized.includes("修改提示语") ||
+    normalized.includes("欺诈") ||
+    normalized.includes("诈骗") ||
     normalized.includes("性暗示") ||
     normalized.includes("色情")
   );
@@ -269,6 +291,12 @@ export function getImageErrorMeta(error: unknown) {
     imageGenerationCallId: error.imageGenerationCallId,
     sourceAccountId: error.sourceAccountId,
     fileIds: error.fileIds,
+    statusCode: error.statusCode,
+    lastPollStatus: error.lastPollStatus,
+    pollStatusCounts: error.pollStatusCounts,
+    pollAttempts: error.pollAttempts,
+    retryAfterMs: error.retryAfterMs,
+    upstreamBodyPreview: error.upstreamBodyPreview,
   };
 }
 

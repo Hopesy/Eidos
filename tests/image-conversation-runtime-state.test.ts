@@ -95,6 +95,47 @@ describe("image conversation runtime state normalization", () => {
     }
   });
 
+  it("keeps a turn active until overlapping runtime tasks all finish", () => {
+    const conversation = createConversation({
+      id: "conversation-overlap",
+      turns: [
+        {
+          ...createConversation().turns![0]!,
+          id: "turn-overlap",
+        },
+      ],
+    });
+    startImageTask({
+      conversationId: "conversation-overlap",
+      turnId: "turn-overlap",
+      mode: "generate",
+      count: 1,
+      variant: "standard",
+      startedAt: 50_000,
+    });
+    startImageTask({
+      conversationId: "conversation-overlap",
+      turnId: "turn-overlap",
+      mode: "generate",
+      count: 1,
+      variant: "standard",
+      startedAt: 60_000,
+    });
+    try {
+      finishImageTask("conversation-overlap", "turn-overlap");
+
+      const result = normalizeConversationRuntimeState([conversation]);
+      const turn = result.items[0]!.turns![0]!;
+
+      assert.equal(result.changed, false);
+      assert.equal(result.items[0]!.status, "generating");
+      assert.equal(turn.status, "generating");
+      assert.equal(turn.images[1]?.status, "loading");
+    } finally {
+      finishImageTask("conversation-overlap", "turn-overlap");
+    }
+  });
+
   it("repairs stale conversation-level generating status from settled turns", () => {
     const result = normalizeConversationRuntimeState([
       createConversation({

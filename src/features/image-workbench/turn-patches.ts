@@ -10,6 +10,12 @@ export type RequestFailureMeta = {
   imageGenerationCallId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 function clearFailureMeta() {
@@ -23,6 +29,12 @@ function clearFailureMeta() {
     imageGenerationCallId: undefined,
     sourceAccountId: undefined,
     fileIds: undefined,
+    statusCode: undefined,
+    lastPollStatus: undefined,
+    pollStatusCounts: undefined,
+    pollAttempts: undefined,
+    retryAfterMs: undefined,
+    upstreamBodyPreview: undefined,
   };
 }
 
@@ -42,6 +54,12 @@ function mergeFailureMeta(
     imageGenerationCallId: failureMeta.imageGenerationCallId ?? (canPreserveRecoveryContext ? fallback?.imageGenerationCallId : undefined),
     sourceAccountId: failureMeta.sourceAccountId ?? (canPreserveRecoveryContext ? fallback?.sourceAccountId : undefined),
     fileIds: failureMeta.fileIds ?? (canPreserveRecoveryContext ? fallback?.fileIds : undefined),
+    statusCode: failureMeta.statusCode ?? fallback?.statusCode,
+    lastPollStatus: failureMeta.lastPollStatus ?? fallback?.lastPollStatus,
+    pollStatusCounts: failureMeta.pollStatusCounts ?? fallback?.pollStatusCounts,
+    pollAttempts: failureMeta.pollAttempts ?? fallback?.pollAttempts,
+    retryAfterMs: failureMeta.retryAfterMs ?? fallback?.retryAfterMs,
+    upstreamBodyPreview: failureMeta.upstreamBodyPreview ?? fallback?.upstreamBodyPreview,
   };
 }
 
@@ -147,6 +165,12 @@ export function applyTurnFailure(
       imageGenerationCallId: meta.imageGenerationCallId,
       sourceAccountId: meta.sourceAccountId,
       fileIds: meta.fileIds,
+      statusCode: meta.statusCode,
+      lastPollStatus: meta.lastPollStatus,
+      pollStatusCounts: meta.pollStatusCounts,
+      pollAttempts: meta.pollAttempts,
+      retryAfterMs: meta.retryAfterMs,
+      upstreamBodyPreview: meta.upstreamBodyPreview,
       images: [
         {
           id: turn.images[0]?.id || `${turn.id}-shared-error`,
@@ -163,6 +187,12 @@ export function applyTurnFailure(
           imageGenerationCallId: meta.imageGenerationCallId,
           sourceAccountId: meta.sourceAccountId,
           fileIds: meta.fileIds,
+          statusCode: meta.statusCode,
+          lastPollStatus: meta.lastPollStatus,
+          pollStatusCounts: meta.pollStatusCounts,
+          pollAttempts: meta.pollAttempts,
+          retryAfterMs: meta.retryAfterMs,
+          upstreamBodyPreview: meta.upstreamBodyPreview,
         },
       ],
     };
@@ -181,6 +211,12 @@ export function applyTurnFailure(
     imageGenerationCallId: meta.imageGenerationCallId,
     sourceAccountId: meta.sourceAccountId,
     fileIds: meta.fileIds,
+    statusCode: meta.statusCode,
+    lastPollStatus: meta.lastPollStatus,
+    pollStatusCounts: meta.pollStatusCounts,
+    pollAttempts: meta.pollAttempts,
+    retryAfterMs: meta.retryAfterMs,
+    upstreamBodyPreview: meta.upstreamBodyPreview,
     images: turn.images.map((image, index) =>
       shouldPatchImage(index, retryIndexes)
         ? {
@@ -197,6 +233,12 @@ export function applyTurnFailure(
           imageGenerationCallId: meta.imageGenerationCallId,
           sourceAccountId: meta.sourceAccountId,
           fileIds: meta.fileIds,
+          statusCode: meta.statusCode,
+          lastPollStatus: meta.lastPollStatus,
+          pollStatusCounts: meta.pollStatusCounts,
+          pollAttempts: meta.pollAttempts,
+          retryAfterMs: meta.retryAfterMs,
+          upstreamBodyPreview: meta.upstreamBodyPreview,
         }
         : image,
     ),

@@ -61,6 +61,12 @@ export type StoredImage = {
   imageGenerationCallId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 export type ImageConversationStatus = "generating" | "success" | "error";
@@ -92,6 +98,12 @@ export type ImageConversationTurn = {
   imageGenerationCallId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 export type ImageConversation = {

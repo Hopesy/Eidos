@@ -8,6 +8,9 @@ export function cleanToken(value: unknown) {
 
 export function isRetryableImageError(error: unknown) {
   if (error instanceof ImageGenerationError) {
+    if (error.kind === "poll_rate_limited") {
+      return false;
+    }
     return error.retryable && (error.retryAction === "resubmit" || error.retryAction === "switch_account");
   }
   const normalized = String(error instanceof Error ? error.message : error || "").toLowerCase();

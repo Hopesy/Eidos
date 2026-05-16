@@ -244,6 +244,28 @@ describe("account admin service", () => {
     ]);
   });
 
+  it("normalizes legacy top-level ChatGPT fingerprint fields into fp metadata", async () => {
+    const store = createMemoryStore([
+      createAccount({
+        access_token: "token-a",
+        "oai-device-id": " device-a ",
+        "oai-session-id": " session-a ",
+        "user-agent": " Browser UA ",
+        "sec-ch-ua": " Chromium ",
+      }),
+    ]);
+    const service = createAccountAdminService(store.dependencies);
+
+    const account = await service.getAccount("token-a");
+
+    assert.deepEqual(account?.fp, {
+      "user-agent": "Browser UA",
+      "oai-device-id": "device-a",
+      "oai-session-id": "session-a",
+      "sec-ch-ua": "Chromium",
+    });
+  });
+
   it("marks image success and fail without drifting quota semantics", async () => {
     const store = createMemoryStore([
       createAccount({

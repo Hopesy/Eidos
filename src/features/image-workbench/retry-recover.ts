@@ -1,8 +1,9 @@
 import { toast } from "sonner";
 
 import { editImage, generateImage, recoverImageTask, upscaleImage } from "@/lib/api";
-import type { ImageConversationTurn } from "@/store/image-conversations";
 import { normalizeImageOutputFormat, resolveUpscaleQuality } from "@/shared/image-generation";
+import { finishImageTask, startImageTask } from "@/store/image-active-tasks";
+import type { ImageConversationTurn } from "@/store/image-conversations";
 
 import type { RetryTurnContext } from "./submission-types";
 import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "./turn-patches";
@@ -103,6 +104,12 @@ function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, ne
     imageGenerationCallId: next.imageGenerationCallId ?? previous.imageGenerationCallId,
     sourceAccountId: next.sourceAccountId ?? previous.sourceAccountId,
     fileIds: next.fileIds ?? previous.fileIds,
+    statusCode: next.statusCode ?? previous.statusCode,
+    lastPollStatus: next.lastPollStatus ?? previous.lastPollStatus,
+    pollStatusCounts: next.pollStatusCounts ?? previous.pollStatusCounts,
+    pollAttempts: next.pollAttempts ?? previous.pollAttempts,
+    retryAfterMs: next.retryAfterMs ?? previous.retryAfterMs,
+    upstreamBodyPreview: next.upstreamBodyPreview ?? previous.upstreamBodyPreview,
   };
 }
 
@@ -140,6 +147,7 @@ export async function runRetryTurn(
   const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];
   const turnImageSources = turnSourceImages.filter((item) => item.role === "image");
   const turnMaskSource = turnSourceImages.find((item) => item.role === "mask") ?? null;
+  const recoveryMode = turnMode === "generate" && turnImageSources.length > 0 ? "edit" : turnMode;
   const turnUpscaleQuality = turnMode === "upscale" ? resolveUpscaleQuality(turn.imageQuality, turn.scale) : undefined;
   const turnImageSize = turn.imageSize || "auto";
   const turnImageQuality = turn.imageQuality || "auto";
@@ -203,6 +211,14 @@ export async function runRetryTurn(
   const abortController = new AbortController();
   const signal = abortController.signal;
   const retryImageIds = retryIndexes.map((index) => turn.images[index]?.id).filter((id): id is string => Boolean(id));
+  startImageTask({
+    conversationId,
+    turnId,
+    mode: turnMode,
+    count: retryIndexes.length,
+    variant: "standard",
+    startedAt,
+  });
   ctx.retryAbortControllersRef.current.set(retryKey, {
     controller: abortController,
     conversationId,
@@ -243,7 +259,7 @@ export async function runRetryTurn(
         fileIds: effectiveFileIds,
         waitMs: effectiveRetryAction === "resume_polling" ? 180000 : 15000,
         model: turn.model,
-        mode: turnMode,
+        mode: recoveryMode,
         signal,
       });
       resultPayloadItems = data.data || [];
@@ -386,10 +402,11 @@ export async function runRetryTurn(
         return keepGeneratingWhileAnyImageLoads(applyTurnFailure(item, message, failureMeta, retryIndexes));
       }),
     }));
-    if (failureMeta.failureKind !== "accepted_pending") {
+    if (failureMeta.failureKind !== "accepted_pending" && failureMeta.failureKind !== "poll_rate_limited") {
       toast.error(message);
     }
   } finally {
+    finishImageTask(conversationId, turnId);
     activeRetryKeys.delete(retryKey);
     ctx.retryAbortControllersRef.current.delete(retryKey);
   }

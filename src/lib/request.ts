@@ -13,6 +13,12 @@ export class ApiRequestError extends Error {
     imageGenerationCallId?: string;
     sourceAccountId?: string;
     fileIds?: string[];
+    statusCode?: number;
+    lastPollStatus?: number;
+    pollStatusCounts?: Record<string, number>;
+    pollAttempts?: number;
+    retryAfterMs?: number;
+    upstreamBodyPreview?: string;
 
     constructor(message: string, options: {
         status?: number;
@@ -25,6 +31,12 @@ export class ApiRequestError extends Error {
         imageGenerationCallId?: string;
         sourceAccountId?: string;
         fileIds?: string[];
+        statusCode?: number;
+        lastPollStatus?: number;
+        pollStatusCounts?: Record<string, number>;
+        pollAttempts?: number;
+        retryAfterMs?: number;
+        upstreamBodyPreview?: string;
     } = {}) {
         super(message);
         this.name = "ApiRequestError";
@@ -38,6 +50,12 @@ export class ApiRequestError extends Error {
         this.imageGenerationCallId = options.imageGenerationCallId;
         this.sourceAccountId = options.sourceAccountId;
         this.fileIds = options.fileIds;
+        this.statusCode = options.statusCode;
+        this.lastPollStatus = options.lastPollStatus;
+        this.pollStatusCounts = options.pollStatusCounts;
+        this.pollAttempts = options.pollAttempts;
+        this.retryAfterMs = options.retryAfterMs;
+        this.upstreamBodyPreview = options.upstreamBodyPreview;
     }
 }
 
@@ -68,6 +86,12 @@ request.interceptors.response.use(
             imageGenerationCallId?: string;
             sourceAccountId?: string;
             fileIds?: string[];
+            statusCode?: number;
+            lastPollStatus?: number;
+            pollStatusCounts?: Record<string, number>;
+            pollAttempts?: number;
+            retryAfterMs?: number;
+            upstreamBodyPreview?: string;
         };
         error?: string;
         message?: string;
@@ -90,6 +114,12 @@ request.interceptors.response.use(
             imageGenerationCallId: payload?.detail?.imageGenerationCallId,
             sourceAccountId: payload?.detail?.sourceAccountId,
             fileIds: payload?.detail?.fileIds,
+            statusCode: payload?.detail?.statusCode,
+            lastPollStatus: payload?.detail?.lastPollStatus,
+            pollStatusCounts: payload?.detail?.pollStatusCounts,
+            pollAttempts: payload?.detail?.pollAttempts,
+            retryAfterMs: payload?.detail?.retryAfterMs,
+            upstreamBodyPreview: payload?.detail?.upstreamBodyPreview,
         }));
     },
 );

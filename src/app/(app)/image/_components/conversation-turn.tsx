@@ -71,6 +71,9 @@ function buildRetryButtonLabel(_turn: ImageConversationTurn, _image?: StoredImag
 }
 
 function buildErrorCardTitle(image: StoredImage, turn: ImageConversationTurn) {
+    if (image.failureKind === "poll_rate_limited" || turn.failureKind === "poll_rate_limited") {
+        return "轮询被限流";
+    }
     if (image.failureKind === "accepted_pending" || turn.failureKind === "accepted_pending") {
         return "仍在生成中";
     }

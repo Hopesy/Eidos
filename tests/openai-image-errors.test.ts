@@ -28,6 +28,10 @@ describe("openai image error policy", () => {
   it("classifies input and account blocked messages", () => {
     assert.equal(isInputBlockedMessage("content policy violation"), true);
     assert.equal(isInputBlockedMessage("抱歉，我无法生成该内容"), true);
+    assert.equal(
+      isInputBlockedMessage("非常抱歉，生成的图片可能违反了关于潜在欺诈或诈骗活动的防护限制。如果你认为此判断有误，请重试或修改提示语。"),
+      true,
+    );
     assert.equal(isInputBlockedMessage("<!DOCTYPE html><html><head><title>Just a moment...</title><meta http-equiv=\"content-security-policy\"></head></html>"), false);
     assert.equal(isAccountBlockedMessage("token_invalidated"), true);
     assert.equal(isAccountBlockedMessage("HTTP 429 quota exceeded"), true);
@@ -82,18 +86,24 @@ describe("openai image error policy", () => {
   });
 
   it("exposes stable image error metadata", () => {
-    const error = createImageError("pending", {
-      kind: "accepted_pending",
+    const error = createImageError("rate limited", {
+      kind: "poll_rate_limited",
       retryAction: "resume_polling",
       retryable: true,
       stage: "poll",
+      statusCode: 429,
       upstreamConversationId: "conv-1",
       fileIds: ["file-1"],
+      lastPollStatus: 429,
+      pollStatusCounts: { "429": 3 },
+      pollAttempts: 3,
+      retryAfterMs: 5000,
+      upstreamBodyPreview: "rate limited",
     });
 
     assert.ok(error instanceof ImageGenerationError);
     assert.deepEqual(getImageErrorMeta(error), {
-      failureKind: "accepted_pending",
+      failureKind: "poll_rate_limited",
       retryAction: "resume_polling",
       retryable: true,
       stage: "poll",
@@ -102,6 +112,12 @@ describe("openai image error policy", () => {
       imageGenerationCallId: undefined,
       sourceAccountId: undefined,
       fileIds: ["file-1"],
+      statusCode: 429,
+      lastPollStatus: 429,
+      pollStatusCounts: { "429": 3 },
+      pollAttempts: 3,
+      retryAfterMs: 5000,
+      upstreamBodyPreview: "rate limited",
     });
     assert.deepEqual(getImageErrorMeta(new Error("plain")), {});
   });
@@ -115,5 +131,17 @@ describe("openai image error policy", () => {
     });
 
     assert.equal(resolveImageErrorStatus(error), 425);
+  });
+
+  it("maps poll rate limits to HTTP 429 with retry metadata", () => {
+    const error = createImageError("rate limited", {
+      kind: "poll_rate_limited",
+      retryAction: "resume_polling",
+      retryable: true,
+      stage: "poll",
+      lastPollStatus: 429,
+    });
+
+    assert.equal(resolveImageErrorStatus(error), 429);
   });
 });

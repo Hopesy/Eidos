@@ -83,4 +83,32 @@ describe("image recovery candidate helpers", () => {
     assert.equal(merged.prompt, "修订提示词");
   });
 
+  it("merges poll rate-limit diagnostics into the stored turn for manual retry", () => {
+    const turn = createTurn({
+      failureKind: "accepted_pending",
+      retryAction: "resume_polling",
+    });
+    const task = createTask({
+      failureKind: "poll_rate_limited",
+      retryAction: "resume_polling",
+      stage: "poll",
+      statusCode: 429,
+      lastPollStatus: 429,
+      pollStatusCounts: { "429": 12 },
+      pollAttempts: 12,
+      retryAfterMs: 5000,
+      upstreamBodyPreview: "rate limited",
+    });
+
+    const merged = mergeRecoverableTaskIntoTurn(turn, task);
+
+    assert.equal(merged.failureKind, "poll_rate_limited");
+    assert.equal(merged.statusCode, 429);
+    assert.equal(merged.lastPollStatus, 429);
+    assert.deepEqual(merged.pollStatusCounts, { "429": 12 });
+    assert.equal(merged.pollAttempts, 12);
+    assert.equal(merged.retryAfterMs, 5000);
+    assert.equal(merged.upstreamBodyPreview, "rate limited");
+  });
+
 });

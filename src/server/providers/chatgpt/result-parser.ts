@@ -60,21 +60,46 @@ function normalizeAssetPointer(pointer: string) {
   return "";
 }
 
+export function isImageGenerationRefusalTitle(title: unknown) {
+  const normalized = cleanToken(title).toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return (
+    normalized.includes("图像生成请求拒绝") ||
+    normalized.includes("图像生成请求被拒绝") ||
+    normalized.includes("图片生成请求拒绝") ||
+    normalized.includes("图片生成请求被拒绝") ||
+    normalized.includes("image generation request rejected") ||
+    normalized.includes("image generation request refused") ||
+    normalized.includes("image generation request declined")
+  );
+}
+
 function extractImageIdsFromMessage(message: unknown) {
   const record = (message ?? {}) as Record<string, unknown>;
   const author = (record.author ?? {}) as Record<string, unknown>;
   const metadata = (record.metadata ?? {}) as Record<string, unknown>;
   const content = (record.content ?? {}) as Record<string, unknown>;
 
-  if (author.role !== "tool" || metadata.async_task_type !== "image_gen" || content.content_type !== "multimodal_text") {
+  if (content.content_type !== "multimodal_text") {
     return [] as string[];
   }
 
+  const isImageGenerationToolMessage = author.role === "tool" && metadata.async_task_type === "image_gen";
   const fileIds: string[] = [];
   const parts = Array.isArray(content.parts) ? content.parts : [];
   for (const part of parts) {
-    const pointer = String((part as Record<string, unknown>)?.asset_pointer || "");
+    if (!part || typeof part !== "object") {
+      continue;
+    }
+    const partRecord = part as Record<string, unknown>;
+    const pointer = String(partRecord.asset_pointer || "");
     const fileId = normalizeAssetPointer(pointer);
+    const isGeneratedImagePointer = pointer.startsWith("sediment://");
+    if (!isImageGenerationToolMessage && !isGeneratedImagePointer) {
+      continue;
+    }
     if (fileId && !fileIds.includes(fileId)) {
       fileIds.push(fileId);
     }

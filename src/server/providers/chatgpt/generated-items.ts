@@ -9,6 +9,7 @@ import {
 import {
   downloadAsBase64,
   fetchDownloadUrl,
+  normalizePollWaitMs,
   pollImageIds,
 } from "./result-download-adapter";
 import {
@@ -95,6 +96,9 @@ async function downloadGeneratedItemWithRetry(
       lastError = error;
       const message = getFailureMessage(error);
       const errorMeta = getImageErrorMeta(error);
+      if (error instanceof ImageGenerationError && error.kind === "poll_rate_limited") {
+        throw error;
+      }
       if (attempt < MAX_DOWNLOAD_RETRIES) {
         logger.warn("openai-client", "generate-image:file-download-retry", {
           conversationId,
@@ -268,7 +272,12 @@ export async function collectGeneratedItems(
     const nextError = buildNoImageReturnedError(textReply);
     nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;
     if (!nextError.retryable) {
-      logger.warn("openai-client", "generate-image:no-file-ids-short-circuit", {
+      const logEvent = nextError.kind === "input_blocked"
+        ? "generate-image:input-blocked"
+        : nextError.kind === "source_invalid"
+          ? "generate-image:source-invalid"
+          : "generate-image:no-file-ids-short-circuit";
+      logger.warn("openai-client", logEvent, {
         conversationId,
         token: maskAccessToken(accessToken),
         ...getImageErrorMeta(nextError),
@@ -354,7 +363,7 @@ export async function recoverGeneratedItems(
   },
 ) {
   const conversationId = cleanToken(recovery.conversationId);
-  const waitMs = Math.max(3000, recovery.waitMs ?? 60000);
+  const waitMs = normalizePollWaitMs(recovery.waitMs ?? 60000);
   throwIfAborted(recovery.signal);
   if (!conversationId) {
     throw createImageError("conversation id is required", {

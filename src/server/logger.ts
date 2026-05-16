@@ -39,8 +39,10 @@ const messageLabels: Record<string, { step: string; text: string }> = {
     "generate-image:file-download-fallback-poll-failed": { step: "轮询失败", text: "轮询补图失败" },
     "generate-image:file-download-retry": { step: "重试下载", text: "重试下载生成图片" },
     "generate-image:file-downloaded": { step: "下载图片", text: "生成图片已下载" },
+    "generate-image:input-blocked": { step: "提示词受限", text: "上游拒绝生成图片" },
     "generate-image:no-file-ids": { step: "未返回图片", text: "上游未返回图片文件" },
     "generate-image:no-file-ids-short-circuit": { step: "等待生成", text: "上游仍在生成图片" },
+    "generate-image:source-invalid": { step: "源图无效", text: "上游未识别源图" },
     "generate-image:sse-parsed": { step: "解析响应", text: "解析上游生成响应" },
     "generate-image:start": { step: "开始生成", text: "开始生成图片" },
     "image-file:not-found": { step: "图片不存在", text: "图片文件不存在" },
@@ -50,7 +52,9 @@ const messageLabels: Record<string, { step: string; text: string }> = {
     "image-response:persisted": { step: "保存结果", text: "保存图片结果" },
     "poll-image-ids:done": { step: "轮询完成", text: "已轮询到图片文件" },
     "poll-image-ids:error": { step: "轮询异常", text: "轮询图片异常" },
+    "poll-image-ids:input-blocked": { step: "提示词受限", text: "网页端标题显示生成被拒绝" },
     "poll-image-ids:non-ok": { step: "轮询异常", text: "轮询图片返回异常状态" },
+    "poll-image-ids:rate-limited": { step: "轮询限流", text: "轮询图片被上游限流" },
     "poll-image-ids:start": { step: "轮询图片", text: "开始轮询图片结果" },
     "poll-image-ids:timeout": { step: "轮询超时", text: "轮询图片超时" },
     "request:canceled": { step: "取消请求", text: "请求已取消" },
@@ -97,7 +101,7 @@ export function getBeijingDateStamp(date = new Date()): string {
 
 export function formatBeijingTimestamp(date = new Date()): string {
     const beijingDate = toBeijingDate(date);
-    return `${getBeijingDateStamp(date)} ${pad(beijingDate.getUTCHours())}:${pad(beijingDate.getUTCMinutes())}:${pad(beijingDate.getUTCSeconds())}.${pad(beijingDate.getUTCMilliseconds(), 3)} +08:00`;
+    return `${getBeijingDateStamp(date)} ${pad(beijingDate.getUTCHours())}:${pad(beijingDate.getUTCMinutes())}:${pad(beijingDate.getUTCSeconds())}`;
 }
 
 function isEnglishEventCode(message: string): boolean {

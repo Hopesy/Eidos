@@ -19,6 +19,12 @@ export type ImageUpstreamTaskRecord = {
   imageGenerationCallId?: string | null;
   sourceAccountId?: string | null;
   fileIds?: string[];
+  statusCode?: number | null;
+  lastPollStatus?: number | null;
+  pollStatusCounts?: Record<string, number> | null;
+  pollAttempts?: number | null;
+  retryAfterMs?: number | null;
+  upstreamBodyPreview?: string | null;
   revisedPrompt?: string | null;
   model?: string | null;
   prompt?: string | null;
@@ -44,6 +50,20 @@ function cleanString(value: unknown) {
 function normalizeFileIds(value: unknown) {
   if (!Array.isArray(value)) return [] as string[];
   return value.map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function normalizeNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeStatusCounts(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const entries = Object.entries(value as Record<string, unknown>)
+    .map(([key, count]) => [String(key), Number(count)] as const)
+    .filter(([key, count]) => key && Number.isFinite(count));
+  return entries.length > 0 ? Object.fromEntries(entries) as Record<string, number> : null;
 }
 
 function parseTask(row: Record<string, unknown> | undefined): ImageUpstreamTaskRecord | null {
@@ -92,6 +112,12 @@ export function upsertImageUpstreamTask(input: UpsertImageUpstreamTaskInput) {
     imageGenerationCallId: cleanString(input.imageGenerationCallId ?? existing?.imageGenerationCallId),
     sourceAccountId: cleanString(input.sourceAccountId ?? existing?.sourceAccountId),
     fileIds: normalizeFileIds(input.fileIds ?? existing?.fileIds),
+    statusCode: normalizeNumber(input.statusCode ?? existing?.statusCode),
+    lastPollStatus: normalizeNumber(input.lastPollStatus ?? existing?.lastPollStatus),
+    pollStatusCounts: normalizeStatusCounts(input.pollStatusCounts ?? existing?.pollStatusCounts),
+    pollAttempts: normalizeNumber(input.pollAttempts ?? existing?.pollAttempts),
+    retryAfterMs: normalizeNumber(input.retryAfterMs ?? existing?.retryAfterMs),
+    upstreamBodyPreview: cleanString(input.upstreamBodyPreview ?? existing?.upstreamBodyPreview),
     revisedPrompt: cleanString(input.revisedPrompt ?? existing?.revisedPrompt),
     model: cleanString(input.model ?? existing?.model),
     prompt: cleanString(input.prompt ?? existing?.prompt),

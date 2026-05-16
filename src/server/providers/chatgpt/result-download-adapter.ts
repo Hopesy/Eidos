@@ -9,7 +9,89 @@ import {
   maskAccessToken,
   type ChatGptResultSession,
 } from "./result-shared";
-import { extractImageIds } from "./result-parser";
+import { extractImageIds, isImageGenerationRefusalTitle } from "./result-parser";
+
+const DEFAULT_POLL_DELAY_MS = 3000;
+export const POLL_MIN_WAIT_MS = 3000;
+export const POLL_MAX_WAIT_MS = 180000;
+const RATE_LIMIT_INITIAL_DELAY_MS = 5000;
+const RATE_LIMIT_MAX_DELAY_MS = 45000;
+
+type PollNonOkState = {
+  attempts: number;
+  statusCounts: Record<string, number>;
+  lastStatus?: number;
+  lastBodyPreview?: string;
+  lastRetryAfterMs?: number;
+};
+
+function parseRetryAfterMs(value: string | null) {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return undefined;
+  }
+  const seconds = Number(normalized);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(RATE_LIMIT_MAX_DELAY_MS, Math.round(seconds * 1000));
+  }
+  const retryDate = Date.parse(normalized);
+  if (!Number.isNaN(retryDate)) {
+    return Math.min(RATE_LIMIT_MAX_DELAY_MS, Math.max(0, retryDate - Date.now()));
+  }
+  return undefined;
+}
+
+function calculatePollDelayMs(status: number | undefined, rateLimitStreak: number, retryAfterMs?: number) {
+  if (status !== 429) {
+    return DEFAULT_POLL_DELAY_MS;
+  }
+  if (retryAfterMs !== undefined && retryAfterMs > 0) {
+    return Math.max(DEFAULT_POLL_DELAY_MS, retryAfterMs);
+  }
+  const multiplier = 2 ** Math.max(0, rateLimitStreak - 1);
+  return Math.min(RATE_LIMIT_MAX_DELAY_MS, RATE_LIMIT_INITIAL_DELAY_MS * multiplier);
+}
+
+export function normalizePollWaitMs(value: unknown) {
+  const parsed = Number(value);
+  const candidate = Number.isFinite(parsed) ? parsed : POLL_MAX_WAIT_MS;
+  return Math.min(POLL_MAX_WAIT_MS, Math.max(POLL_MIN_WAIT_MS, Math.round(candidate)));
+}
+
+async function readResponsePreview(response: Response) {
+  try {
+    return (await response.text()).slice(0, 300);
+  } catch {
+    return "";
+  }
+}
+
+function buildPollRateLimitError(conversationId: string, state: PollNonOkState) {
+  return createImageError("轮询图片结果被上游限流，请稍后再试", {
+    kind: "poll_rate_limited",
+    retryAction: "resume_polling",
+    retryable: true,
+    stage: "poll",
+    statusCode: 429,
+    upstreamConversationId: conversationId,
+    lastPollStatus: state.lastStatus,
+    pollStatusCounts: state.statusCounts,
+    pollAttempts: state.attempts,
+    retryAfterMs: state.lastRetryAfterMs,
+    upstreamBodyPreview: state.lastBodyPreview,
+  });
+}
+
+function buildTitleRefusalError(conversationId: string, title: string) {
+  return createImageError("图像生成请求被上游拒绝，请修改提示词后重试", {
+    kind: "input_blocked",
+    retryAction: "revise_input",
+    retryable: false,
+    stage: "submit",
+    upstreamConversationId: conversationId,
+    upstreamBodyPreview: title,
+  });
+}
 
 export async function pollImageIds(
   session: ChatGptResultSession,
@@ -20,24 +102,30 @@ export async function pollImageIds(
 ) {
   throwIfAborted(options.signal);
   const started = Date.now();
-  const maxWaitMs = Math.max(3000, options.maxWaitMs ?? 180000);
+  const maxWaitMs = normalizePollWaitMs(options.maxWaitMs ?? POLL_MAX_WAIT_MS);
   logger.info("openai-client", "poll-image-ids:start", {
     conversationId,
     deviceId,
     token: maskAccessToken(accessToken),
     maxWaitMs,
   });
+  const nonOkState: PollNonOkState = {
+    attempts: 0,
+    statusCounts: {},
+  };
+  let rateLimitStreak = 0;
   while (Date.now() - started < maxWaitMs) {
     throwIfAborted(options.signal);
     let response: Response;
     try {
+      const remainingMs = Math.max(1, maxWaitMs - (Date.now() - started));
       response = await session.fetch(`${BASE_URL}/backend-api/conversation/${conversationId}`, {
         headers: {
           authorization: `Bearer ${accessToken}`,
           "oai-device-id": deviceId,
           accept: "*/*",
         },
-        timeoutMs: 30000,
+        timeoutMs: Math.min(30000, remainingMs),
         signal: options.signal,
       });
     } catch (error) {
@@ -60,7 +148,17 @@ export async function pollImageIds(
     }
 
     if (response.ok) {
-      const payload = (await response.json()) as { mapping?: Record<string, unknown> };
+      rateLimitStreak = 0;
+      const payload = (await response.json()) as { title?: unknown; mapping?: Record<string, unknown> };
+      const title = String(payload.title || "").trim();
+      if (isImageGenerationRefusalTitle(title)) {
+        logger.warn("openai-client", "poll-image-ids:input-blocked", {
+          conversationId,
+          title,
+          elapsedMs: Date.now() - started,
+        });
+        throw buildTitleRefusalError(conversationId, title);
+      }
       const fileIds = extractImageIds(payload.mapping || {});
       if (fileIds.length > 0) {
         logger.info("openai-client", "poll-image-ids:done", {
@@ -71,20 +169,55 @@ export async function pollImageIds(
         return fileIds;
       }
     } else {
+      nonOkState.attempts += 1;
+      nonOkState.lastStatus = response.status;
+      nonOkState.statusCounts[String(response.status)] = (nonOkState.statusCounts[String(response.status)] ?? 0) + 1;
+      rateLimitStreak = response.status === 429 ? rateLimitStreak + 1 : 0;
+      const retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+      nonOkState.lastRetryAfterMs = retryAfterMs;
+      nonOkState.lastBodyPreview = await readResponsePreview(response);
+      const delayMs = calculatePollDelayMs(response.status, rateLimitStreak, retryAfterMs);
       logger.warn("openai-client", "poll-image-ids:non-ok", {
         conversationId,
         status: response.status,
+        attempt: nonOkState.attempts,
+        elapsedMs: Date.now() - started,
+        retryAfterMs,
+        nextDelayMs: delayMs,
+        rateLimitStreak,
+        bodyPreview: nonOkState.lastBodyPreview,
       });
+      const remainingMs = maxWaitMs - (Date.now() - started);
+      await abortableDelay(Math.max(0, Math.min(delayMs, remainingMs)), options.signal);
+      continue;
     }
 
-    await abortableDelay(3000, options.signal);
+    const remainingMs = maxWaitMs - (Date.now() - started);
+    await abortableDelay(Math.max(0, Math.min(DEFAULT_POLL_DELAY_MS, remainingMs)), options.signal);
   }
 
   logger.warn("openai-client", "poll-image-ids:timeout", {
     conversationId,
     elapsedMs: Date.now() - started,
     maxWaitMs,
+    lastStatus: nonOkState.lastStatus,
+    statusCounts: nonOkState.statusCounts,
+    attempts: nonOkState.attempts,
   });
+  const rateLimitedCount = nonOkState.statusCounts["429"] ?? 0;
+  if (nonOkState.lastStatus === 429 && rateLimitedCount > 0) {
+    logger.warn("openai-client", "poll-image-ids:rate-limited", {
+      conversationId,
+      elapsedMs: Date.now() - started,
+      maxWaitMs,
+      lastStatus: nonOkState.lastStatus,
+      statusCounts: nonOkState.statusCounts,
+      attempts: nonOkState.attempts,
+      retryAfterMs: nonOkState.lastRetryAfterMs,
+      bodyPreview: nonOkState.lastBodyPreview,
+    });
+    throw buildPollRateLimitError(conversationId, nonOkState);
+  }
   return [] as string[];
 }
 

@@ -7,6 +7,9 @@ export function resolveImageErrorStatus(error: ImageGenerationError) {
   if (error.statusCode === 429) {
     return 429;
   }
+  if (error.kind === "poll_rate_limited") {
+    return 429;
+  }
   if (error.kind === "input_blocked") {
     return 400;
   }

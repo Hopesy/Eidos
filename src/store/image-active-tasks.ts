@@ -13,8 +13,8 @@ export type ActiveImageTask = {
 
 type Listener = () => void;
 
-// 内部 Map 和 Set
 const activeTasks = new Map<string, ActiveImageTask>();
+const activeTaskRefs = new Map<string, number>();
 const listeners = new Set<Listener>();
 
 // key 格式：conversationId:turnId
@@ -30,12 +30,21 @@ function notifyListeners(): void {
 
 export function startImageTask(task: ActiveImageTask): void {
   const key = getTaskKey(task.conversationId, task.turnId);
+  activeTaskRefs.set(key, (activeTaskRefs.get(key) ?? 0) + 1);
   activeTasks.set(key, task);
   notifyListeners();
 }
 
 export function finishImageTask(conversationId: string, turnId: string): void {
   const key = getTaskKey(conversationId, turnId);
+  const refs = activeTaskRefs.get(key) ?? 0;
+  if (refs > 1) {
+    activeTaskRefs.set(key, refs - 1);
+    notifyListeners();
+    return;
+  }
+
+  activeTaskRefs.delete(key);
   activeTasks.delete(key);
   notifyListeners();
 }

@@ -145,6 +145,12 @@ export type ImageResponseItem = {
   upstreamConversationId?: string;
   sourceAccountId?: string;
   fileIds?: string[];
+  statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 export type GalleryImageItem = {
@@ -207,6 +213,11 @@ export type RequestLogItem = {
   finalStatus?: "success" | "partial" | "failed";
   apiStyle?: string;
   statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 export type RecoverableImageTaskItem = {
@@ -224,6 +235,12 @@ export type RecoverableImageTaskItem = {
   imageGenerationCallId?: string | null;
   sourceAccountId?: string | null;
   fileIds?: string[];
+  statusCode?: number | null;
+  lastPollStatus?: number | null;
+  pollStatusCounts?: Record<string, number> | null;
+  pollAttempts?: number | null;
+  retryAfterMs?: number | null;
+  upstreamBodyPreview?: string | null;
   revisedPrompt?: string | null;
   model?: string | null;
   prompt?: string | null;

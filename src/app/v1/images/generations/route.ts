@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof ImageGenerationError) {
       const meta = getImageErrorMeta(error);
-      if (error.kind === "accepted_pending") {
+      if (error.kind === "accepted_pending" || error.kind === "poll_rate_limited") {
         logger.warn("images.generations.route", "request:pending", {
           message: error.message,
           ...meta,

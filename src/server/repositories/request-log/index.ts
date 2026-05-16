@@ -34,6 +34,11 @@ export type RequestLogEntry = {
   finalStatus?: "success" | "partial" | "failed";
   apiStyle?: string;
   statusCode?: number;
+  lastPollStatus?: number;
+  pollStatusCounts?: Record<string, number>;
+  pollAttempts?: number;
+  retryAfterMs?: number;
+  upstreamBodyPreview?: string;
 };
 
 const MAX_LOGS = 500;

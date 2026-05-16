@@ -23,6 +23,13 @@ export function mergeRecoverableTaskIntoTurn(
     sourceAccountId:
       String(task.sourceAccountId || turn.sourceAccountId || "").trim() || turn.sourceAccountId,
     fileIds: Array.isArray(task.fileIds) && task.fileIds.length > 0 ? task.fileIds : turn.fileIds,
+    statusCode: typeof task.statusCode === "number" ? task.statusCode : turn.statusCode,
+    lastPollStatus: typeof task.lastPollStatus === "number" ? task.lastPollStatus : turn.lastPollStatus,
+    pollStatusCounts: task.pollStatusCounts ?? turn.pollStatusCounts,
+    pollAttempts: typeof task.pollAttempts === "number" ? task.pollAttempts : turn.pollAttempts,
+    retryAfterMs: typeof task.retryAfterMs === "number" ? task.retryAfterMs : turn.retryAfterMs,
+    upstreamBodyPreview:
+      String(task.upstreamBodyPreview || turn.upstreamBodyPreview || "").trim() || turn.upstreamBodyPreview,
     error: String(task.error || turn.error || "").trim() || turn.error,
   };
 }

@@ -3,6 +3,15 @@ import { normalizeAccountType } from "@/server/account/type-policy";
 import { updateAccounts, readAccounts } from "@/server/repositories/account";
 import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 
+const CHATGPT_FINGERPRINT_KEYS = [
+  "user-agent",
+  "oai-device-id",
+  "oai-session-id",
+  "sec-ch-ua",
+  "sec-ch-ua-mobile",
+  "sec-ch-ua-platform",
+];
+
 function cleanToken(value: unknown) {
   return String(value || "").trim();
 }
@@ -19,6 +28,22 @@ function dedupeTokens(tokens: string[]) {
     cleaned.push(normalized);
   }
   return cleaned;
+}
+
+function normalizeFingerprint(input: Record<string, unknown>) {
+  const raw = input.fp && typeof input.fp === "object"
+    ? (input.fp as Record<string, unknown>)
+    : {};
+  const fp: Record<string, unknown> = {};
+
+  for (const key of CHATGPT_FINGERPRINT_KEYS) {
+    const value = cleanToken(raw[key] ?? input[key]);
+    if (value) {
+      fp[key] = value;
+    }
+  }
+
+  return Object.keys(fp).length > 0 ? fp : undefined;
 }
 
 function normalizeAccount(input: Record<string, unknown>): AccountRecord | null {
@@ -48,7 +73,7 @@ function normalizeAccount(input: Record<string, unknown>): AccountRecord | null 
     last_used_at: cleanToken(input.last_used_at) || null,
     updated_at: cleanToken(input.updated_at) || null,
     last_refreshed_at: cleanToken(input.last_refreshed_at) || null,
-    fp: input.fp && typeof input.fp === "object" ? (input.fp as Record<string, unknown>) : undefined,
+    fp: normalizeFingerprint(input),
   };
 }
 

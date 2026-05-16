@@ -57,6 +57,12 @@ function syncConversationUpstreamTasks(conversation: ImageConversationRecord) {
         imageGenerationCallId: conversation.imageGenerationCallId,
         sourceAccountId: conversation.sourceAccountId,
         fileIds: conversation.fileIds,
+        statusCode: conversation.statusCode,
+        lastPollStatus: conversation.lastPollStatus,
+        pollStatusCounts: conversation.pollStatusCounts,
+        pollAttempts: conversation.pollAttempts,
+        retryAfterMs: conversation.retryAfterMs,
+        upstreamBodyPreview: conversation.upstreamBodyPreview,
       },
     ];
 
@@ -93,6 +99,14 @@ function syncConversationUpstreamTasks(conversation: ImageConversationRecord) {
       imageGenerationCallId: imageGenerationCallId || null,
       sourceAccountId: sourceAccountId || null,
       fileIds,
+      statusCode: typeof turn.statusCode === "number" ? turn.statusCode : null,
+      lastPollStatus: typeof turn.lastPollStatus === "number" ? turn.lastPollStatus : null,
+      pollStatusCounts: turn.pollStatusCounts && typeof turn.pollStatusCounts === "object"
+        ? turn.pollStatusCounts as Record<string, number>
+        : null,
+      pollAttempts: typeof turn.pollAttempts === "number" ? turn.pollAttempts : null,
+      retryAfterMs: typeof turn.retryAfterMs === "number" ? turn.retryAfterMs : null,
+      upstreamBodyPreview: String(turn.upstreamBodyPreview || "").trim() || null,
       revisedPrompt: String(turn.prompt || conversation.prompt || "").trim() || null,
       model: String(turn.model || conversation.model || "").trim() || null,
       prompt: String(turn.prompt || conversation.prompt || "").trim() || null,

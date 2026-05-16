@@ -334,6 +334,9 @@ export function countFailures(images: StoredImage[]) {
 
 export function humanizeError(error: unknown): string {
   if (error instanceof ApiRequestError) {
+    if (error.failureKind === "poll_rate_limited") {
+      return "轮询图片结果被上游限流，暂时无法确认图片是否生成。请稍后再试。";
+    }
     if (error.failureKind === "accepted_pending") {
       return "任务已提交，图像服务还在处理。可以稍后点击重试继续获取结果。";
     }
@@ -407,6 +410,12 @@ export function extractRequestFailureMeta(error: unknown) {
       imageGenerationCallId: undefined,
       sourceAccountId: undefined,
       fileIds: undefined,
+      statusCode: undefined,
+      lastPollStatus: undefined,
+      pollStatusCounts: undefined,
+      pollAttempts: undefined,
+      retryAfterMs: undefined,
+      upstreamBodyPreview: undefined,
     };
   }
   return {
@@ -419,6 +428,12 @@ export function extractRequestFailureMeta(error: unknown) {
     imageGenerationCallId: error.imageGenerationCallId,
     sourceAccountId: error.sourceAccountId,
     fileIds: error.fileIds,
+    statusCode: error.statusCode,
+    lastPollStatus: error.lastPollStatus,
+    pollStatusCounts: error.pollStatusCounts,
+    pollAttempts: error.pollAttempts,
+    retryAfterMs: error.retryAfterMs,
+    upstreamBodyPreview: error.upstreamBodyPreview,
   };
 }
 

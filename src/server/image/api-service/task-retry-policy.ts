@@ -8,6 +8,9 @@ const API_RETRY_BASE_DELAY_MS = 1500;
 
 export function isRetryableApiError(error: unknown) {
   if (error instanceof ImageGenerationError) {
+    if (error.kind === "poll_rate_limited") {
+      return false;
+    }
     return error.retryable && (error.retryAction === "resubmit" || error.retryAction === "retry_download");
   }
   const normalized = String(error instanceof Error ? error.message : error || "").toLowerCase();

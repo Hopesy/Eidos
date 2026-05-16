@@ -33,6 +33,12 @@ function clearTurnFailureMeta() {
     imageGenerationCallId: undefined,
     sourceAccountId: undefined,
     fileIds: undefined,
+    statusCode: undefined,
+    lastPollStatus: undefined,
+    pollStatusCounts: undefined,
+    pollAttempts: undefined,
+    retryAfterMs: undefined,
+    upstreamBodyPreview: undefined,
   };
 }
 
@@ -97,6 +103,12 @@ function patchSingleTurnFailure(
       imageGenerationCallId: failureMeta.imageGenerationCallId,
       sourceAccountId: failureMeta.sourceAccountId,
       fileIds: failureMeta.fileIds,
+      statusCode: failureMeta.statusCode,
+      lastPollStatus: failureMeta.lastPollStatus,
+      pollStatusCounts: failureMeta.pollStatusCounts,
+      pollAttempts: failureMeta.pollAttempts,
+      retryAfterMs: failureMeta.retryAfterMs,
+      upstreamBodyPreview: failureMeta.upstreamBodyPreview,
     },
     durationMs,
   );
@@ -379,6 +391,12 @@ export async function runSubmit(ctx: SubmitContext) {
                           imageGenerationCallId: failureMeta.imageGenerationCallId,
                           sourceAccountId: failureMeta.sourceAccountId,
                           fileIds: failureMeta.fileIds,
+                          statusCode: failureMeta.statusCode,
+                          lastPollStatus: failureMeta.lastPollStatus,
+                          pollStatusCounts: failureMeta.pollStatusCounts,
+                          pollAttempts: failureMeta.pollAttempts,
+                          retryAfterMs: failureMeta.retryAfterMs,
+                          upstreamBodyPreview: failureMeta.upstreamBodyPreview,
                         };
                       });
                       return patchTurnImages(turn, nextImages, Date.now() - startedAt);
@@ -530,7 +548,7 @@ export async function runSubmit(ctx: SubmitContext) {
         turn.id === turnId ? applyTurnFailure(turn, message, failureMeta) : turn,
       ),
     }));
-    if (failureMeta.failureKind !== "accepted_pending") {
+    if (failureMeta.failureKind !== "accepted_pending" && failureMeta.failureKind !== "poll_rate_limited") {
       toast.error(message);
     }
   } finally {
