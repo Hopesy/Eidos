@@ -128,8 +128,8 @@ export function ComposerPanel({
     const uploadLabel = mode === "generate" ? "上传参考图" : "上传源图";
 
     return (
-        <div className="shrink-0 border-t border-stone-200/60 bg-white px-6 py-2.5 sm:px-10 sm:py-3 lg:px-12 dark:border-stone-700 dark:bg-stone-900">
-            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-2.5">
+        <div className="shrink-0 border-t border-stone-200/60 bg-white py-2.5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-2.5 px-6 sm:px-10 lg:px-12">
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <div className="inline-flex w-full shrink-0 rounded-full bg-stone-100 p-1 shadow-sm ring-1 ring-stone-900/5 sm:w-[156px] dark:bg-stone-800 dark:ring-stone-700">
                         {modeOptions.map((item) => (
