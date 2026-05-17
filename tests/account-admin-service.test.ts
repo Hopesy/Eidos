@@ -305,4 +305,74 @@ describe("account admin service", () => {
 
     assert.equal(missing, null);
   });
+
+  it("atomically updates quota when many markImageResult calls run concurrently", async () => {
+    let pending = Promise.resolve();
+    const lockedStore = (initialAccounts: AccountRecord[]) => {
+      let records = cloneAccounts(initialAccounts);
+      const dependencies: AccountAdminStoreDependencies = {
+        async readAccounts() {
+          return cloneAccounts(records);
+        },
+        async updateAccounts<T>(updater: (accounts: AccountRecord[]) => Promise<T> | T) {
+          const previous = pending;
+          let release!: () => void;
+          pending = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          await previous;
+          try {
+            const working = cloneAccounts(records);
+            const result = await updater(working);
+            records = cloneAccounts(working);
+            return result;
+          } finally {
+            release();
+          }
+        },
+      };
+      return {
+        dependencies,
+        records() {
+          return cloneAccounts(records);
+        },
+      };
+    };
+
+    const store = lockedStore([
+      createAccount({ access_token: "token-a", status: "正常", quota: 10, success: 0, fail: 0 }),
+    ]);
+    const service = createAccountAdminService(store.dependencies);
+
+    const concurrency = 10;
+    const results = await Promise.all(
+      Array.from({ length: concurrency }, () => service.markImageResult("token-a", true)),
+    );
+
+    assert.equal(results.length, concurrency);
+    for (const result of results) {
+      assert.ok(result, "every concurrent call should return the updated record");
+    }
+    const final = store.records().find((item) => item.access_token === "token-a");
+    assert.equal(final?.quota, 0);
+    assert.equal(final?.success, concurrency);
+    assert.equal(final?.fail, 0);
+    assert.equal(final?.status, "限流");
+  });
+
+  it("debits quota even on failure when upstream already consumed the request", async () => {
+    const store = createMemoryStore([
+      createAccount({ access_token: "token-post-submit", status: "正常", quota: 5, success: 1, fail: 0 }),
+      createAccount({ access_token: "token-pre-submit", status: "正常", quota: 5, success: 1, fail: 0 }),
+    ]);
+    const service = createAccountAdminService(store.dependencies);
+
+    const downloadFailure = await service.markImageResult("token-post-submit", false, { stage: "download" });
+    const submitFailure = await service.markImageResult("token-pre-submit", false, { stage: "submit" });
+
+    assert.equal(downloadFailure?.quota, 4, "download-stage failures should still debit quota");
+    assert.equal(downloadFailure?.fail, 1);
+    assert.equal(submitFailure?.quota, 5, "submit-stage failures should keep quota intact");
+    assert.equal(submitFailure?.fail, 1);
+  });
 });

@@ -146,7 +146,9 @@ export async function runAttachmentTaskWithPool(
         });
         throw error;
       }
-      await dependencies.markImageResult(requestToken, false);
+      await dependencies.markImageResult(requestToken, false, {
+        stage: error instanceof ImageGenerationError ? error.stage : undefined,
+      });
       const message = error instanceof Error ? error.message : String(error);
       lastErrors.push(message);
       lastImageError = error instanceof ImageGenerationError ? error : lastImageError;

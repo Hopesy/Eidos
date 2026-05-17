@@ -2,6 +2,7 @@ import { logger } from "@/server/logger";
 import { abortableDelay, isAbortError, throwIfAborted } from "@/server/image/abort";
 import {
   createImageError,
+  isInputBlockedMessage,
 } from "@/server/providers/openai/image-errors";
 
 import {
@@ -9,7 +10,12 @@ import {
   maskAccessToken,
   type ChatGptResultSession,
 } from "./result-shared";
-import { extractImageResult, isImageGenerationRefusalTitle } from "./result-parser";
+import {
+  buildNoImageReturnedError,
+  extractAssistantText,
+  extractImageResult,
+  isImageGenerationRefusalTitle,
+} from "./result-parser";
 
 const DEFAULT_POLL_DELAY_MS = 3000;
 export const POLL_MIN_WAIT_MS = 3000;
@@ -108,11 +114,12 @@ export async function pollImageResult(
   accessToken: string,
   deviceId: string,
   conversationId: string,
-  options: { maxWaitMs?: number; signal?: AbortSignal } = {},
+  options: { maxWaitMs?: number; signal?: AbortSignal; minCreateTimeMs?: number } = {},
 ) {
   throwIfAborted(options.signal);
   const started = Date.now();
   const maxWaitMs = normalizePollWaitMs(options.maxWaitMs ?? POLL_MAX_WAIT_MS);
+  const minCreateTimeMs = options.minCreateTimeMs;
   logger.info("openai-client", "poll-image-ids:start", {
     conversationId,
     deviceId,
@@ -169,7 +176,8 @@ export async function pollImageResult(
         });
         throw buildTitleRefusalError(conversationId, title);
       }
-      const result = extractImageResult(payload.mapping || {});
+      const mapping = payload.mapping || {};
+      const result = extractImageResult(mapping, { minCreateTimeMs });
       const fileIds = result.fileIds;
       if (fileIds.length > 0) {
         logger.info("openai-client", "poll-image-ids:done", {
@@ -179,6 +187,19 @@ export async function pollImageResult(
           elapsedMs: Date.now() - started,
         });
         return result;
+      }
+      const assistantText = extractAssistantText(mapping);
+      if (assistantText && isInputBlockedMessage(assistantText)) {
+        logger.warn("openai-client", "poll-image-ids:input-blocked", {
+          conversationId,
+          elapsedMs: Date.now() - started,
+          textPreview: assistantText.slice(0, 240),
+        });
+        const error = buildNoImageReturnedError(assistantText);
+        if (error.kind === "input_blocked") {
+          error.upstreamConversationId = conversationId || error.upstreamConversationId;
+          throw error;
+        }
       }
     } else {
       nonOkState.attempts += 1;
@@ -312,6 +333,8 @@ function buildDownloadHeaders(downloadUrl: string, accessToken: string, deviceId
   };
 }
 
+const MAX_RESULT_IMAGE_BYTES = 50 * 1024 * 1024;
+
 export async function downloadAsBase64(
   session: ChatGptResultSession,
   downloadUrl: string,
@@ -352,6 +375,21 @@ export async function downloadAsBase64(
     });
   }
 
+  const contentLength = Number(response.headers.get("content-length") || 0);
+  if (Number.isFinite(contentLength) && contentLength > MAX_RESULT_IMAGE_BYTES) {
+    logger.error("openai-client", "download-image:too-large", {
+      downloadUrl,
+      contentLength,
+      limit: MAX_RESULT_IMAGE_BYTES,
+    });
+    throw createImageError(`下载的图片超过单图大小上限 ${MAX_RESULT_IMAGE_BYTES} 字节`, {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: false,
+      stage: "download",
+    });
+  }
+
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length === 0) {
     logger.error("openai-client", "download-image:empty", {
@@ -361,6 +399,19 @@ export async function downloadAsBase64(
       kind: "result_fetch_failed",
       retryAction: "retry_download",
       retryable: true,
+      stage: "download",
+    });
+  }
+  if (bytes.length > MAX_RESULT_IMAGE_BYTES) {
+    logger.error("openai-client", "download-image:too-large", {
+      downloadUrl,
+      bytes: bytes.length,
+      limit: MAX_RESULT_IMAGE_BYTES,
+    });
+    throw createImageError(`下载的图片超过单图大小上限 ${MAX_RESULT_IMAGE_BYTES} 字节`, {
+      kind: "result_fetch_failed",
+      retryAction: "retry_download",
+      retryable: false,
       stage: "download",
     });
   }

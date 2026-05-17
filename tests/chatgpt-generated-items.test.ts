@@ -451,6 +451,372 @@ describe("chatgpt generated item collection", () => {
     );
   });
 
+  it("does not treat user-uploaded reference attachments as generated output when upstream refuses", async () => {
+    const refusalText = "非常抱歉，生成的图片可能违反了关于潜在欺诈或诈骗活动的防护限制。如果你认为此判断有误，请重试或修改提示语。";
+    const fetchedUrls: string[] = [];
+    const session = {
+      async fetch(url: string) {
+        fetchedUrls.push(url);
+        if (url.endsWith("/backend-api/conversation/conv-edit-refusal")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              node_user: {
+                message: {
+                  id: "msg-user",
+                  author: { role: "user" },
+                  create_time: 1,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [
+                      { asset_pointer: "sediment://file_upload_a" },
+                      { asset_pointer: "sediment://file_upload_b" },
+                    ],
+                  },
+                },
+              },
+              node_assistant: {
+                message: {
+                  id: "msg-assistant",
+                  author: { role: "assistant" },
+                  create_time: 2,
+                  content: {
+                    content_type: "text",
+                    parts: [refusalText],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-edit-refusal","message":{"id":"msg-pending","content":{"content_type":"text","parts":["正在处理图片"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    await assert.rejects(
+      () => collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a"),
+      (error) => {
+        assert.ok(error instanceof ImageGenerationError);
+        assert.equal(error.kind, "input_blocked");
+        assert.equal(error.retryAction, "revise_input");
+        assert.equal(error.retryable, false);
+        assert.equal(error.upstreamConversationId, "conv-edit-refusal");
+        assert.ok(!fetchedUrls.some((url) => url.includes("/attachment/file_upload_a")));
+        assert.ok(!fetchedUrls.some((url) => url.includes("/attachment/file_upload_b")));
+        return true;
+      },
+    );
+  });
+
+  it("does not extract image ids from unknown author roles even when sediment pointers are present", async () => {
+    const session = {
+      async fetch(url: string) {
+        if (url.endsWith("/backend-api/conversation/conv-unknown-role")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              node_system: {
+                message: {
+                  id: "msg-system",
+                  author: { role: "system" },
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_system_leak" }],
+                  },
+                },
+              },
+              node_unknown: {
+                message: {
+                  id: "msg-unknown",
+                  author: { role: "developer" },
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_unknown_leak" }],
+                  },
+                },
+              },
+              node_assistant_refusal: {
+                message: {
+                  id: "msg-refusal",
+                  author: { role: "assistant" },
+                  create_time: 99,
+                  content: {
+                    content_type: "text",
+                    parts: ["抱歉，我无法生成涉及性内容或色情暗示的图像。"],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-unknown-role","message":{"id":"msg-pending","content":{"content_type":"text","parts":["正在处理图片"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    await assert.rejects(
+      () => collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a"),
+      (error) => {
+        assert.ok(error instanceof ImageGenerationError);
+        assert.equal(error.kind, "input_blocked");
+        return true;
+      },
+    );
+  });
+
+  it("returns only the latest turn's generated file ids when the conversation history has earlier turns", async () => {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const session = {
+      async fetch(url: string) {
+        if (url.endsWith("/backend-api/conversation/conv-multi-turn")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              old_tool: {
+                message: {
+                  id: "msg-old",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  // Five minutes ago — clearly a previous turn.
+                  create_time: nowSec - 300,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_previous_turn" }],
+                  },
+                },
+              },
+              new_tool: {
+                message: {
+                  id: "msg-new",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  create_time: nowSec,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_current_turn" }],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.includes("/attachment/file_current_turn/download")) {
+          return new Response(JSON.stringify({ download_url: "https://download.local/current.png" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url === "https://download.local/current.png") {
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-multi-turn","message":{"id":"msg-progress","content":{"content_type":"text","parts":["正在处理图片"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    assert.equal(result.data.length, 1);
+    assert.equal(result.data[0]?.file_id, "sed:file_current_turn");
+    assert.equal(result.data[0]?.parent_message_id, "msg-new");
+  });
+
+  it("does not return a previous turn's tool message when the new image has not been generated yet", async () => {
+    // The toughest variant of the multi-turn pollution bug: the new image is still in flight,
+    // so the polled mapping only contains the *previous* turn's tool message. Without a submit-
+    // time baseline the runner would happily treat that stale image as today's result. The
+    // submit-time baseline forces it to keep polling instead.
+    const nowSec = Math.floor(Date.now() / 1000);
+    let pollCount = 0;
+    const downloadedIds: string[] = [];
+    const session = {
+      async fetch(url: string) {
+        if (url.endsWith("/backend-api/conversation/conv-stale-only")) {
+          pollCount += 1;
+          // First two polls only show the previous turn; the third poll surfaces the new
+          // tool message (as it would once the upstream actually finishes generating).
+          if (pollCount >= 3) {
+            return new Response(JSON.stringify({
+              mapping: {
+                stale_tool: {
+                  message: {
+                    id: "msg-stale",
+                    author: { role: "tool" },
+                    metadata: { async_task_type: "image_gen" },
+                    // 30 minutes earlier — must be ignored.
+                    create_time: nowSec - 1800,
+                    content: {
+                      content_type: "multimodal_text",
+                      parts: [{ asset_pointer: "sediment://file_stale" }],
+                    },
+                  },
+                },
+                fresh_tool: {
+                  message: {
+                    id: "msg-fresh",
+                    author: { role: "tool" },
+                    metadata: { async_task_type: "image_gen" },
+                    create_time: nowSec,
+                    content: {
+                      content_type: "multimodal_text",
+                      parts: [{ asset_pointer: "sediment://file_fresh" }],
+                    },
+                  },
+                },
+              },
+            }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          return new Response(JSON.stringify({
+            mapping: {
+              stale_tool: {
+                message: {
+                  id: "msg-stale",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  create_time: nowSec - 1800,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_stale" }],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        const matchAttachment = /\/attachment\/([^/]+)\/download/.exec(url);
+        if (matchAttachment) {
+          return new Response(JSON.stringify({ download_url: `https://download.local/${matchAttachment[1]}.png` }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.startsWith("https://download.local/")) {
+          const file = url.slice("https://download.local/".length).replace(/\.png$/, "");
+          downloadedIds.push(file);
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-stale-only","message":{"id":"msg-progress","content":{"content_type":"text","parts":["正在处理图片"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    assert.equal(result.data.length, 1);
+    assert.equal(result.data[0]?.file_id, "sed:file_fresh");
+    assert.deepEqual(downloadedIds, ["file_fresh"], "stale tool message must never be downloaded");
+    assert.ok(pollCount >= 3, "polling must keep going until the fresh tool message appears");
+  });
+
+  it("keeps every image of a multi-image turn even when their tool messages stream tens of seconds apart", async () => {
+    // Reproduces the "slow follow-up image" case within the submit-time baseline window: a
+    // multi-image turn whose extra slots finish a few dozen seconds after the first one. The
+    // gap-based clustering keeps them together as one current turn while an older message from
+    // a previous turn is discarded.
+    const nowSec = Math.floor(Date.now() / 1000);
+    const downloadedIds: string[] = [];
+    const session = {
+      async fetch(url: string) {
+        if (url.endsWith("/backend-api/conversation/conv-slow-batch")) {
+          return new Response(JSON.stringify({
+            mapping: {
+              fast_image: {
+                message: {
+                  id: "msg-fast",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  // 20 seconds before the slow one — still within the current turn baseline.
+                  create_time: nowSec - 20,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_fast" }],
+                  },
+                },
+              },
+              slow_image: {
+                message: {
+                  id: "msg-slow",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  create_time: nowSec,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_slow" }],
+                  },
+                },
+              },
+              long_idle_then_new_turn: {
+                message: {
+                  id: "msg-prev",
+                  author: { role: "tool" },
+                  metadata: { async_task_type: "image_gen" },
+                  // 10 minutes earlier — must be discarded as a previous turn.
+                  create_time: nowSec - 600,
+                  content: {
+                    content_type: "multimodal_text",
+                    parts: [{ asset_pointer: "sediment://file_prev_turn" }],
+                  },
+                },
+              },
+            },
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        const matchAttachment = /\/attachment\/([^/]+)\/download/.exec(url);
+        if (matchAttachment) {
+          return new Response(JSON.stringify({ download_url: `https://download.local/${matchAttachment[1]}.png` }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        if (url.startsWith("https://download.local/")) {
+          const file = url.slice("https://download.local/".length).replace(/\.png$/, "");
+          downloadedIds.push(file);
+          return new Response(Buffer.from("png-binary"), { status: 200 });
+        }
+        throw new Error(`unexpected url: ${url}`);
+      },
+    };
+    const raw = [
+      'data: {"conversation_id":"conv-slow-batch","message":{"id":"msg-progress","content":{"content_type":"text","parts":["正在处理图片"]}}}',
+      "data: [DONE]",
+    ].join("\n");
+
+    const result = await collectGeneratedItems(session, "token-a", "device-a", raw, "prompt-a");
+
+    const fileIds = result.data.map((item) => item.file_id).sort();
+    assert.deepEqual(fileIds, ["sed:file_fast", "sed:file_slow"]);
+    assert.ok(!downloadedIds.includes("file_prev_turn"), "previous turn file must not be downloaded");
+  });
+
+
   it("does not fall back to polling for non-recoverable download failures", async () => {
     let pollCalled = false;
     const session = {

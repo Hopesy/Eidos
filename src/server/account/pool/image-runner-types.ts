@@ -1,11 +1,16 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import type { ImagePipelineStage } from "@/server/providers/openai/image-errors";
 import type { AccountRecord } from "@/server/types";
 
 export type AccountPoolImageRunnerDependencies = {
   getAvailableAccessToken(excludedTokens?: Set<string>): Promise<string>;
   getAccount(accessToken: string): Promise<AccountRecord | null>;
   getAccountById(accountId: string): Promise<AccountRecord | null>;
-  markImageResult(accessToken: string, success: boolean): Promise<unknown>;
+  markImageResult(
+    accessToken: string,
+    success: boolean,
+    options?: { stage?: ImagePipelineStage },
+  ): Promise<unknown>;
   removeToken(accessToken: string): Promise<unknown>;
 };
 

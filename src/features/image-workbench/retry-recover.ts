@@ -90,21 +90,34 @@ export function buildSharedRecoverableRetryResult(
 }
 
 function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, next: ImageConversationTurn) {
-  if (!next.images.some((image) => image.status === "error")) {
+  const errorImages = next.images.filter((image) => image.status === "error");
+  if (errorImages.length === 0) {
     return next;
   }
 
+  // If any error slot carries an image-level failureKind, pick the most severe one to drive
+  // the turn's retry guidance. Otherwise fall back to whatever the previous turn was reporting,
+  // since partial-success placeholders ("接口没有返回图片数据") leave the slots without metadata.
+  const worstImage = errorImages
+    .filter((image) => Boolean(image.failureKind))
+    .sort((a, b) => failureKindSeverity(a.failureKind) - failureKindSeverity(b.failureKind))[0];
+
+  const failureKind = next.failureKind ?? worstImage?.failureKind ?? previous.failureKind;
+  const retryAction = next.retryAction ?? worstImage?.retryAction ?? previous.retryAction;
+  const retryable = next.retryable ?? worstImage?.retryable ?? previous.retryable;
+  const stage = next.stage ?? worstImage?.stage ?? previous.stage;
+
   return {
     ...next,
-    failureKind: next.failureKind ?? previous.failureKind,
-    retryAction: next.retryAction ?? previous.retryAction,
-    retryable: next.retryable ?? previous.retryable,
-    stage: next.stage ?? previous.stage,
-    upstreamConversationId: next.upstreamConversationId ?? previous.upstreamConversationId,
-    upstreamParentMessageId: next.upstreamParentMessageId ?? previous.upstreamParentMessageId,
+    failureKind,
+    retryAction,
+    retryable,
+    stage,
+    upstreamConversationId: next.upstreamConversationId ?? worstImage?.upstreamConversationId ?? previous.upstreamConversationId,
+    upstreamParentMessageId: next.upstreamParentMessageId ?? worstImage?.upstreamParentMessageId ?? previous.upstreamParentMessageId,
     upstreamResponseId: next.upstreamResponseId ?? previous.upstreamResponseId,
     imageGenerationCallId: next.imageGenerationCallId ?? previous.imageGenerationCallId,
-    sourceAccountId: next.sourceAccountId ?? previous.sourceAccountId,
+    sourceAccountId: next.sourceAccountId ?? worstImage?.sourceAccountId ?? previous.sourceAccountId,
     fileIds: next.fileIds ?? previous.fileIds,
     statusCode: next.statusCode ?? previous.statusCode,
     lastPollStatus: next.lastPollStatus ?? previous.lastPollStatus,
@@ -113,6 +126,25 @@ function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, ne
     retryAfterMs: next.retryAfterMs ?? previous.retryAfterMs,
     upstreamBodyPreview: next.upstreamBodyPreview ?? previous.upstreamBodyPreview,
   };
+}
+
+// Ordered most-severe → least-severe so we pick the worst failure kind when several images
+// fail with different reasons in the same retry round.
+const FAILURE_KIND_SEVERITY_ORDER = [
+  "account_blocked",
+  "input_blocked",
+  "source_invalid",
+  "service_unavailable",
+  "submit_failed",
+  "result_fetch_failed",
+  "poll_rate_limited",
+  "accepted_pending",
+  "unknown",
+];
+
+function failureKindSeverity(kind: string | undefined) {
+  const index = FAILURE_KIND_SEVERITY_ORDER.indexOf(kind ?? "unknown");
+  return index === -1 ? FAILURE_KIND_SEVERITY_ORDER.length : index;
 }
 
 function buildTurnContinuation(turn: ImageConversationTurn): ImageConversationContinuation | null {
@@ -225,35 +257,35 @@ export async function runRetryTurn(
   activeRetryKeys.add(retryKey);
 
   const turnId = turn.id;
-  const startedAt = Date.now();
-  const abortController = new AbortController();
-  const signal = abortController.signal;
-  const upstreamContext = buildTurnContinuation({
-    ...turn,
-    upstreamConversationId: effectiveUpstreamConversationId,
-    upstreamParentMessageId: effectiveUpstreamParentMessageId,
-    sourceAccountId: effectiveSourceAccountId,
-  });
-  const retryImageIds = retryIndexes.map((index) => turn.images[index]?.id).filter((id): id is string => Boolean(id));
-  startImageTask({
-    taskId: retryKey,
-    conversationId,
-    turnId,
-    imageIds: retryImageIds,
-    mode: turnMode,
-    count: retryIndexes.length,
-    variant: "standard",
-    startedAt,
-  });
-  ctx.retryAbortControllersRef.current.set(retryKey, {
-    controller: abortController,
-    conversationId,
-    turnId,
-    imageIds: retryImageIds,
-  });
-  ctx.focusConversation(conversationId);
-
   try {
+    const startedAt = Date.now();
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+    const upstreamContext = buildTurnContinuation({
+      ...turn,
+      upstreamConversationId: effectiveUpstreamConversationId,
+      upstreamParentMessageId: effectiveUpstreamParentMessageId,
+      sourceAccountId: effectiveSourceAccountId,
+    });
+    const retryImageIds = retryIndexes.map((index) => turn.images[index]?.id).filter((id): id is string => Boolean(id));
+    startImageTask({
+      taskId: retryKey,
+      conversationId,
+      turnId,
+      imageIds: retryImageIds,
+      mode: turnMode,
+      count: retryIndexes.length,
+      variant: "standard",
+      startedAt,
+    });
+    ctx.retryAbortControllersRef.current.set(retryKey, {
+      controller: abortController,
+      conversationId,
+      turnId,
+      imageIds: retryImageIds,
+    });
+    ctx.focusConversation(conversationId);
+
     await ctx.updateConversation(conversationId, (current) => ({
       ...current,
       turns: (current.turns ?? []).map((item) => {

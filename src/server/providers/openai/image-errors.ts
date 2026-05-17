@@ -158,11 +158,13 @@ export function isInputBlockedMessage(message: string) {
   return (
     normalized.includes("content policy") ||
     normalized.includes("content_policy_violation") ||
-    normalized.includes("safety") ||
-    normalized.includes("policy") ||
+    normalized.includes("内容审核拦截") ||
+    normalized.includes("safety system") ||
+    normalized.includes("violates our") ||
+    normalized.includes("violation of policy") ||
     normalized.includes("unsupported") ||
     normalized.includes("invalid_image") ||
-    normalized.includes("bad request") ||
+    normalized.includes("invalid image") ||
     normalized.includes("cannot generate") ||
     normalized.includes("unable to generate") ||
     normalized.includes("抱歉，我不能") ||
@@ -195,10 +197,35 @@ export function isAccountBlockedMessage(message: string) {
   );
 }
 
-export function buildHttpImageError(message: string, status: number, stage: ImagePipelineStage, fallbackKind: ImageFailureKind = "submit_failed") {
+const MAX_RETRY_AFTER_MS = 5 * 60 * 1000;
+
+export function parseRetryAfterHeader(value: string | null | undefined) {
+  const normalized = String(value || "").trim();
+  if (!normalized) {
+    return undefined;
+  }
+  const seconds = Number(normalized);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(MAX_RETRY_AFTER_MS, Math.round(seconds * 1000));
+  }
+  const retryDate = Date.parse(normalized);
+  if (!Number.isNaN(retryDate)) {
+    return Math.min(MAX_RETRY_AFTER_MS, Math.max(0, retryDate - Date.now()));
+  }
+  return undefined;
+}
+
+export function buildHttpImageError(
+  message: string,
+  status: number,
+  stage: ImagePipelineStage,
+  fallbackKind: ImageFailureKind = "submit_failed",
+  options: { retryAfterMs?: number } = {},
+) {
   const normalizedMessage = normalizeUpstreamErrorMessage(message);
   const isApiServiceStage = stage === "api_service";
   const inputBlocked = isInputBlockedMessage(normalizedMessage);
+  const retryAfterMs = options.retryAfterMs;
   if (status === 401 || status === 429) {
     if (isApiServiceStage && status === 401) {
       return createImageError(`图像 API 认证失败：${normalizedMessage}`, {
@@ -216,6 +243,7 @@ export function buildHttpImageError(message: string, status: number, stage: Imag
         retryable: true,
         stage,
         statusCode: status,
+        retryAfterMs,
       });
     }
     return createImageError(normalizedMessage, {
@@ -224,6 +252,7 @@ export function buildHttpImageError(message: string, status: number, stage: Imag
       retryable: true,
       stage,
       statusCode: status,
+      retryAfterMs,
     });
   }
   if (isApiServiceStage && isApiServiceUnavailableMessage(normalizedMessage)) {
@@ -245,13 +274,16 @@ export function buildHttpImageError(message: string, status: number, stage: Imag
     });
   }
   if (isApiServiceStage && status === 403) {
-    return createImageError(`图像 API 服务拒绝访问：${normalizedMessage}`, {
-      kind: "account_blocked",
-      retryAction: "none",
-      retryable: false,
-      stage,
-      statusCode: status,
-    });
+    return createImageError(
+      `图像 API 服务拒绝访问，请检查 API key 与 baseUrl 配置：${normalizedMessage}`,
+      {
+        kind: "account_blocked",
+        retryAction: "none",
+        retryable: false,
+        stage,
+        statusCode: status,
+      },
+    );
   }
   if (isApiServiceStage && status >= 500) {
     return createImageError(normalizedMessage || "图像 API 服务暂时不可用", {

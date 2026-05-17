@@ -12,6 +12,9 @@ export type AccountSelector = {
 
 export function createAccountSelector(dependencies: AccountSelectorDependencies): AccountSelector {
   let nextIndex = 0;
+  // Selection must be serialized so that concurrent requests do not advance nextIndex
+  // simultaneously and pick the same account.
+  let selectionChain: Promise<unknown> = Promise.resolve();
 
   async function trySelectFromCandidates(candidates: AccountRecord[], excludedTokens?: Set<string>) {
     const available = [...candidates];
@@ -29,6 +32,31 @@ export function createAccountSelector(dependencies: AccountSelectorDependencies)
     return null;
   }
 
+  async function selectExclusively(excludedTokens?: Set<string>) {
+    const accounts = await dependencies.listRecords();
+    // 过滤：未被禁用 + 未在排除集合中（quota=0 的新导入账号也允许参与，刷新后再判断实际余量）
+    const candidates = accounts.filter(
+      (item) => item.status !== "禁用" && !excludedTokens?.has(item.access_token),
+    );
+    if (candidates.length === 0) {
+      throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
+    }
+
+    // 优先使用已有 quota 的账号（避免对每个新账号都发起远端请求拖慢速度）
+    const withQuota = candidates.filter((item) => item.quota > 0);
+    const withoutQuota = candidates.filter((item) => item.quota <= 0);
+    const batches = withQuota.length > 0 ? [withQuota, withoutQuota] : [withoutQuota];
+
+    for (const batch of batches) {
+      const accessToken = await trySelectFromCandidates(batch, excludedTokens);
+      if (accessToken) {
+        return accessToken;
+      }
+    }
+
+    throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
+  }
+
   return {
     reset(accountCount: number) {
       if (accountCount > 0) {
@@ -39,28 +67,18 @@ export function createAccountSelector(dependencies: AccountSelectorDependencies)
     },
 
     async getAvailableAccessToken(excludedTokens?: Set<string>) {
-      const accounts = await dependencies.listRecords();
-      // 过滤：未被禁用 + 未在排除集合中（quota=0 的新导入账号也允许参与，刷新后再判断实际余量）
-      const candidates = accounts.filter(
-        (item) => item.status !== "禁用" && !excludedTokens?.has(item.access_token),
-      );
-      if (candidates.length === 0) {
-        throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
+      const previous = selectionChain;
+      let release!: () => void;
+      const current = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      selectionChain = current;
+      await previous.catch(() => undefined);
+      try {
+        return await selectExclusively(excludedTokens);
+      } finally {
+        release();
       }
-
-      // 优先使用已有 quota 的账号（避免对每个新账号都发起远端请求拖慢速度）
-      const withQuota = candidates.filter((item) => item.quota > 0);
-      const withoutQuota = candidates.filter((item) => item.quota <= 0);
-      const batches = withQuota.length > 0 ? [withQuota, withoutQuota] : [withoutQuota];
-
-      for (const batch of batches) {
-        const accessToken = await trySelectFromCandidates(batch, excludedTokens);
-        if (accessToken) {
-          return accessToken;
-        }
-      }
-
-      throw new Error("暂无可用账号，请先在账号管理页面添加并启用账号");
     },
   };
 }

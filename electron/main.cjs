@@ -18,6 +18,8 @@ const {
 let serverProcess = null;
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
+/** @type {BrowserWindow | null} */
+let splashWindow = null;
 let serverPort = 0;
 let isQuitting = false;
 let updateCheckPromise = null;
@@ -98,6 +100,57 @@ function buildStandaloneNodePath(standaloneDir) {
   }
 }
 
+function createSplashWindow() {
+  const splash = new BrowserWindow({
+    width: 360,
+    height: 240,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: true,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: false,
+    backgroundColor: "#00000000",
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+    },
+  });
+
+  splash.removeMenu();
+  splash.loadFile(path.join(__dirname, "splash.html")).catch(() => undefined);
+  splash.once("ready-to-show", () => {
+    splash.show();
+  });
+  splash.on("closed", () => {
+    if (splashWindow === splash) {
+      splashWindow = null;
+    }
+  });
+
+  splashWindow = splash;
+  return splash;
+}
+
+function closeSplashWindow() {
+  if (!splashWindow) {
+    return;
+  }
+  const splash = splashWindow;
+  splashWindow = null;
+  try {
+    if (!splash.isDestroyed()) {
+      splash.close();
+    }
+  } catch {
+    // ignore — splash might be mid-destruction
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1480,
@@ -115,7 +168,9 @@ function createWindow() {
   });
 
   mainWindow.once("ready-to-show", () => {
+    closeSplashWindow();
     mainWindow?.show();
+    mainWindow?.focus();
   });
 
   mainWindow.on("closed", () => {
@@ -556,12 +611,14 @@ app.on("window-all-closed", () => {
 });
 
 app.whenReady().then(async () => {
+  createSplashWindow();
   try {
     const win = createWindow();
     await startServer();
     await win.loadURL(`http://127.0.0.1:${serverPort}/image`);
     void checkForUpdates();
   } catch (error) {
+    closeSplashWindow();
     dialog.showErrorBox(
       "Eidos 启动失败",
       error instanceof Error ? error.message : String(error),

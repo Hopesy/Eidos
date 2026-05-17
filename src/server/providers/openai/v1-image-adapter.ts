@@ -5,6 +5,7 @@ import {
   ImageGenerationError,
   buildHttpImageError,
   createImageError,
+  parseRetryAfterHeader,
 } from "@/server/providers/openai/image-errors";
 
 import {
@@ -83,7 +84,13 @@ export async function generateImageResultWithApiService(
         status: response.status,
         bodyPreview: bodyText,
       });
-      throw buildHttpImageError(bodyText || `image api failed: ${response.status}`, response.status, "api_service");
+      throw buildHttpImageError(
+        bodyText || `image api failed: ${response.status}`,
+        response.status,
+        "api_service",
+        "submit_failed",
+        { retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")) },
+      );
     }
 
     const payload = (await response.json()) as {
@@ -225,7 +232,13 @@ export async function editImageResultWithApiService(
         status: response.status,
         bodyPreview: bodyText,
       });
-      throw buildHttpImageError(bodyText || `image edit api failed: ${response.status}`, response.status, "api_service");
+      throw buildHttpImageError(
+        bodyText || `image edit api failed: ${response.status}`,
+        response.status,
+        "api_service",
+        "submit_failed",
+        { retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")) },
+      );
     }
 
     const payload = (await response.json()) as {

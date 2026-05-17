@@ -5,6 +5,8 @@ import { abortableDelay } from "@/server/image/abort";
 
 export const API_MAX_ATTEMPTS = 3;
 const API_RETRY_BASE_DELAY_MS = 1500;
+const RATE_LIMIT_FLOOR_MS = 15000;
+const RATE_LIMIT_MAX_MS = 60000;
 
 export function isRetryableApiError(error: unknown) {
   if (error instanceof ImageGenerationError) {
@@ -19,11 +21,11 @@ export function isRetryableApiError(error: unknown) {
   }
   if (
     normalized.includes("content policy") ||
-    normalized.includes("safety") ||
-    normalized.includes("policy") ||
+    normalized.includes("content_policy_violation") ||
+    normalized.includes("safety system") ||
     normalized.includes("unsupported") ||
     normalized.includes("invalid_image") ||
-    normalized.includes("bad request") ||
+    normalized.includes("invalid image") ||
     normalized.includes("400") ||
     normalized.includes("401") ||
     normalized.includes("403")
@@ -53,7 +55,11 @@ export function getApiRetryDelayMs(attempt: number, error: unknown) {
   const normalizedAttempt = Math.max(1, attempt);
   if (error instanceof ImageGenerationError) {
     if (error.statusCode === 429) {
-      return 4000 * normalizedAttempt;
+      if (typeof error.retryAfterMs === "number" && error.retryAfterMs > 0) {
+        return Math.min(RATE_LIMIT_MAX_MS, Math.max(RATE_LIMIT_FLOOR_MS, error.retryAfterMs));
+      }
+      const escalated = RATE_LIMIT_FLOOR_MS * (2 ** (normalizedAttempt - 1));
+      return Math.min(RATE_LIMIT_MAX_MS, escalated);
     }
     if (error.stage === "upload") {
       return 1200 * normalizedAttempt;

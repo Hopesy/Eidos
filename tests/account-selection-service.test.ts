@@ -112,4 +112,41 @@ describe("account selection service", () => {
       /暂无可用账号，请先在账号管理页面添加并启用账号/,
     );
   });
+
+  it("serializes concurrent selections so the round-robin index does not desync", async () => {
+    const refreshCalls: string[] = [];
+    let resolveGate: (() => void) | null = null;
+    const gate = new Promise<void>((resolve) => {
+      resolveGate = resolve;
+    });
+
+    const selector = createAccountSelector({
+      async listRecords() {
+        return [
+          createAccount({ access_token: "token-a", quota: 1 }),
+          createAccount({ access_token: "token-b", quota: 1 }),
+        ];
+      },
+      async refreshAccountState(accessToken: string) {
+        refreshCalls.push(accessToken);
+        // Hold the first refresh open until both concurrent requests have queued up,
+        // proving the second call waits its turn instead of advancing nextIndex on top of the first.
+        if (refreshCalls.length === 1) {
+          await gate;
+        }
+        return createAccount({ access_token: accessToken, quota: 1, status: "正常" });
+      },
+    });
+
+    const first = selector.getAvailableAccessToken();
+    const second = selector.getAvailableAccessToken();
+    await Promise.resolve();
+    await Promise.resolve();
+    resolveGate?.();
+    const [firstToken, secondToken] = await Promise.all([first, second]);
+
+    assert.notEqual(firstToken, secondToken, "concurrent selections must not pick the same account");
+    assert.deepEqual(new Set([firstToken, secondToken]), new Set(["token-a", "token-b"]));
+    assert.deepEqual(refreshCalls, ["token-a", "token-b"]);
+  });
 });

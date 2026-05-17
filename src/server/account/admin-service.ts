@@ -1,5 +1,6 @@
 import { createAccountId, resolveAccountId } from "@/server/account-id";
 import { normalizeAccountType } from "@/server/account/type-policy";
+import type { ImagePipelineStage } from "@/server/providers/openai/image-errors";
 import { updateAccounts, readAccounts } from "@/server/repositories/account";
 import type { AccountRecord, AccountStatus, PublicAccount } from "@/server/types";
 
@@ -243,26 +244,45 @@ export function createAccountAdminService(dependencies: AccountAdminStoreDepende
     return updated;
   }
 
-  async function markImageResult(accessToken: string, success: boolean) {
-    const current = await getAccount(accessToken);
-    if (!current) {
-      return null;
-    }
+  async function markImageResult(
+    accessToken: string,
+    success: boolean,
+    options: { stage?: ImagePipelineStage } = {},
+  ) {
+    const normalizedToken = cleanToken(accessToken);
+    // Upstream debits the account quota as soon as the request is accepted (poll/download stage),
+    // so failures discovered after submit should still consume one quota slot. Only failures
+    // detected before the upstream accepted the request are quota-neutral.
+    const stage = options.stage;
+    const upstreamConsumed = success || stage === "poll" || stage === "download";
+    let updated: AccountRecord | null = null;
 
-    return updateAccount(accessToken, {
-      ...current,
-      last_used_at: new Date().toISOString(),
-      success: success ? current.success + 1 : current.success,
-      fail: success ? current.fail : current.fail + 1,
-      quota: success ? Math.max(0, current.quota - 1) : current.quota,
-      status: success
-        ? current.quota - 1 <= 0
-          ? "限流"
-          : current.status === "限流"
-            ? "正常"
-            : current.status
-        : current.status,
-    });
+    await saveTransformed((accounts) =>
+      accounts.map((account) => {
+        if (account.access_token !== normalizedToken) {
+          return account;
+        }
+        const nextQuota = upstreamConsumed ? Math.max(0, account.quota - 1) : account.quota;
+        updated = normalizeAccount({
+          ...account,
+          access_token: normalizedToken,
+          last_used_at: new Date().toISOString(),
+          success: success ? account.success + 1 : account.success,
+          fail: success ? account.fail : account.fail + 1,
+          quota: nextQuota,
+          status: success
+            ? nextQuota <= 0
+              ? "限流"
+              : account.status === "限流"
+                ? "正常"
+                : account.status
+            : account.status,
+        });
+        return updated ?? account;
+      }),
+    );
+
+    return updated;
   }
 
   return {

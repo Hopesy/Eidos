@@ -10,7 +10,9 @@ import {
   isApiServiceUnavailableMessage,
   isInputBlockedMessage,
   normalizeUpstreamErrorMessage,
+  parseRetryAfterHeader,
 } from "../src/server/providers/openai/image-errors.ts";
+import { getApiRetryDelayMs } from "../src/server/image/api-service/task-retry-policy.ts";
 import { resolveImageErrorStatus } from "../src/server/image/error-status.ts";
 
 describe("openai image error policy", () => {
@@ -32,6 +34,10 @@ describe("openai image error policy", () => {
       isInputBlockedMessage("非常抱歉，生成的图片可能违反了关于潜在欺诈或诈骗活动的防护限制。如果你认为此判断有误，请重试或修改提示语。"),
       true,
     );
+    // Legitimate prompts containing the standalone word "policy" or "safety" must not be blocked.
+    assert.equal(isInputBlockedMessage("Illustration about IT security policy review"), false);
+    assert.equal(isInputBlockedMessage("Safety helmet on a construction worker"), false);
+    assert.equal(isInputBlockedMessage("HTTP 400 bad request returned by upstream"), false);
     assert.equal(isInputBlockedMessage("<!DOCTYPE html><html><head><title>Just a moment...</title><meta http-equiv=\"content-security-policy\"></head></html>"), false);
     assert.equal(isAccountBlockedMessage("token_invalidated"), true);
     assert.equal(isAccountBlockedMessage("HTTP 429 quota exceeded"), true);
@@ -144,5 +150,45 @@ describe("openai image error policy", () => {
     });
 
     assert.equal(resolveImageErrorStatus(error), 429);
+  });
+
+  it("propagates Retry-After hints into ImageGenerationError metadata", () => {
+    assert.equal(parseRetryAfterHeader("10"), 10000);
+    assert.equal(parseRetryAfterHeader("0"), 0);
+    assert.equal(parseRetryAfterHeader(""), undefined);
+    assert.equal(parseRetryAfterHeader(null), undefined);
+
+    const rateLimited = buildHttpImageError("slow down", 429, "api_service", "submit_failed", {
+      retryAfterMs: 7000,
+    });
+    assert.equal(rateLimited.kind, "submit_failed");
+    assert.equal(rateLimited.statusCode, 429);
+    assert.equal(rateLimited.retryAfterMs, 7000);
+  });
+
+  it("escalates 429 retry delay through floor/ceiling and honors Retry-After hints", () => {
+    const baseError = buildHttpImageError("slow down", 429, "api_service");
+    assert.equal(getApiRetryDelayMs(1, baseError), 15000);
+    assert.equal(getApiRetryDelayMs(2, baseError), 30000);
+    assert.equal(getApiRetryDelayMs(3, baseError), 60000);
+    assert.equal(getApiRetryDelayMs(10, baseError), 60000);
+
+    const hinted = buildHttpImageError("slow down", 429, "api_service", "submit_failed", {
+      retryAfterMs: 22000,
+    });
+    assert.equal(getApiRetryDelayMs(1, hinted), 22000);
+
+    const tinyHint = buildHttpImageError("slow down", 429, "api_service", "submit_failed", {
+      retryAfterMs: 500,
+    });
+    assert.equal(getApiRetryDelayMs(1, tinyHint), 15000);
+  });
+
+  it("marks api_service 403 as non-retryable with a config-guidance message", () => {
+    const forbidden = buildHttpImageError("permission denied", 403, "api_service");
+    assert.equal(forbidden.kind, "account_blocked");
+    assert.equal(forbidden.retryAction, "none");
+    assert.equal(forbidden.retryable, false);
+    assert.match(forbidden.message, /请检查 API key 与 baseUrl 配置/);
   });
 });

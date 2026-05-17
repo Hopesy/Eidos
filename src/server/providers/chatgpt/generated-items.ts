@@ -10,6 +10,7 @@ import {
   downloadAsBase64,
   fetchDownloadUrl,
   normalizePollWaitMs,
+  POLL_MIN_WAIT_MS,
   pollImageResult,
 } from "./result-download-adapter";
 import {
@@ -39,6 +40,11 @@ type GeneratedDownloadFailure = {
 
 const MAX_DOWNLOAD_RETRIES = 3;
 const DOWNLOAD_FALLBACK_POLL_MS = 15000;
+// Allow some slack between local clock and upstream server clock when computing the
+// "tool messages created before this point are previous turns" baseline. 30 seconds covers
+// realistic NTP drift and the small delay between user submit and the upstream creating its
+// own message records.
+const TURN_BASELINE_SLACK_MS = 30_000;
 
 function getFailureMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error || "unknown download error");
@@ -182,6 +188,7 @@ async function downloadGeneratedItemsWithConversationFallback(
   parentMessageId?: string,
   fallbackWaitMs = DOWNLOAD_FALLBACK_POLL_MS,
   signal?: AbortSignal,
+  minCreateTimeMs?: number,
 ) {
   const firstAttempt = await downloadGeneratedItems(
     session,
@@ -209,7 +216,11 @@ async function downloadGeneratedItemsWithConversationFallback(
   let polledFileIds: string[];
   let effectiveParentMessageId = parentMessageId;
   try {
-    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs, signal });
+    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, {
+      maxWaitMs: fallbackWaitMs,
+      signal,
+      minCreateTimeMs,
+    });
     polledFileIds = polled.fileIds;
     effectiveParentMessageId = polled.parentMessageId || effectiveParentMessageId;
   } catch (error) {
@@ -269,6 +280,11 @@ export async function collectGeneratedItems(
   options: { signal?: AbortSignal } = {},
 ) {
   throwIfAborted(options.signal);
+  // Anchor "current turn" to right around now. Any tool message older than this is from a
+  // previous turn (or earlier history) — required because while the new image is still
+  // generating, the conversation mapping only contains the *previous* turn's tool messages
+  // and we would otherwise mistake them for this turn's result.
+  const turnBaselineMs = Date.now() - TURN_BASELINE_SLACK_MS;
   const parsed = parseSsePayload(rawResponseText);
   const conversationId = parsed.conversationId || "";
   let parentMessageId = parsed.parentMessageId || "";
@@ -300,7 +316,10 @@ export async function collectGeneratedItems(
     }
   }
   if (conversationId && fileIds.length === 0) {
-    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, { signal: options.signal });
+    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, {
+      signal: options.signal,
+      minCreateTimeMs: turnBaselineMs,
+    });
     fileIds = polled.fileIds;
     parentMessageId = polled.parentMessageId || parentMessageId;
   }
@@ -340,6 +359,7 @@ export async function collectGeneratedItems(
     parentMessageId,
     undefined,
     options.signal,
+    turnBaselineMs,
   );
 
   logger.info("openai-client", "generate-image:done", {
@@ -400,8 +420,12 @@ export async function recoverGeneratedItems(
     const started = Date.now();
     while (Date.now() - started < waitMs) {
       throwIfAborted(recovery.signal);
+      const remaining = waitMs - (Date.now() - started);
+      if (remaining < POLL_MIN_WAIT_MS) {
+        break;
+      }
       const polled = await pollImageResult(session, accessToken, deviceId, conversationId, {
-        maxWaitMs: Math.max(3000, waitMs - (Date.now() - started)),
+        maxWaitMs: remaining,
         signal: recovery.signal,
       });
       fileIds = polled.fileIds;

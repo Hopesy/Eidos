@@ -5,6 +5,7 @@ import { createAbortError, createLinkedAbortController, isAbortError } from "@/s
 import {
   buildHttpImageError,
   createImageError,
+  parseRetryAfterHeader,
 } from "@/server/providers/openai/image-errors";
 import { captureBuildInfoFromHtml, getPowConfig, getRequirementsToken } from "@/server/providers/openai/proof";
 import type { AccountRecord } from "@/server/types";
@@ -223,7 +224,13 @@ export async function getChatRequirements(
       status: response.status,
       bodyPreview: bodyText,
     });
-    throw buildHttpImageError(bodyText || `chat-requirements failed: ${response.status}`, response.status, "submit");
+    throw buildHttpImageError(
+      bodyText || `chat-requirements failed: ${response.status}`,
+      response.status,
+      "submit",
+      "submit_failed",
+      { retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")) },
+    );
   }
 
   const payload = (await response.json()) as {

@@ -20,6 +20,7 @@ import {
 import {
   buildHttpImageError,
   createImageError,
+  parseRetryAfterHeader,
 } from "@/server/providers/openai/image-errors";
 import { getProofToken } from "@/server/providers/openai/proof";
 import type { ImageGenerationOptions } from "@/server/providers/openai/api-service-shared";
@@ -216,7 +217,13 @@ async function sendConversation(
       status: response.status,
       bodyPreview: bodyText,
     });
-    throw buildHttpImageError(bodyText || `conversation failed: ${response.status}`, response.status, "submit");
+    throw buildHttpImageError(
+      bodyText || `conversation failed: ${response.status}`,
+      response.status,
+      "submit",
+      "submit_failed",
+      { retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")) },
+    );
   }
 
   logger.info("openai-client", "conversation:accepted", {

@@ -3,6 +3,7 @@ import {
   buildHttpImageError,
   createImageError,
   isAccountBlockedMessage,
+  parseRetryAfterHeader,
 } from "@/server/providers/openai/image-errors";
 
 const BASE_URL = "https://chatgpt.com";
@@ -144,7 +145,13 @@ async function uploadChatGptFileBytes(uploadUrl: string, bytes: Buffer, mimeType
 
   if (!response.ok) {
     const bodyText = (await response.text()).slice(0, 300);
-    throw buildHttpImageError(bodyText || `chatgpt file upload failed: ${response.status}`, response.status, "upload");
+    throw buildHttpImageError(
+      bodyText || `chatgpt file upload failed: ${response.status}`,
+      response.status,
+      "upload",
+      "submit_failed",
+      { retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")) },
+    );
   }
 }
 

@@ -1,9 +1,10 @@
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
-import { throwIfAborted } from "@/server/image/abort";
+import { createLinkedAbortController, isAbortError, throwIfAborted } from "@/server/image/abort";
 import {
   buildHttpImageError,
   createImageError,
   normalizeUpstreamErrorMessage,
+  parseRetryAfterHeader,
 } from "@/server/providers/openai/image-errors";
 
 export type ImageApiServiceConfig = {
@@ -56,6 +57,8 @@ export function resolveFilesEndpoint(baseUrl?: string) {
   return `${resolveApiBase(baseUrl)}/files`;
 }
 
+const UPLOAD_TIMEOUT_MS = 120000;
+
 export async function uploadInputFile(
   serviceConfig: ImageApiServiceConfig,
   file: File,
@@ -76,15 +79,40 @@ export async function uploadInputFile(
   formData.append("purpose", "user_data");
   formData.append("file", file, file.name || "image.png");
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
-    signal,
-    cache: "no-store",
-  });
+  const linked = createLinkedAbortController(signal, UPLOAD_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: formData,
+      signal: linked.signal,
+      cache: "no-store",
+    });
+  } catch (error) {
+    linked.cleanup();
+    if (linked.timedOut()) {
+      throw createImageError(`图像 API 上传超时（${UPLOAD_TIMEOUT_MS / 1000}s）：${file.name || "image"}`, {
+        kind: "submit_failed",
+        retryAction: "resubmit",
+        retryable: true,
+        stage: "upload",
+      });
+    }
+    if (isAbortError(error)) {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : "image api upload failed";
+    throw createImageError(message, {
+      kind: "submit_failed",
+      retryAction: "resubmit",
+      retryable: true,
+      stage: "upload",
+    });
+  }
+  linked.cleanup();
 
   if (!response.ok) {
     const bodyText = (await response.text()).slice(0, 400);
@@ -99,15 +127,19 @@ export async function uploadInputFile(
       });
     }
     if (response.status === 429) {
+      const retryAfterMs = parseRetryAfterHeader(response.headers.get("retry-after"));
       throw createImageError(`图像 API 上传限流：${normalizedMessage}`, {
         kind: "submit_failed",
         retryAction: "resubmit",
         retryable: true,
         stage: "api_service",
         statusCode: response.status,
+        retryAfterMs,
       });
     }
-    throw buildHttpImageError(normalizedMessage, response.status, "api_service");
+    throw buildHttpImageError(normalizedMessage, response.status, "api_service", "submit_failed", {
+      retryAfterMs: parseRetryAfterHeader(response.headers.get("retry-after")),
+    });
   }
 
   const payload = (await response.json()) as { id?: string };

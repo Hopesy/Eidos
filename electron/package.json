@@ -25,6 +25,7 @@
       "main.cjs",
       "preload.cjs",
       "release-shared.cjs",
+      "splash.html",
       "package.json"
     ],
     "extraResources": [

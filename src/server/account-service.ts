@@ -7,6 +7,7 @@ import { createImageRecoveryService } from "@/server/image/recovery-service";
 import { getImageApiServiceConfig } from "@/server/image/api-service/service-config";
 import { runApiEditTask, runApiGenerateTask, runApiUpscaleTask } from "@/server/image/api-service/task-runner";
 import { logger } from "@/server/logger";
+import type { ImagePipelineStage } from "@/server/providers/openai/image-errors";
 import { getSavedConfig } from "@/server/repositories/config";
 import type { AccountRecord } from "@/server/types";
 import { sanitizeConfigPayload } from "@/shared/app-config";
@@ -124,8 +125,12 @@ export async function updateAccount(accessToken: string, updates: Partial<Accoun
   return accountAdminService.updateAccount(accessToken, updates);
 }
 
-export async function markImageResult(accessToken: string, success: boolean) {
-  return accountAdminService.markImageResult(accessToken, success);
+export async function markImageResult(
+  accessToken: string,
+  success: boolean,
+  options: { stage?: ImagePipelineStage } = {},
+) {
+  return accountAdminService.markImageResult(accessToken, success, options);
 }
 
 export async function fetchAccountRemoteInfo(accessToken: string) {
