@@ -906,6 +906,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
       retractTurnAfterAbort,
       restoreComposerFromTurn,
       selectedConversationId,
+      selectedConversation,
       usesImageApiService,
       mode,
       imagePrompt,

@@ -29,6 +29,7 @@ const accountSelector = createAccountSelector({
 const accountPoolImageRunner = createAccountPoolImageRunner({
   getAvailableAccessToken,
   getAccount: accountAdminService.getAccount,
+  getAccountById: accountAdminService.getAccountById,
   markImageResult: accountAdminService.markImageResult,
   removeToken,
 });
@@ -153,6 +154,11 @@ export async function generateWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    upstreamContext?: {
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    };
     signal?: AbortSignal;
   } = {},
 ) {
@@ -204,6 +210,7 @@ export async function generateWithPool(
     imageSize,
     imageQuality,
     imageFormat,
+    upstreamContext: options.upstreamContext,
     signal: options.signal,
   });
 }
@@ -217,6 +224,15 @@ export async function editWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    sourceReference?: {
+      originalFileId?: string;
+      originalGenId?: string;
+      previousResponseId?: string;
+      imageGenerationCallId?: string;
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    } | null;
     signal?: AbortSignal;
   } = {},
 ) {
@@ -233,8 +249,8 @@ export async function editWithApiService(
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
     sourceReference?: {
-      originalFileId: string;
-      originalGenId: string;
+      originalFileId?: string;
+      originalGenId?: string;
       previousResponseId?: string;
       imageGenerationCallId?: string;
       conversationId?: string;
@@ -278,6 +294,15 @@ export async function upscaleWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    sourceReference?: {
+      originalFileId?: string;
+      originalGenId?: string;
+      previousResponseId?: string;
+      imageGenerationCallId?: string;
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    } | null;
     signal?: AbortSignal;
   } = {},
 ) {
@@ -349,6 +374,7 @@ export async function recoverImageTaskWithAccount(
   params: {
     conversationId: string;
     sourceAccountId?: string;
+    upstreamParentMessageId?: string;
     revisedPrompt?: string;
     fileIds?: string[];
     waitMs?: number;

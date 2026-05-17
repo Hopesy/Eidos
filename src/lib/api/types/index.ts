@@ -34,6 +34,12 @@ export type SyncStatus =
   | "remote_only"
   | "remote_deleted";
 
+export type ImageConversationContinuation = {
+  conversation_id: string;
+  parent_message_id: string;
+  source_account_id: string;
+};
+
 export type Account = {
   id: string;
   access_token: string;
@@ -138,6 +144,7 @@ export type ImageResponseItem = {
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id?: string;
+  upstreamParentMessageId?: string;
   failureKind?: string;
   retryAction?: string;
   retryable?: boolean;
@@ -177,13 +184,13 @@ export type GalleryImageItem = {
 };
 
 export type InpaintSourceReference = {
-  original_file_id: string;
-  original_gen_id: string;
+  original_file_id?: string;
+  original_gen_id?: string;
   previous_response_id?: string;
   image_generation_call_id?: string;
   conversation_id?: string;
   parent_message_id?: string;
-  source_account_id: string;
+  source_account_id?: string;
 };
 
 export type RequestLogItem = {
@@ -205,6 +212,7 @@ export type RequestLogItem = {
   retryable?: boolean;
   stage?: string;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;

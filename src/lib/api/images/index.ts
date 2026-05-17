@@ -4,6 +4,7 @@ import type {
   GalleryImageItem,
   ImageGenerationQuality,
   ImageGenerationSize,
+  ImageConversationContinuation,
   ImageOutputFormat,
   ImageModel,
   ImageResponseItem,
@@ -19,10 +20,11 @@ export async function generateImage(
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
     format?: ImageOutputFormat;
+    upstreamContext?: ImageConversationContinuation | null;
     signal?: AbortSignal;
   } = {},
 ) {
-  const { size = "auto", quality = "auto", format = "png", signal } = options;
+  const { size = "auto", quality = "auto", format = "png", upstreamContext, signal } = options;
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/generations",
     {
@@ -35,6 +37,9 @@ export async function generateImage(
         size,
         quality,
         output_format: format,
+        upstream_conversation_id: upstreamContext?.conversation_id,
+        upstream_parent_message_id: upstreamContext?.parent_message_id,
+        source_account_id: upstreamContext?.source_account_id,
       },
       signal,
     },
@@ -79,8 +84,12 @@ export async function editImage(params: {
     formData.append("mask", mask);
   }
   if (sourceReference) {
-    formData.append("original_file_id", sourceReference.original_file_id);
-    formData.append("original_gen_id", sourceReference.original_gen_id);
+    if (sourceReference.original_file_id) {
+      formData.append("original_file_id", sourceReference.original_file_id);
+    }
+    if (sourceReference.original_gen_id) {
+      formData.append("original_gen_id", sourceReference.original_gen_id);
+    }
     if (sourceReference.previous_response_id) {
       formData.append("previous_response_id", sourceReference.previous_response_id);
     }
@@ -96,7 +105,9 @@ export async function editImage(params: {
     if (sourceReference.parent_message_id) {
       formData.append("parent_message_id", sourceReference.parent_message_id);
     }
-    formData.append("source_account_id", sourceReference.source_account_id);
+    if (sourceReference.source_account_id) {
+      formData.append("source_account_id", sourceReference.source_account_id);
+    }
   }
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/edits",
@@ -115,9 +126,10 @@ export async function upscaleImage(params: {
   quality?: ImageGenerationQuality;
   format?: ImageOutputFormat;
   model?: ImageModel;
+  sourceReference?: InpaintSourceReference | null;
   signal?: AbortSignal;
 }) {
-  const { image, prompt, size, quality, format = "png", model = "gpt-image-1", signal } = params;
+  const { image, prompt, size, quality, format = "png", model = "gpt-image-1", sourceReference, signal } = params;
   const formData = new FormData();
   formData.append("image", image);
   formData.append("model", model);
@@ -132,6 +144,32 @@ export async function upscaleImage(params: {
     formData.append("quality", quality);
   }
   formData.append("output_format", format);
+  if (sourceReference) {
+    if (sourceReference.original_file_id) {
+      formData.append("original_file_id", sourceReference.original_file_id);
+    }
+    if (sourceReference.original_gen_id) {
+      formData.append("original_gen_id", sourceReference.original_gen_id);
+    }
+    if (sourceReference.previous_response_id) {
+      formData.append("previous_response_id", sourceReference.previous_response_id);
+    }
+    if (sourceReference.image_generation_call_id) {
+      formData.append(
+        "image_generation_call_id",
+        sourceReference.image_generation_call_id,
+      );
+    }
+    if (sourceReference.conversation_id) {
+      formData.append("conversation_id", sourceReference.conversation_id);
+    }
+    if (sourceReference.parent_message_id) {
+      formData.append("parent_message_id", sourceReference.parent_message_id);
+    }
+    if (sourceReference.source_account_id) {
+      formData.append("source_account_id", sourceReference.source_account_id);
+    }
+  }
   return httpRequest<{ created: number; data: ImageResponseItem[] }>(
     "/v1/images/upscale",
     {
@@ -175,6 +213,7 @@ export async function deleteImageFavorite(id: string) {
 export async function recoverImageTask(params: {
   conversationId: string;
   sourceAccountId?: string;
+  upstreamParentMessageId?: string;
   revisedPrompt?: string;
   fileIds?: string[];
   waitMs?: number;

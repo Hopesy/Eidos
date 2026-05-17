@@ -57,6 +57,7 @@ export type StoredImage = {
   retryable?: boolean;
   stage?: string;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;
@@ -94,6 +95,7 @@ export type ImageConversationTurn = {
   retryable?: boolean;
   stage?: string;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;
@@ -125,6 +127,9 @@ export type ImageConversation = {
   scale?: string;
   sourceImages?: StoredSourceImage[];
   turns?: ImageConversationTurn[];
+  upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
+  sourceAccountId?: string;
 };
 
 // ─────────────────────────────────────────────
@@ -201,6 +206,41 @@ export function normalizeTurn(turn: ImageConversationTurn): ImageConversationTur
   };
 }
 
+function cleanOptionalString(value: unknown) {
+  const normalized = String(value || "").trim();
+  return normalized || undefined;
+}
+
+function getLatestTurnUpstreamContext(turns: ImageConversationTurn[]) {
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (!turn) {
+      continue;
+    }
+    const fromTurn = {
+      upstreamConversationId: cleanOptionalString(turn.upstreamConversationId),
+      upstreamParentMessageId: cleanOptionalString(turn.upstreamParentMessageId),
+      sourceAccountId: cleanOptionalString(turn.sourceAccountId),
+    };
+    if (fromTurn.upstreamConversationId || fromTurn.upstreamParentMessageId || fromTurn.sourceAccountId) {
+      return fromTurn;
+    }
+
+    for (let imageIndex = (turn.images ?? []).length - 1; imageIndex >= 0; imageIndex -= 1) {
+      const image = turn.images[imageIndex];
+      const fromImage = {
+        upstreamConversationId: cleanOptionalString(image?.conversation_id ?? image?.upstreamConversationId),
+        upstreamParentMessageId: cleanOptionalString(image?.parent_message_id ?? image?.upstreamParentMessageId),
+        sourceAccountId: cleanOptionalString(image?.source_account_id ?? image?.sourceAccountId),
+      };
+      if (fromImage.upstreamConversationId || fromImage.upstreamParentMessageId || fromImage.sourceAccountId) {
+        return fromImage;
+      }
+    }
+  }
+  return null;
+}
+
 function deriveConversationStatus(
   turns: ImageConversationTurn[],
   fallback: ImageConversationStatus,
@@ -258,6 +298,9 @@ export function normalizeConversation(
       createdAt: conversation.createdAt,
       status: conversation.status,
       error: conversation.error,
+      upstreamConversationId: conversation.upstreamConversationId,
+      upstreamParentMessageId: conversation.upstreamParentMessageId,
+      sourceAccountId: conversation.sourceAccountId,
     })
     : null;
   const turns = hasTurns
@@ -266,6 +309,7 @@ export function normalizeConversation(
       ? [legacyTurn]
       : [];
   const status = deriveConversationStatus(turns, conversation.status ?? "success");
+  const upstreamContext = getLatestTurnUpstreamContext(turns);
 
   return {
     ...conversation,
@@ -279,6 +323,9 @@ export function normalizeConversation(
     status,
     error: deriveConversationError(turns, status, conversation.error),
     turns,
+    upstreamConversationId: upstreamContext?.upstreamConversationId ?? cleanOptionalString(conversation.upstreamConversationId),
+    upstreamParentMessageId: upstreamContext?.upstreamParentMessageId ?? cleanOptionalString(conversation.upstreamParentMessageId),
+    sourceAccountId: upstreamContext?.sourceAccountId ?? cleanOptionalString(conversation.sourceAccountId),
   };
 }
 

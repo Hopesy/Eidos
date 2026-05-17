@@ -21,8 +21,8 @@ export function runApiEditTask(
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
     sourceReference?: {
-      originalFileId: string;
-      originalGenId: string;
+      originalFileId?: string;
+      originalGenId?: string;
       previousResponseId?: string;
       imageGenerationCallId?: string;
       conversationId?: string;

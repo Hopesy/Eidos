@@ -31,6 +31,7 @@ export type ImageGenerationErrorOptions = {
   stage?: ImagePipelineStage;
   statusCode?: number;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;
@@ -49,6 +50,7 @@ export class ImageGenerationError extends Error {
   stage: ImagePipelineStage;
   statusCode?: number;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;
@@ -68,6 +70,7 @@ export class ImageGenerationError extends Error {
     this.stage = options.stage ?? "unknown";
     this.statusCode = options.statusCode;
     this.upstreamConversationId = options.upstreamConversationId;
+    this.upstreamParentMessageId = options.upstreamParentMessageId;
     this.upstreamResponseId = options.upstreamResponseId;
     this.imageGenerationCallId = options.imageGenerationCallId;
     this.sourceAccountId = options.sourceAccountId;
@@ -287,6 +290,7 @@ export function getImageErrorMeta(error: unknown) {
     retryable: error.retryable,
     stage: error.stage,
     upstreamConversationId: error.upstreamConversationId,
+    upstreamParentMessageId: error.upstreamParentMessageId,
     upstreamResponseId: error.upstreamResponseId,
     imageGenerationCallId: error.imageGenerationCallId,
     sourceAccountId: error.sourceAccountId,

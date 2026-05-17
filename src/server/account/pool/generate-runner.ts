@@ -12,7 +12,13 @@ import {
 import { addRequestLog } from "@/server/repositories/request-log";
 
 import type { AccountPoolImageRunnerDependencies } from "./image-runner-types";
-import { isRetryableImageError } from "./image-runner-shared";
+import {
+  getContinuationForAccount,
+  getPreferredContinuationAccount,
+  getResultUpstreamContext,
+  isRetryableImageError,
+  normalizeUpstreamContext,
+} from "./image-runner-shared";
 
 export async function runGenerateTaskWithPool(
   dependencies: AccountPoolImageRunnerDependencies,
@@ -25,6 +31,11 @@ export async function runGenerateTaskWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    upstreamContext?: {
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    };
     signal?: AbortSignal;
   } = {},
 ) {
@@ -42,6 +53,7 @@ export async function runGenerateTaskWithPool(
   const operation = options.operation ?? "generate";
   const imageSize = options.imageSize ?? "auto";
   const imageQuality = options.imageQuality ?? "auto";
+  let upstreamContext = normalizeUpstreamContext(options.upstreamContext);
 
   let requestIndex = 1;
   while (data.length < count) {
@@ -55,7 +67,12 @@ export async function runGenerateTaskWithPool(
     while (true) {
       let requestToken = "";
       try {
-        requestToken = await dependencies.getAvailableAccessToken(attempted);
+        const preferredAccount = await getPreferredContinuationAccount(
+          dependencies.getAccountById,
+          upstreamContext,
+          attempted,
+        );
+        requestToken = preferredAccount?.access_token || (await dependencies.getAvailableAccessToken(attempted));
       } catch (noTokenErr) {
         const msg = noTokenErr instanceof Error ? noTokenErr.message : String(noTokenErr);
         lastErrors.push(msg);
@@ -67,6 +84,7 @@ export async function runGenerateTaskWithPool(
       logger.info("account-service", `第 ${requestIndex} 次请求：使用 token`, { token: tokenHint, model });
       const account = await dependencies.getAccount(requestToken);
       const sourceAccountId = resolveAccountId(account);
+      const continuation = getContinuationForAccount(upstreamContext, account);
 
       try {
         if (account) {
@@ -76,6 +94,7 @@ export async function runGenerateTaskWithPool(
         const result = await generateImageResult(requestToken, prompt, model, account, {
           size: imageSize,
           quality: imageQuality,
+          continuation,
           signal: options.signal,
         }) as { created: number; data: Array<Record<string, unknown>> };
         throwIfAborted(options.signal);
@@ -97,6 +116,7 @@ export async function runGenerateTaskWithPool(
         }
         if (Array.isArray(result.data)) {
           data.push(...result.data);
+          upstreamContext = getResultUpstreamContext(result.data, sourceAccountId) ?? upstreamContext;
         }
         logger.info("account-service", `第 ${requestIndex} 次请求：成功，累计 ${data.length}/${count} 张`, {
           token: tokenHint,

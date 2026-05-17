@@ -3,8 +3,10 @@
 import type { ImageMode } from "@/store/image-conversations";
 
 export type ActiveImageTask = {
+  taskId?: string;
   conversationId: string;
   turnId: string;
+  imageIds?: string[];
   mode: ImageMode;
   count: number;
   variant: "standard" | "selection-edit";
@@ -17,9 +19,14 @@ const activeTasks = new Map<string, ActiveImageTask>();
 const activeTaskRefs = new Map<string, number>();
 const listeners = new Set<Listener>();
 
-// key 格式：conversationId:turnId
-function getTaskKey(conversationId: string, turnId: string): string {
+// group key 格式：conversationId:turnId；task key 会额外带 taskId。
+function getTaskGroupKey(conversationId: string, turnId: string): string {
   return `${conversationId}:${turnId}`;
+}
+
+function getTaskKey(conversationId: string, turnId: string, taskId?: string): string {
+  const groupKey = getTaskGroupKey(conversationId, turnId);
+  return taskId ? `${groupKey}:${taskId}` : groupKey;
 }
 
 function notifyListeners(): void {
@@ -29,14 +36,14 @@ function notifyListeners(): void {
 }
 
 export function startImageTask(task: ActiveImageTask): void {
-  const key = getTaskKey(task.conversationId, task.turnId);
+  const key = getTaskKey(task.conversationId, task.turnId, task.taskId);
   activeTaskRefs.set(key, (activeTaskRefs.get(key) ?? 0) + 1);
   activeTasks.set(key, task);
   notifyListeners();
 }
 
-export function finishImageTask(conversationId: string, turnId: string): void {
-  const key = getTaskKey(conversationId, turnId);
+export function finishImageTask(conversationId: string, turnId: string, taskId?: string): void {
+  const key = getTaskKey(conversationId, turnId, taskId);
   const refs = activeTaskRefs.get(key) ?? 0;
   if (refs > 1) {
     activeTaskRefs.set(key, refs - 1);
@@ -50,8 +57,13 @@ export function finishImageTask(conversationId: string, turnId: string): void {
 }
 
 export function isImageTaskActive(conversationId: string, turnId: string): boolean {
-  const key = getTaskKey(conversationId, turnId);
-  return activeTasks.has(key);
+  const groupKey = getTaskGroupKey(conversationId, turnId);
+  for (const task of activeTasks.values()) {
+    if (getTaskGroupKey(task.conversationId, task.turnId) === groupKey) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function listActiveImageTasks(): ActiveImageTask[] {

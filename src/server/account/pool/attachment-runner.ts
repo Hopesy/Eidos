@@ -12,7 +12,13 @@ import {
 import { addRequestLog } from "@/server/repositories/request-log";
 
 import type { AccountPoolImageRunnerDependencies } from "./image-runner-types";
-import { isRetryableImageError } from "./image-runner-shared";
+import {
+  getContinuationForAccount,
+  getPreferredContinuationAccount,
+  getResultUpstreamContext,
+  isRetryableImageError,
+  normalizeSourceReferenceContext,
+} from "./image-runner-shared";
 
 export async function runAttachmentTaskWithPool(
   dependencies: AccountPoolImageRunnerDependencies,
@@ -24,6 +30,15 @@ export async function runAttachmentTaskWithPool(
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
     format?: ImageOutputFormat;
+    sourceReference?: {
+      originalFileId?: string;
+      originalGenId?: string;
+      previousResponseId?: string;
+      imageGenerationCallId?: string;
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    } | null;
     signal?: AbortSignal;
   },
   requestMeta: {
@@ -42,6 +57,7 @@ export async function runAttachmentTaskWithPool(
   let lastAccountEmail: string | undefined;
   let lastAccountType: string | undefined;
   let attemptCount = 0;
+  let upstreamContext = normalizeSourceReferenceContext(params.sourceReference);
 
   const attempted = new Set<string>();
   while (true) {
@@ -49,7 +65,12 @@ export async function runAttachmentTaskWithPool(
     attemptCount += 1;
     let requestToken = "";
     try {
-      requestToken = await dependencies.getAvailableAccessToken(attempted);
+      const preferredAccount = await getPreferredContinuationAccount(
+        dependencies.getAccountById,
+        upstreamContext,
+        attempted,
+      );
+      requestToken = preferredAccount?.access_token || (await dependencies.getAvailableAccessToken(attempted));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       lastErrors.push(message);
@@ -58,6 +79,7 @@ export async function runAttachmentTaskWithPool(
 
     const account = await dependencies.getAccount(requestToken);
     const sourceAccountId = resolveAccountId(account);
+    const continuation = getContinuationForAccount(upstreamContext, account);
     const tokenHint = requestToken.slice(0, 16) + "...";
     if (account) {
       lastAccountEmail = account.email ?? undefined;
@@ -65,7 +87,14 @@ export async function runAttachmentTaskWithPool(
     }
 
     try {
-      const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, params) as {
+      const result = await generateImageResultWithAttachments(requestToken, prompt, model, account, {
+        images: params.images,
+        mask: params.mask,
+        size: params.size,
+        quality: params.quality,
+        continuation,
+        signal: params.signal,
+      }) as {
         created: number;
         data: Array<Record<string, unknown>>;
       };
@@ -74,6 +103,7 @@ export async function runAttachmentTaskWithPool(
         ...item,
         source_account_id: sourceAccountId,
       }));
+      upstreamContext = getResultUpstreamContext(result.data, sourceAccountId) ?? upstreamContext;
 
       result.data = await persistImageResponseItems(result.data, {
         route: requestMeta.route,

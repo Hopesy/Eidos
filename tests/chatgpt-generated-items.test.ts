@@ -144,6 +144,7 @@ describe("chatgpt generated item collection", () => {
             mapping: {
               node_1: {
                 message: {
+                  id: "msg-result",
                   author: { role: "tool" },
                   metadata: { async_task_type: "image_gen" },
                   content: {
@@ -179,6 +180,7 @@ describe("chatgpt generated item collection", () => {
 
     assert.equal(result.data.length, 1);
     assert.equal(result.data[0]?.file_id, "sed:file_result");
+    assert.equal(result.data[0]?.parent_message_id, "msg-result");
     assert.ok(fetchedUrls.some((url) => url.includes("/backend-api/conversation/conv-source")));
     assert.ok(!fetchedUrls.some((url) => url.includes("/attachment/file_source/download")));
   });
@@ -202,6 +204,7 @@ describe("chatgpt generated item collection", () => {
             mapping: {
               node_1: {
                 message: {
+                  id: "msg-result",
                   author: { role: "tool" },
                   metadata: { async_task_type: "image_gen" },
                   content: {
@@ -238,6 +241,7 @@ describe("chatgpt generated item collection", () => {
     assert.equal(staleDownloadCalls, 4);
     assert.equal(result.data.length, 1);
     assert.equal(result.data[0]?.file_id, "sed:file_result");
+    assert.equal(result.data[0]?.parent_message_id, "msg-result");
   });
 
   it("classifies polling network failures as recoverable pending work", async () => {
@@ -373,6 +377,7 @@ describe("chatgpt generated item collection", () => {
     await assert.rejects(
       () => recoverGeneratedItems(session, "token-a", "device-a", {
         conversationId: "conv-recover",
+        parentMessageId: "msg-recover",
         fileIds: ["sed:file_1"],
         sourceAccountId: "account-1",
       }),
@@ -382,6 +387,7 @@ describe("chatgpt generated item collection", () => {
         assert.equal(error.retryAction, "retry_download");
         assert.equal(error.stage, "download");
         assert.equal(error.upstreamConversationId, "conv-recover");
+        assert.equal(error.upstreamParentMessageId, "msg-recover");
         assert.equal(error.sourceAccountId, "account-1");
         return true;
       },

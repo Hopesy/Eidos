@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
     const count = parseImageCount(body.n);
     const quality = (body.quality || "auto") as ImageGenerationQuality;
     const outputFormat = normalizeImageOutputFormat(body.output_format);
+    const upstreamContext =
+      body.upstream_conversation_id && body.upstream_parent_message_id && body.source_account_id
+        ? {
+          conversationId: body.upstream_conversation_id,
+          parentMessageId: body.upstream_parent_message_id,
+          sourceAccountId: body.source_account_id,
+        }
+        : undefined;
     const requestedSize = (body.size || "auto") as ImageGenerationSize;
     const size = requestedSize === "auto"
       ? resolveImageGenerationSize("auto", quality)
@@ -38,12 +46,14 @@ export async function POST(request: NextRequest) {
       size,
       quality,
       outputFormat,
+      hasUpstreamContext: Boolean(upstreamContext),
     });
 
     const result = await generateWithPool(prompt, model, count, {
       imageSize: size,
       imageQuality: quality,
       imageFormat: outputFormat,
+      upstreamContext,
       signal: request.signal,
     });
 

@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
-import { editImage, generateImage, upscaleImage } from "@/lib/api";
-import { type StoredImage } from "@/store/image-conversations";
+import { editImage, generateImage, upscaleImage, type ImageConversationContinuation } from "@/lib/api";
+import { type ImageConversation, type StoredImage } from "@/store/image-conversations";
 import { resolveImageGenerationSize } from "@/shared/image-generation";
 
 import { beginRequest, buildDraftConversationFromTurn, finishRequest, sortConversations } from "./request-lifecycle";
@@ -29,6 +29,7 @@ function clearTurnFailureMeta() {
     retryable: undefined,
     stage: undefined,
     upstreamConversationId: undefined,
+    upstreamParentMessageId: undefined,
     upstreamResponseId: undefined,
     imageGenerationCallId: undefined,
     sourceAccountId: undefined,
@@ -42,6 +43,49 @@ function clearTurnFailureMeta() {
   };
 }
 
+function getImageUpstreamContext(images: StoredImage[]) {
+  for (let index = images.length - 1; index >= 0; index -= 1) {
+    const image = images[index];
+    const upstreamConversationId = String(image?.conversation_id || image?.upstreamConversationId || "").trim();
+    const upstreamParentMessageId = String(image?.parent_message_id || image?.upstreamParentMessageId || "").trim();
+    const sourceAccountId = String(image?.source_account_id || image?.sourceAccountId || "").trim();
+    if (upstreamConversationId || upstreamParentMessageId || sourceAccountId) {
+      return {
+        upstreamConversationId: upstreamConversationId || undefined,
+        upstreamParentMessageId: upstreamParentMessageId || undefined,
+        sourceAccountId: sourceAccountId || undefined,
+      };
+    }
+  }
+  return {};
+}
+
+function buildConversationContinuation(conversation: ImageConversation | null): ImageConversationContinuation | null {
+  const conversationId = String(conversation?.upstreamConversationId || "").trim();
+  const parentMessageId = String(conversation?.upstreamParentMessageId || "").trim();
+  const sourceAccountId = String(conversation?.sourceAccountId || "").trim();
+  if (!conversationId || !parentMessageId || !sourceAccountId) {
+    return null;
+  }
+  return {
+    conversation_id: conversationId,
+    parent_message_id: parentMessageId,
+    source_account_id: sourceAccountId,
+  };
+}
+
+function buildImageContinuation(image: StoredImage): ImageConversationContinuation | null {
+  const context = getImageUpstreamContext([image]);
+  if (!context.upstreamConversationId || !context.upstreamParentMessageId || !context.sourceAccountId) {
+    return null;
+  }
+  return {
+    conversation_id: context.upstreamConversationId,
+    parent_message_id: context.upstreamParentMessageId,
+    source_account_id: context.sourceAccountId,
+  };
+}
+
 function patchTurnImages(turn: ReturnType<typeof createConversationTurn>, images: StoredImage[], durationMs?: number) {
   const failedCount = countFailures(images);
   const hasLoading = images.some((image) => image.status === "loading");
@@ -52,6 +96,7 @@ function patchTurnImages(turn: ReturnType<typeof createConversationTurn>, images
     error: hasLoading ? undefined : failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
     durationMs,
     ...clearTurnFailureMeta(),
+    ...getImageUpstreamContext(images),
   };
 }
 
@@ -99,6 +144,7 @@ function patchSingleTurnFailure(
       retryable: failureMeta.retryable,
       stage: failureMeta.stage,
       upstreamConversationId: failureMeta.upstreamConversationId,
+      upstreamParentMessageId: failureMeta.upstreamParentMessageId,
       upstreamResponseId: failureMeta.upstreamResponseId,
       imageGenerationCallId: failureMeta.imageGenerationCallId,
       sourceAccountId: failureMeta.sourceAccountId,
@@ -169,6 +215,7 @@ export async function runSubmit(ctx: SubmitContext) {
   const turnImageQuality = mode === "upscale" ? upscaleQuality : imageQuality;
   const turnImageRatio = mode === "upscale" ? "auto" : imageSize;
   const turnImageSize = resolveImageGenerationSize(turnImageRatio, turnImageQuality);
+  let upstreamContext = ctx.usesImageApiService ? null : buildConversationContinuation(ctx.selectedConversation);
   const draftTurn = createConversationTurn({
     turnId,
     title: buildConversationTitle(mode, prompt, turnImageQuality),
@@ -320,12 +367,14 @@ export async function runSubmit(ctx: SubmitContext) {
                   size: turnImageSize,
                   quality: turnImageQuality,
                   format: imageFormat,
+                  upstreamContext,
                   signal,
                 });
                 const resultImage = createResultImage(
                   draftLoadingImages[slotIndex]?.id || `${turnId}-${slotIndex}`,
                   data.data?.[0],
                 );
+                upstreamContext = buildImageContinuation(resultImage) ?? upstreamContext;
                 settledSlotIndexes.add(slotIndex);
                 if (resultImage.status === "success") {
                   succeededCount += 1;
@@ -387,6 +436,7 @@ export async function runSubmit(ctx: SubmitContext) {
                           retryable: failureMeta.retryable,
                           stage: failureMeta.stage,
                           upstreamConversationId: failureMeta.upstreamConversationId,
+                          upstreamParentMessageId: failureMeta.upstreamParentMessageId,
                           upstreamResponseId: failureMeta.upstreamResponseId,
                           imageGenerationCallId: failureMeta.imageGenerationCallId,
                           sourceAccountId: failureMeta.sourceAccountId,
@@ -448,6 +498,7 @@ export async function runSubmit(ctx: SubmitContext) {
           size: turnImageSize,
           quality: turnImageQuality,
           format: imageFormat,
+          upstreamContext,
           signal,
         });
         resultItems = mergeResultImages(turnId, data.data || [], parsedCount);
@@ -482,6 +533,7 @@ export async function runSubmit(ctx: SubmitContext) {
         quality: turnImageQuality,
         format: imageFormat,
         model: imageModel,
+        sourceReference: buildSourceReference(imageSources[0]),
         signal,
       });
       resultItems = mergeResultImages(turnId, data.data || [], 1);

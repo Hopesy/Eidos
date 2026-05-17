@@ -29,6 +29,7 @@ export function createAccountPoolImageRunner(
           size: options.imageSize,
           quality: options.imageQuality,
           format: options.imageFormat,
+          sourceReference: options.sourceReference,
           signal: options.signal,
         },
         {
@@ -51,6 +52,7 @@ export function createAccountPoolImageRunner(
           size: options.imageSize,
           quality: options.imageQuality,
           format: options.imageFormat,
+          sourceReference: options.sourceReference,
           signal: options.signal,
         },
         {

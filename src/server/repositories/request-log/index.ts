@@ -26,6 +26,7 @@ export type RequestLogEntry = {
   retryable?: boolean;
   stage?: string;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;

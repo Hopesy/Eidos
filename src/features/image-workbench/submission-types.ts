@@ -105,6 +105,7 @@ export type RetryTurnContext = Pick<SubmissionContext, "focusConversation" | "up
 
 export type SubmitContext = SubmissionContext & {
   selectedConversationId: string | null;
+  selectedConversation: ImageConversation | null;
   usesImageApiService: boolean;
   mode: ImageMode;
   imagePrompt: string;

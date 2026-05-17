@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-import { editImage, generateImage, recoverImageTask, upscaleImage } from "@/lib/api";
+import { editImage, generateImage, recoverImageTask, upscaleImage, type ImageConversationContinuation } from "@/lib/api";
 import { normalizeImageOutputFormat, resolveUpscaleQuality } from "@/shared/image-generation";
 import { finishImageTask, startImageTask } from "@/store/image-active-tasks";
 import type { ImageConversationTurn } from "@/store/image-conversations";
@@ -81,6 +81,7 @@ export function buildSharedRecoverableRetryResult(
         retryable: true,
         stage: "download",
         upstreamConversationId: turn.upstreamConversationId,
+        upstreamParentMessageId: turn.upstreamParentMessageId,
       },
     ],
     failedCount: remainingFileIds.length,
@@ -100,6 +101,7 @@ function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, ne
     retryable: next.retryable ?? previous.retryable,
     stage: next.stage ?? previous.stage,
     upstreamConversationId: next.upstreamConversationId ?? previous.upstreamConversationId,
+    upstreamParentMessageId: next.upstreamParentMessageId ?? previous.upstreamParentMessageId,
     upstreamResponseId: next.upstreamResponseId ?? previous.upstreamResponseId,
     imageGenerationCallId: next.imageGenerationCallId ?? previous.imageGenerationCallId,
     sourceAccountId: next.sourceAccountId ?? previous.sourceAccountId,
@@ -110,6 +112,20 @@ function preserveRetryMetaWhenFailuresRemain(previous: ImageConversationTurn, ne
     pollAttempts: next.pollAttempts ?? previous.pollAttempts,
     retryAfterMs: next.retryAfterMs ?? previous.retryAfterMs,
     upstreamBodyPreview: next.upstreamBodyPreview ?? previous.upstreamBodyPreview,
+  };
+}
+
+function buildTurnContinuation(turn: ImageConversationTurn): ImageConversationContinuation | null {
+  const conversationId = String(turn.upstreamConversationId || "").trim();
+  const parentMessageId = String(turn.upstreamParentMessageId || "").trim();
+  const sourceAccountId = String(turn.sourceAccountId || "").trim();
+  if (!conversationId || !parentMessageId || !sourceAccountId) {
+    return null;
+  }
+  return {
+    conversation_id: conversationId,
+    parent_message_id: parentMessageId,
+    source_account_id: sourceAccountId,
   };
 }
 
@@ -138,6 +154,7 @@ export async function runRetryTurn(
     : null;
   const effectiveRetryAction = targetImage?.retryAction ?? turn.retryAction;
   const effectiveUpstreamConversationId = targetImage?.upstreamConversationId ?? turn.upstreamConversationId;
+  const effectiveUpstreamParentMessageId = targetImage?.upstreamParentMessageId ?? turn.upstreamParentMessageId;
   const effectiveUpstreamResponseId = targetImage?.upstreamResponseId ?? turn.upstreamResponseId;
   const effectiveImageGenerationCallId = targetImage?.imageGenerationCallId ?? turn.imageGenerationCallId;
   const effectiveSourceAccountId = targetImage?.sourceAccountId ?? turn.sourceAccountId;
@@ -158,6 +175,7 @@ export async function runRetryTurn(
     retryable: targetImage?.retryable ?? turn.retryable,
     stage: targetImage?.stage ?? turn.stage,
     upstreamConversationId: effectiveUpstreamConversationId,
+    upstreamParentMessageId: effectiveUpstreamParentMessageId,
     upstreamResponseId: effectiveUpstreamResponseId,
     imageGenerationCallId: effectiveImageGenerationCallId,
     sourceAccountId: effectiveSourceAccountId,
@@ -210,10 +228,18 @@ export async function runRetryTurn(
   const startedAt = Date.now();
   const abortController = new AbortController();
   const signal = abortController.signal;
+  const upstreamContext = buildTurnContinuation({
+    ...turn,
+    upstreamConversationId: effectiveUpstreamConversationId,
+    upstreamParentMessageId: effectiveUpstreamParentMessageId,
+    sourceAccountId: effectiveSourceAccountId,
+  });
   const retryImageIds = retryIndexes.map((index) => turn.images[index]?.id).filter((id): id is string => Boolean(id));
   startImageTask({
+    taskId: retryKey,
     conversationId,
     turnId,
+    imageIds: retryImageIds,
     mode: turnMode,
     count: retryIndexes.length,
     variant: "standard",
@@ -254,6 +280,7 @@ export async function runRetryTurn(
     if ((effectiveRetryAction === "resume_polling" || effectiveRetryAction === "retry_download") && effectiveUpstreamConversationId) {
       const data = await recoverImageTask({
         conversationId: effectiveUpstreamConversationId,
+        upstreamParentMessageId: effectiveUpstreamParentMessageId,
         sourceAccountId: effectiveSourceAccountId,
         revisedPrompt: prompt,
         fileIds: effectiveFileIds,
@@ -284,6 +311,7 @@ export async function runRetryTurn(
           size: turnImageSize,
           quality: turnImageQuality,
           format: turnImageFormat,
+          upstreamContext,
           signal,
         });
         resultPayloadItems = data.data || [];
@@ -318,6 +346,7 @@ export async function runRetryTurn(
         quality: turnUpscaleQuality,
         format: turnImageFormat,
         model: turn.model,
+        sourceReference: buildSourceReference(turnImageSources[0]),
         signal,
       });
       resultPayloadItems = data.data || [];
@@ -348,6 +377,7 @@ export async function runRetryTurn(
             retryable: sharedResult.failedCount > 0 ? true : undefined,
             stage: sharedResult.failedCount > 0 ? "download" : undefined,
             upstreamConversationId: sharedResult.failedCount > 0 ? effectiveUpstreamConversationId : undefined,
+            upstreamParentMessageId: sharedResult.failedCount > 0 ? effectiveUpstreamParentMessageId : undefined,
             upstreamResponseId: sharedResult.failedCount > 0 ? effectiveUpstreamResponseId : undefined,
             imageGenerationCallId: sharedResult.failedCount > 0 ? effectiveImageGenerationCallId : undefined,
             sourceAccountId: sharedResult.failedCount > 0 ? effectiveSourceAccountId : undefined,
@@ -406,7 +436,7 @@ export async function runRetryTurn(
       toast.error(message);
     }
   } finally {
-    finishImageTask(conversationId, turnId);
+    finishImageTask(conversationId, turnId, retryKey);
     activeRetryKeys.delete(retryKey);
     ctx.retryAbortControllersRef.current.delete(retryKey);
   }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { normalizeConversationRuntimeState } from "../src/features/image-workbench/utils.ts";
-import { finishImageTask, startImageTask } from "../src/store/image-active-tasks.ts";
+import { finishImageTask, listActiveImageTasks, startImageTask } from "../src/store/image-active-tasks.ts";
 import type { ImageConversation } from "../src/store/image-conversations.ts";
 
 function createConversation(overrides: Partial<ImageConversation> = {}): ImageConversation {
@@ -133,6 +133,68 @@ describe("image conversation runtime state normalization", () => {
       assert.equal(turn.images[1]?.status, "loading");
     } finally {
       finishImageTask("conversation-overlap", "turn-overlap");
+    }
+  });
+
+  it("tracks concurrent retry cards in the same turn as independent tasks", () => {
+    const conversation = createConversation({
+      id: "conversation-retry-overlap",
+      turns: [
+        {
+          ...createConversation().turns![0]!,
+          id: "turn-retry-overlap",
+          images: [
+            { id: "image-a", status: "loading", startedAt: 50_000 },
+            { id: "image-b", status: "loading", startedAt: 60_000 },
+          ],
+        },
+      ],
+    });
+
+    startImageTask({
+      taskId: "retry-image-a",
+      conversationId: "conversation-retry-overlap",
+      turnId: "turn-retry-overlap",
+      imageIds: ["image-a"],
+      mode: "generate",
+      count: 1,
+      variant: "standard",
+      startedAt: 50_000,
+    });
+    startImageTask({
+      taskId: "retry-image-b",
+      conversationId: "conversation-retry-overlap",
+      turnId: "turn-retry-overlap",
+      imageIds: ["image-b"],
+      mode: "generate",
+      count: 1,
+      variant: "standard",
+      startedAt: 60_000,
+    });
+
+    try {
+      assert.equal(
+        listActiveImageTasks().filter((task) => task.conversationId === "conversation-retry-overlap").length,
+        2,
+      );
+
+      finishImageTask("conversation-retry-overlap", "turn-retry-overlap", "retry-image-a");
+
+      const result = normalizeConversationRuntimeState([conversation]);
+      const turn = result.items[0]!.turns![0]!;
+
+      assert.equal(
+        listActiveImageTasks().filter((task) => task.conversationId === "conversation-retry-overlap").length,
+        1,
+      );
+      assert.equal(result.changed, false);
+      assert.equal(result.items[0]!.status, "generating");
+      assert.equal(turn.status, "generating");
+      assert.equal(turn.images[0]?.status, "loading");
+      assert.equal(turn.images[1]?.status, "loading");
+    } finally {
+      finishImageTask("conversation-retry-overlap", "turn-retry-overlap", "retry-image-a");
+      finishImageTask("conversation-retry-overlap", "turn-retry-overlap", "retry-image-b");
     }
   });
 

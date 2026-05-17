@@ -17,6 +17,10 @@ export type ImageGenerationOptions = {
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
   format?: ImageOutputFormat;
+  continuation?: {
+    conversationId?: string;
+    parentMessageId?: string;
+  } | null;
   signal?: AbortSignal;
 };
 

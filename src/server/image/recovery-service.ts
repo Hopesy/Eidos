@@ -18,6 +18,7 @@ export type ImageRecoveryService = {
     params: {
       conversationId: string;
       sourceAccountId?: string;
+      upstreamParentMessageId?: string;
       revisedPrompt?: string;
       fileIds?: string[];
       waitMs?: number;
@@ -63,6 +64,7 @@ export function createImageRecoveryService(
           retryable: false,
           stage: "account",
           upstreamConversationId: conversationId,
+          upstreamParentMessageId: cleanToken(params.upstreamParentMessageId),
           sourceAccountId: cleanToken(params.sourceAccountId),
         });
         addRequestLog({
@@ -87,6 +89,7 @@ export function createImageRecoveryService(
       try {
         const result = await recoverImageResult(account.access_token, params.model, account, {
           conversationId,
+          parentMessageId: params.upstreamParentMessageId,
           fileIds: params.fileIds,
           revisedPrompt: params.revisedPrompt,
           waitMs: params.waitMs,
@@ -124,8 +127,13 @@ export function createImageRecoveryService(
         if (isAbortError(error)) {
           throw error;
         }
-        if (error instanceof ImageGenerationError && !error.sourceAccountId) {
-          error.sourceAccountId = cleanToken(params.sourceAccountId);
+        if (error instanceof ImageGenerationError) {
+          if (!error.sourceAccountId) {
+            error.sourceAccountId = cleanToken(params.sourceAccountId);
+          }
+          if (!error.upstreamParentMessageId) {
+            error.upstreamParentMessageId = cleanToken(params.upstreamParentMessageId);
+          }
         }
         const message = error instanceof Error ? error.message : String(error);
         addRequestLog({

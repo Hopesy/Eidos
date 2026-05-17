@@ -9,7 +9,7 @@ import {
   maskAccessToken,
   type ChatGptResultSession,
 } from "./result-shared";
-import { extractImageIds, isImageGenerationRefusalTitle } from "./result-parser";
+import { extractImageResult, isImageGenerationRefusalTitle } from "./result-parser";
 
 const DEFAULT_POLL_DELAY_MS = 3000;
 export const POLL_MIN_WAIT_MS = 3000;
@@ -100,6 +100,16 @@ export async function pollImageIds(
   conversationId: string,
   options: { maxWaitMs?: number; signal?: AbortSignal } = {},
 ) {
+  return (await pollImageResult(session, accessToken, deviceId, conversationId, options)).fileIds;
+}
+
+export async function pollImageResult(
+  session: ChatGptResultSession,
+  accessToken: string,
+  deviceId: string,
+  conversationId: string,
+  options: { maxWaitMs?: number; signal?: AbortSignal } = {},
+) {
   throwIfAborted(options.signal);
   const started = Date.now();
   const maxWaitMs = normalizePollWaitMs(options.maxWaitMs ?? POLL_MAX_WAIT_MS);
@@ -159,14 +169,16 @@ export async function pollImageIds(
         });
         throw buildTitleRefusalError(conversationId, title);
       }
-      const fileIds = extractImageIds(payload.mapping || {});
+      const result = extractImageResult(payload.mapping || {});
+      const fileIds = result.fileIds;
       if (fileIds.length > 0) {
         logger.info("openai-client", "poll-image-ids:done", {
           conversationId,
           fileCount: fileIds.length,
+          hasParentMessageId: Boolean(result.parentMessageId),
           elapsedMs: Date.now() - started,
         });
-        return fileIds;
+        return result;
       }
     } else {
       nonOkState.attempts += 1;
@@ -218,7 +230,7 @@ export async function pollImageIds(
     });
     throw buildPollRateLimitError(conversationId, nonOkState);
   }
-  return [] as string[];
+  return { fileIds: [] as string[], parentMessageId: "" };
 }
 
 export async function fetchDownloadUrl(

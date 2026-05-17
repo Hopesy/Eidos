@@ -31,6 +31,11 @@ type ConversationInput = {
   attachments?: UploadedMultimodalFile[];
 };
 
+type ChatGptConversationContinuation = {
+  conversationId?: string;
+  parentMessageId?: string;
+} | null | undefined;
+
 function gcd(a: number, b: number): number {
   return b === 0 ? a : gcd(b, a % b);
 }
@@ -116,6 +121,48 @@ function buildConversationMessage(input: ConversationInput) {
   };
 }
 
+function normalizeContinuation(input: ChatGptConversationContinuation) {
+  const conversationId = cleanToken(input?.conversationId);
+  const parentMessageId = cleanToken(input?.parentMessageId);
+  if (!conversationId || !parentMessageId) {
+    return null;
+  }
+  return { conversationId, parentMessageId };
+}
+
+export function buildConversationRequestBody(
+  input: ConversationInput,
+  model: string,
+  continuation?: ChatGptConversationContinuation,
+) {
+  const normalizedContinuation = normalizeContinuation(continuation);
+  return {
+    action: "next",
+    messages: [buildConversationMessage(input)],
+    parent_message_id: normalizedContinuation?.parentMessageId ?? randomUUID(),
+    ...(normalizedContinuation ? { conversation_id: normalizedContinuation.conversationId } : {}),
+    model,
+    history_and_training_disabled: false,
+    timezone_offset_min: -480,
+    timezone: "America/Los_Angeles",
+    conversation_mode: { kind: "primary_assistant" },
+    websocket_request_id: randomUUID(),
+    force_paragen: false,
+    force_use_sse: true,
+    system_hints: ["picture_v2"],
+    supported_encodings: [],
+    client_contextual_info: {
+      is_dark_mode: false,
+      time_since_loaded: 120,
+      page_height: 900,
+      page_width: 1600,
+      pixel_ratio: 1.2,
+      screen_height: 1080,
+      screen_width: 1920,
+    },
+  };
+}
+
 async function sendConversation(
   session: CookieSession,
   accessToken: string,
@@ -124,9 +171,11 @@ async function sendConversation(
   proofToken: string | null,
   input: ConversationInput,
   model: string,
+  continuation?: ChatGptConversationContinuation,
   signal?: AbortSignal,
 ) {
   throwIfAborted(signal);
+  const normalizedContinuation = normalizeContinuation(continuation);
   logger.info("openai-client", "conversation:start", {
     deviceId,
     token: maskAccessToken(accessToken),
@@ -134,6 +183,8 @@ async function sendConversation(
     promptLength: input.prompt.length,
     attachmentCount: input.attachments?.length ?? 0,
     hasProofToken: Boolean(proofToken),
+    upstreamConversationId: normalizedContinuation?.conversationId,
+    hasUpstreamParentMessageId: Boolean(normalizedContinuation?.parentMessageId),
   });
   const response = await session.fetch(`${CHATGPT_BASE_URL}/backend-api/conversation`, {
     method: "POST",
@@ -151,30 +202,7 @@ async function sendConversation(
       "openai-sentinel-chat-requirements-token": chatToken,
       ...(proofToken ? { "openai-sentinel-proof-token": proofToken } : {}),
     },
-    body: JSON.stringify({
-      action: "next",
-      messages: [buildConversationMessage(input)],
-      parent_message_id: randomUUID(),
-      model,
-      history_and_training_disabled: false,
-      timezone_offset_min: -480,
-      timezone: "America/Los_Angeles",
-      conversation_mode: { kind: "primary_assistant" },
-      websocket_request_id: randomUUID(),
-      force_paragen: false,
-      force_use_sse: true,
-      system_hints: ["picture_v2"],
-      supported_encodings: [],
-      client_contextual_info: {
-        is_dark_mode: false,
-        time_since_loaded: 120,
-        page_height: 900,
-        page_width: 1600,
-        pixel_ratio: 1.2,
-        screen_height: 1080,
-        screen_width: 1920,
-      },
-    }),
+    body: JSON.stringify(buildConversationRequestBody(input, model, normalizedContinuation)),
     timeoutMs: 180000,
     signal,
   });
@@ -264,6 +292,7 @@ export async function generateImageResult(
     proofToken,
     { prompt: effectivePrompt },
     upstreamModel,
+    options.continuation,
     options.signal,
   );
   throwIfAborted(options.signal);
@@ -280,6 +309,10 @@ export async function generateImageResultWithAttachments(
     mask?: File | null;
     size?: ImageGenerationSize;
     quality?: ImageGenerationQuality;
+    continuation?: {
+      conversationId?: string;
+      parentMessageId?: string;
+    } | null;
     signal?: AbortSignal;
   },
 ) {
@@ -341,6 +374,7 @@ export async function generateImageResultWithAttachments(
       attachments: uploadedFiles,
     },
     upstreamModel,
+    params.continuation,
     params.signal,
   );
 
@@ -354,6 +388,7 @@ export async function recoverImageResult(
   account: AccountRecord | null,
   recovery: {
     conversationId: string;
+    parentMessageId?: string;
     fileIds?: string[];
     revisedPrompt?: string;
     waitMs?: number;

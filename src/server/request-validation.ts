@@ -53,11 +53,15 @@ export const imageGenerationBodySchema = z.object({
   size: imageSizeSchema.optional(),
   quality: imageQualitySchema.optional(),
   output_format: imageOutputFormatSchema.optional(),
+  upstream_conversation_id: z.string().trim().optional(),
+  upstream_parent_message_id: z.string().trim().optional(),
+  source_account_id: z.string().trim().optional(),
 });
 
 export const imageTaskRecoverBodySchema = z.object({
   conversationId: z.string().trim().min(1, "conversationId is required"),
   sourceAccountId: z.string().trim().optional(),
+  upstreamParentMessageId: z.string().trim().optional(),
   revisedPrompt: z.string().trim().optional(),
   fileIds: stringListSchema.optional(),
   waitMs: z.number().positive().optional(),

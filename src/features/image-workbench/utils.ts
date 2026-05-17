@@ -28,6 +28,7 @@ type ResultItemPayload = {
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id?: string;
+  upstreamParentMessageId?: string;
 };
 
 export function cloneSourceImagesForComposer(sourceImages: StoredSourceImage[] = []) {
@@ -217,17 +218,21 @@ export function buildSourceReference(source: StoredSourceImage | null | undefine
   const originalFileId = String(source.file_id || "").trim();
   const originalGenId = String(source.gen_id || source.response_id || "").trim();
   const sourceAccountId = String(source.source_account_id || "").trim();
-  if (!originalFileId || !sourceAccountId || !originalGenId) {
+  const conversationId = String(source.conversation_id || "").trim();
+  const parentMessageId = String(source.parent_message_id || "").trim();
+  const hasResponsesReference = Boolean(originalGenId || source.image_generation_call_id);
+  const hasConversationReference = Boolean(conversationId && parentMessageId && sourceAccountId);
+  if (!hasResponsesReference && !hasConversationReference) {
     return null;
   }
   return {
-    original_file_id: originalFileId,
-    original_gen_id: originalGenId,
+    original_file_id: originalFileId || undefined,
+    original_gen_id: originalGenId || undefined,
     previous_response_id: String(source.response_id || "").trim() || undefined,
     image_generation_call_id: String(source.image_generation_call_id || "").trim() || undefined,
-    conversation_id: String(source.conversation_id || "").trim() || undefined,
-    parent_message_id: String(source.parent_message_id || "").trim() || undefined,
-    source_account_id: sourceAccountId,
+    conversation_id: conversationId || undefined,
+    parent_message_id: parentMessageId || undefined,
+    source_account_id: sourceAccountId || undefined,
   };
 }
 
@@ -257,6 +262,7 @@ export function createResultImage(
       retryable: undefined,
       stage: undefined,
       upstreamConversationId: undefined,
+      upstreamParentMessageId: item.upstreamParentMessageId,
     };
   }
 
@@ -406,6 +412,7 @@ export function extractRequestFailureMeta(error: unknown) {
       retryable: undefined,
       stage: undefined,
       upstreamConversationId: undefined,
+      upstreamParentMessageId: undefined,
       upstreamResponseId: undefined,
       imageGenerationCallId: undefined,
       sourceAccountId: undefined,
@@ -424,6 +431,7 @@ export function extractRequestFailureMeta(error: unknown) {
     retryable: error.retryable,
     stage: error.stage,
     upstreamConversationId: error.upstreamConversationId,
+    upstreamParentMessageId: error.upstreamParentMessageId,
     upstreamResponseId: error.upstreamResponseId,
     imageGenerationCallId: error.imageGenerationCallId,
     sourceAccountId: error.sourceAccountId,

@@ -6,6 +6,7 @@ export type RequestFailureMeta = {
   retryable?: boolean;
   stage?: string;
   upstreamConversationId?: string;
+  upstreamParentMessageId?: string;
   upstreamResponseId?: string;
   imageGenerationCallId?: string;
   sourceAccountId?: string;
@@ -25,6 +26,7 @@ function clearFailureMeta() {
     retryable: undefined,
     stage: undefined,
     upstreamConversationId: undefined,
+    upstreamParentMessageId: undefined,
     upstreamResponseId: undefined,
     imageGenerationCallId: undefined,
     sourceAccountId: undefined,
@@ -50,6 +52,7 @@ function mergeFailureMeta(
     retryable: failureMeta.retryable ?? fallback?.retryable,
     stage: failureMeta.stage ?? fallback?.stage,
     upstreamConversationId: failureMeta.upstreamConversationId ?? (canPreserveRecoveryContext ? fallback?.upstreamConversationId : undefined),
+    upstreamParentMessageId: failureMeta.upstreamParentMessageId ?? (canPreserveRecoveryContext ? fallback?.upstreamParentMessageId : undefined),
     upstreamResponseId: failureMeta.upstreamResponseId ?? (canPreserveRecoveryContext ? fallback?.upstreamResponseId : undefined),
     imageGenerationCallId: failureMeta.imageGenerationCallId ?? (canPreserveRecoveryContext ? fallback?.imageGenerationCallId : undefined),
     sourceAccountId: failureMeta.sourceAccountId ?? (canPreserveRecoveryContext ? fallback?.sourceAccountId : undefined),
@@ -61,6 +64,23 @@ function mergeFailureMeta(
     retryAfterMs: failureMeta.retryAfterMs ?? fallback?.retryAfterMs,
     upstreamBodyPreview: failureMeta.upstreamBodyPreview ?? fallback?.upstreamBodyPreview,
   };
+}
+
+function getTurnUpstreamContext(resultItems: StoredImage[]) {
+  for (let index = resultItems.length - 1; index >= 0; index -= 1) {
+    const item = resultItems[index];
+    const upstreamConversationId = String(item?.conversation_id || item?.upstreamConversationId || "").trim();
+    const upstreamParentMessageId = String(item?.parent_message_id || item?.upstreamParentMessageId || "").trim();
+    const sourceAccountId = String(item?.source_account_id || item?.sourceAccountId || "").trim();
+    if (upstreamConversationId || upstreamParentMessageId || sourceAccountId) {
+      return {
+        upstreamConversationId: upstreamConversationId || undefined,
+        upstreamParentMessageId: upstreamParentMessageId || undefined,
+        sourceAccountId: sourceAccountId || undefined,
+      };
+    }
+  }
+  return {};
 }
 
 function shouldPatchImage(index: number, retryIndexes?: number[]) {
@@ -106,6 +126,7 @@ export function applyTurnSuccess(
   durationMs: number,
 ) {
   const finishedAt = Date.now();
+  const upstreamContext = getTurnUpstreamContext(resultItems);
   return {
     ...turn,
     images: resultItems.map((image, index) => {
@@ -120,6 +141,7 @@ export function applyTurnSuccess(
     error: failedCount > 0 ? `其中 ${failedCount} 张处理失败` : undefined,
     durationMs,
     ...clearFailureMeta(),
+    ...upstreamContext,
   };
 }
 
@@ -161,6 +183,7 @@ export function applyTurnFailure(
       retryable: meta.retryable,
       stage: meta.stage,
       upstreamConversationId: meta.upstreamConversationId,
+      upstreamParentMessageId: meta.upstreamParentMessageId,
       upstreamResponseId: meta.upstreamResponseId,
       imageGenerationCallId: meta.imageGenerationCallId,
       sourceAccountId: meta.sourceAccountId,
@@ -183,6 +206,7 @@ export function applyTurnFailure(
           retryable: meta.retryable,
           stage: meta.stage,
           upstreamConversationId: meta.upstreamConversationId,
+          upstreamParentMessageId: meta.upstreamParentMessageId,
           upstreamResponseId: meta.upstreamResponseId,
           imageGenerationCallId: meta.imageGenerationCallId,
           sourceAccountId: meta.sourceAccountId,
@@ -207,6 +231,7 @@ export function applyTurnFailure(
     retryable: meta.retryable,
     stage: meta.stage,
     upstreamConversationId: meta.upstreamConversationId,
+    upstreamParentMessageId: meta.upstreamParentMessageId,
     upstreamResponseId: meta.upstreamResponseId,
     imageGenerationCallId: meta.imageGenerationCallId,
     sourceAccountId: meta.sourceAccountId,
@@ -229,6 +254,7 @@ export function applyTurnFailure(
           retryable: meta.retryable,
           stage: meta.stage,
           upstreamConversationId: meta.upstreamConversationId,
+          upstreamParentMessageId: meta.upstreamParentMessageId,
           upstreamResponseId: meta.upstreamResponseId,
           imageGenerationCallId: meta.imageGenerationCallId,
           sourceAccountId: meta.sourceAccountId,

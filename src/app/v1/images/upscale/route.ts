@@ -26,6 +26,17 @@ export async function POST(request: NextRequest) {
         let quality: ImageGenerationQuality = "medium";
         let outputFormat: ImageOutputFormat = "png";
         let image: File | null = null;
+        let sourceReference:
+            | {
+                originalFileId?: string;
+                originalGenId?: string;
+                previousResponseId?: string;
+                imageGenerationCallId?: string;
+                conversationId?: string;
+                parentMessageId?: string;
+                sourceAccountId?: string;
+            }
+            | null = null;
 
         if (contentType.includes("multipart/form-data")) {
             const formData = await request.formData();
@@ -36,6 +47,26 @@ export async function POST(request: NextRequest) {
             outputFormat = normalizeImageOutputFormat(formData.get("output_format"));
             const imageValue = formData.get("image");
             image = imageValue instanceof File ? imageValue : null;
+            const originalFileId = String(formData.get("original_file_id") || "").trim();
+            const originalGenId = String(formData.get("original_gen_id") || "").trim();
+            const previousResponseId = String(formData.get("previous_response_id") || "").trim();
+            const imageGenerationCallId = String(formData.get("image_generation_call_id") || "").trim();
+            const conversationId = String(formData.get("conversation_id") || "").trim();
+            const parentMessageId = String(formData.get("parent_message_id") || "").trim();
+            const sourceAccountId = String(formData.get("source_account_id") || "").trim();
+            const hasResponsesReference = Boolean(originalGenId || previousResponseId || imageGenerationCallId);
+            const hasConversationReference = Boolean(conversationId && parentMessageId && sourceAccountId);
+            if (hasResponsesReference || hasConversationReference) {
+                sourceReference = {
+                    originalFileId: originalFileId || undefined,
+                    originalGenId: originalGenId || undefined,
+                    previousResponseId: previousResponseId || undefined,
+                    imageGenerationCallId: imageGenerationCallId || undefined,
+                    conversationId: conversationId || undefined,
+                    parentMessageId: parentMessageId || undefined,
+                    sourceAccountId: sourceAccountId || undefined,
+                };
+            }
         } else {
             const body = await parseJsonBody(request, recordBodySchema);
             prompt = String(body.prompt || "").trim();
@@ -62,6 +93,7 @@ export async function POST(request: NextRequest) {
             promptLength: prompt.length,
             contentType,
             hasImage: Boolean(image),
+            hasSourceReference: Boolean(sourceReference?.conversationId && sourceReference.parentMessageId && sourceReference.sourceAccountId),
         });
 
         const imageApiService = getImageApiServiceConfig();
@@ -69,7 +101,21 @@ export async function POST(request: NextRequest) {
         if (imageApiService) {
             result = await upscaleWithApiService(upscalePrompt, model, image, { imageSize: size, imageQuality: quality, imageFormat: outputFormat, signal: request.signal });
         } else {
-            result = await upscaleWithPool(upscalePrompt, model, image, { imageSize: size, imageQuality: quality, imageFormat: outputFormat, signal: request.signal });
+            result = await upscaleWithPool(upscalePrompt, model, image, {
+                imageSize: size,
+                imageQuality: quality,
+                imageFormat: outputFormat,
+                sourceReference: sourceReference ? {
+                    originalFileId: sourceReference.originalFileId,
+                    originalGenId: sourceReference.originalGenId,
+                    previousResponseId: sourceReference.previousResponseId,
+                    imageGenerationCallId: sourceReference.imageGenerationCallId,
+                    conversationId: sourceReference.conversationId,
+                    parentMessageId: sourceReference.parentMessageId,
+                    sourceAccountId: sourceReference.sourceAccountId,
+                } : null,
+                signal: request.signal,
+            });
         }
 
         logger.info("images.upscale.route", "request:success", {

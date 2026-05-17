@@ -10,7 +10,7 @@ import {
   downloadAsBase64,
   fetchDownloadUrl,
   normalizePollWaitMs,
-  pollImageIds,
+  pollImageResult,
 } from "./result-download-adapter";
 import {
   buildNoImageReturnedError,
@@ -27,6 +27,7 @@ type GeneratedDownloadItem = {
   revised_prompt: string | undefined;
   file_id: string;
   conversation_id: string | undefined;
+  parent_message_id: string | undefined;
 };
 
 type GeneratedDownloadFailure = {
@@ -57,6 +58,7 @@ async function downloadGeneratedItemWithRetry(
   conversationId: string,
   fileId: string,
   revisedPrompt?: string,
+  parentMessageId?: string,
   signal?: AbortSignal,
 ) {
   let lastError: unknown;
@@ -88,6 +90,7 @@ async function downloadGeneratedItemWithRetry(
         revised_prompt: revisedPrompt,
         file_id: fileId,
         conversation_id: conversationId || undefined,
+        parent_message_id: parentMessageId || undefined,
       };
     } catch (error) {
       if (isAbortError(error)) {
@@ -124,12 +127,13 @@ async function downloadGeneratedItems(
   conversationId: string,
   fileIds: string[],
   revisedPrompt?: string,
+  parentMessageId?: string,
   signal?: AbortSignal,
 ) {
   throwIfAborted(signal);
   const downloadResults = await Promise.allSettled(
     fileIds.map((fileId) =>
-      downloadGeneratedItemWithRetry(session, accessToken, deviceId, conversationId, fileId, revisedPrompt, signal),
+      downloadGeneratedItemWithRetry(session, accessToken, deviceId, conversationId, fileId, revisedPrompt, parentMessageId, signal),
     ),
   );
 
@@ -175,6 +179,7 @@ async function downloadGeneratedItemsWithConversationFallback(
   conversationId: string,
   fileIds: string[],
   revisedPrompt?: string,
+  parentMessageId?: string,
   fallbackWaitMs = DOWNLOAD_FALLBACK_POLL_MS,
   signal?: AbortSignal,
 ) {
@@ -185,6 +190,7 @@ async function downloadGeneratedItemsWithConversationFallback(
     conversationId,
     fileIds,
     revisedPrompt,
+    parentMessageId,
     signal,
   );
   if (firstAttempt.items.length > 0 || !conversationId) {
@@ -201,8 +207,11 @@ async function downloadGeneratedItemsWithConversationFallback(
   }
 
   let polledFileIds: string[];
+  let effectiveParentMessageId = parentMessageId;
   try {
-    polledFileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs, signal });
+    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, { maxWaitMs: fallbackWaitMs, signal });
+    polledFileIds = polled.fileIds;
+    effectiveParentMessageId = polled.parentMessageId || effectiveParentMessageId;
   } catch (error) {
     if (isAbortError(error)) {
       throw error;
@@ -239,6 +248,7 @@ async function downloadGeneratedItemsWithConversationFallback(
     conversationId,
     fallbackFileIds,
     revisedPrompt,
+    effectiveParentMessageId,
     signal,
   );
   return {
@@ -261,16 +271,19 @@ export async function collectGeneratedItems(
   throwIfAborted(options.signal);
   const parsed = parseSsePayload(rawResponseText);
   const conversationId = parsed.conversationId || "";
+  let parentMessageId = parsed.parentMessageId || "";
   let fileIds = parsed.fileIds;
   logger.info("openai-client", "generate-image:sse-parsed", {
     conversationId,
     fileCount: fileIds.length,
+    hasParentMessageId: Boolean(parentMessageId),
     textPreview: parsed.text.slice(0, 200),
   });
   const textReply = parsed.text?.trim();
   if (conversationId && fileIds.length === 0 && textReply) {
     const nextError = buildNoImageReturnedError(textReply);
     nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;
+    nextError.upstreamParentMessageId = parentMessageId || nextError.upstreamParentMessageId;
     if (!nextError.retryable) {
       const logEvent = nextError.kind === "input_blocked"
         ? "generate-image:input-blocked"
@@ -287,7 +300,9 @@ export async function collectGeneratedItems(
     }
   }
   if (conversationId && fileIds.length === 0) {
-    fileIds = await pollImageIds(session, accessToken, deviceId, conversationId, { signal: options.signal });
+    const polled = await pollImageResult(session, accessToken, deviceId, conversationId, { signal: options.signal });
+    fileIds = polled.fileIds;
+    parentMessageId = polled.parentMessageId || parentMessageId;
   }
   if (fileIds.length === 0) {
     logger.error("openai-client", "generate-image:no-file-ids", {
@@ -298,6 +313,7 @@ export async function collectGeneratedItems(
     if (textReply) {
       const nextError = buildNoImageReturnedError(textReply);
       nextError.upstreamConversationId = conversationId || nextError.upstreamConversationId;
+      nextError.upstreamParentMessageId = parentMessageId || nextError.upstreamParentMessageId;
       throw nextError;
     }
     throw createImageError("no image returned from upstream", {
@@ -306,6 +322,7 @@ export async function collectGeneratedItems(
       retryable: true,
       stage: "poll",
       upstreamConversationId: conversationId,
+      upstreamParentMessageId: parentMessageId || undefined,
     });
   }
 
@@ -320,6 +337,7 @@ export async function collectGeneratedItems(
     conversationId,
     fileIds,
     revisedPrompt,
+    parentMessageId,
     undefined,
     options.signal,
   );
@@ -339,6 +357,7 @@ export async function collectGeneratedItems(
       retryable: true,
       stage: "download",
       upstreamConversationId: conversationId,
+      upstreamParentMessageId: parentMessageId || undefined,
       fileIds: attemptedFileIds,
     });
   }
@@ -355,6 +374,7 @@ export async function recoverGeneratedItems(
   deviceId: string,
   recovery: {
     conversationId: string;
+    parentMessageId?: string;
     fileIds?: string[];
     revisedPrompt?: string;
     waitMs?: number;
@@ -375,14 +395,17 @@ export async function recoverGeneratedItems(
   }
 
   let fileIds = (recovery.fileIds ?? []).map((item) => cleanToken(item)).filter(Boolean);
+  let parentMessageId = cleanToken(recovery.parentMessageId);
   if (fileIds.length === 0) {
     const started = Date.now();
     while (Date.now() - started < waitMs) {
       throwIfAborted(recovery.signal);
-      fileIds = await pollImageIds(session, accessToken, deviceId, conversationId, {
+      const polled = await pollImageResult(session, accessToken, deviceId, conversationId, {
         maxWaitMs: Math.max(3000, waitMs - (Date.now() - started)),
         signal: recovery.signal,
       });
+      fileIds = polled.fileIds;
+      parentMessageId = polled.parentMessageId || parentMessageId;
       if (fileIds.length > 0) {
         break;
       }
@@ -396,6 +419,7 @@ export async function recoverGeneratedItems(
       retryable: true,
       stage: "poll",
       upstreamConversationId: conversationId,
+      upstreamParentMessageId: parentMessageId || undefined,
       sourceAccountId: recovery.sourceAccountId,
     });
   }
@@ -411,6 +435,7 @@ export async function recoverGeneratedItems(
     conversationId,
     fileIds,
     recovery.revisedPrompt,
+    parentMessageId || undefined,
     waitMs,
     recovery.signal,
   );
@@ -423,6 +448,7 @@ export async function recoverGeneratedItems(
       retryable: true,
       stage: "download",
       upstreamConversationId: conversationId,
+      upstreamParentMessageId: parentMessageId || undefined,
       sourceAccountId: recovery.sourceAccountId,
       fileIds: attemptedFileIds,
     });

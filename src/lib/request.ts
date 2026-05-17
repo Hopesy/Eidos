@@ -9,6 +9,7 @@ export class ApiRequestError extends Error {
     retryable?: boolean;
     stage?: string;
     upstreamConversationId?: string;
+    upstreamParentMessageId?: string;
     upstreamResponseId?: string;
     imageGenerationCallId?: string;
     sourceAccountId?: string;
@@ -27,6 +28,7 @@ export class ApiRequestError extends Error {
         retryable?: boolean;
         stage?: string;
         upstreamConversationId?: string;
+        upstreamParentMessageId?: string;
         upstreamResponseId?: string;
         imageGenerationCallId?: string;
         sourceAccountId?: string;
@@ -46,6 +48,7 @@ export class ApiRequestError extends Error {
         this.retryable = options.retryable;
         this.stage = options.stage;
         this.upstreamConversationId = options.upstreamConversationId;
+        this.upstreamParentMessageId = options.upstreamParentMessageId;
         this.upstreamResponseId = options.upstreamResponseId;
         this.imageGenerationCallId = options.imageGenerationCallId;
         this.sourceAccountId = options.sourceAccountId;
@@ -82,6 +85,7 @@ request.interceptors.response.use(
             retryable?: boolean;
             stage?: string;
             upstreamConversationId?: string;
+            upstreamParentMessageId?: string;
             upstreamResponseId?: string;
             imageGenerationCallId?: string;
             sourceAccountId?: string;
@@ -110,6 +114,7 @@ request.interceptors.response.use(
             retryable: payload?.detail?.retryable,
             stage: payload?.detail?.stage,
             upstreamConversationId: payload?.detail?.upstreamConversationId,
+            upstreamParentMessageId: payload?.detail?.upstreamParentMessageId,
             upstreamResponseId: payload?.detail?.upstreamResponseId,
             imageGenerationCallId: payload?.detail?.imageGenerationCallId,
             sourceAccountId: payload?.detail?.sourceAccountId,

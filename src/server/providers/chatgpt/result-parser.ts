@@ -9,6 +9,7 @@ import { cleanToken } from "./result-shared";
 export function parseSsePayload(raw: string) {
   const fileIds: string[] = [];
   let conversationId = "";
+  let parentMessageId = "";
   const textParts: string[] = [];
 
   for (const line of raw.split(/\r?\n/)) {
@@ -28,12 +29,15 @@ export function parseSsePayload(raw: string) {
       if (nested && typeof nested === "object") {
         conversationId = String((nested as Record<string, unknown>).conversation_id || conversationId);
       }
+      const message = (json.message as Record<string, unknown> | undefined) ??
+        ((nested as Record<string, unknown> | undefined)?.message as Record<string, unknown> | undefined) ??
+        {};
+      parentMessageId = String(message.id || parentMessageId);
       for (const fileId of extractImageIdsFromPayload(json)) {
         if (fileId && !fileIds.includes(fileId)) {
           fileIds.push(fileId);
         }
       }
-      const message = (json.message as Record<string, unknown> | undefined) ?? {};
       const content = (message.content as Record<string, unknown> | undefined) ?? {};
       if (content.content_type === "text" && Array.isArray(content.parts) && content.parts.length > 0) {
         textParts.push(String(content.parts[0] || ""));
@@ -45,6 +49,7 @@ export function parseSsePayload(raw: string) {
 
   return {
     conversationId,
+    parentMessageId,
     fileIds,
     text: textParts.join(""),
   };
@@ -157,14 +162,23 @@ export function buildNoImageReturnedError(textReply: string) {
 }
 
 export function extractImageIds(mapping: Record<string, unknown>) {
+  return extractImageResult(mapping).fileIds;
+}
+
+export function extractImageResult(mapping: Record<string, unknown>) {
   const fileIds: string[] = [];
+  let parentMessageId = "";
   for (const node of Object.values(mapping)) {
     const message = ((node as Record<string, unknown> | undefined)?.message ?? {}) as Record<string, unknown>;
-    for (const fileId of extractImageIdsFromMessage(message)) {
+    const messageFileIds = extractImageIdsFromMessage(message);
+    if (messageFileIds.length > 0) {
+      parentMessageId = cleanToken(message.id) || parentMessageId;
+    }
+    for (const fileId of messageFileIds) {
       if (fileId && !fileIds.includes(fileId)) {
         fileIds.push(fileId);
       }
     }
   }
-  return fileIds;
+  return { fileIds, parentMessageId };
 }

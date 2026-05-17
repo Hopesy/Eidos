@@ -45,11 +45,13 @@ export async function POST(request: NextRequest) {
       waitMs,
       fileCount: fileIds.length,
       hasSourceAccountId: Boolean(body.sourceAccountId),
+      hasUpstreamParentMessageId: Boolean(body.upstreamParentMessageId),
     });
 
     const result = await recoverImageTaskWithAccount({
       conversationId,
       sourceAccountId: String(body.sourceAccountId || "").trim() || undefined,
+      upstreamParentMessageId: String(body.upstreamParentMessageId || "").trim() || undefined,
       revisedPrompt: String(body.revisedPrompt || "").trim() || undefined,
       fileIds,
       waitMs,

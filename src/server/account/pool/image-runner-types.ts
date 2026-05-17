@@ -4,8 +4,25 @@ import type { AccountRecord } from "@/server/types";
 export type AccountPoolImageRunnerDependencies = {
   getAvailableAccessToken(excludedTokens?: Set<string>): Promise<string>;
   getAccount(accessToken: string): Promise<AccountRecord | null>;
+  getAccountById(accountId: string): Promise<AccountRecord | null>;
   markImageResult(accessToken: string, success: boolean): Promise<unknown>;
   removeToken(accessToken: string): Promise<unknown>;
+};
+
+export type UpstreamConversationContext = {
+  conversationId?: string;
+  parentMessageId?: string;
+  sourceAccountId?: string;
+};
+
+export type AccountPoolSourceReference = {
+  originalFileId?: string;
+  originalGenId?: string;
+  previousResponseId?: string;
+  imageGenerationCallId?: string;
+  conversationId?: string;
+  parentMessageId?: string;
+  sourceAccountId?: string;
 };
 
 export type AccountPoolImageRunner = {
@@ -19,6 +36,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      upstreamContext?: UpstreamConversationContext;
       signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
@@ -31,6 +49,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      sourceReference?: AccountPoolSourceReference | null;
       signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;
@@ -42,6 +61,7 @@ export type AccountPoolImageRunner = {
       imageSize?: ImageGenerationSize;
       imageQuality?: ImageGenerationQuality;
       imageFormat?: ImageOutputFormat;
+      sourceReference?: AccountPoolSourceReference | null;
       signal?: AbortSignal;
     },
   ): Promise<{ created: number; data: Array<Record<string, unknown>> }>;

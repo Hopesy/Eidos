@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
         let mask: File | null = null;
         let sourceReference:
             | {
-                originalFileId: string;
-                originalGenId: string;
+                originalFileId?: string;
+                originalGenId?: string;
                 previousResponseId?: string;
                 imageGenerationCallId?: string;
                 conversationId?: string;
@@ -51,15 +51,22 @@ export async function POST(request: NextRequest) {
             mask = maskValue instanceof File ? maskValue : null;
             const originalFileId = String(formData.get("original_file_id") || "").trim();
             const originalGenId = String(formData.get("original_gen_id") || "").trim();
-            if (originalFileId && originalGenId) {
+            const previousResponseId = String(formData.get("previous_response_id") || "").trim();
+            const imageGenerationCallId = String(formData.get("image_generation_call_id") || "").trim();
+            const conversationId = String(formData.get("conversation_id") || "").trim();
+            const parentMessageId = String(formData.get("parent_message_id") || "").trim();
+            const sourceAccountId = String(formData.get("source_account_id") || "").trim();
+            const hasResponsesReference = Boolean(originalGenId || previousResponseId || imageGenerationCallId);
+            const hasConversationReference = Boolean(conversationId && parentMessageId && sourceAccountId);
+            if (hasResponsesReference || hasConversationReference) {
                 sourceReference = {
-                    originalFileId,
-                    originalGenId,
-                    previousResponseId: String(formData.get("previous_response_id") || "").trim() || undefined,
-                    imageGenerationCallId: String(formData.get("image_generation_call_id") || "").trim() || undefined,
-                    conversationId: String(formData.get("conversation_id") || "").trim() || undefined,
-                    parentMessageId: String(formData.get("parent_message_id") || "").trim() || undefined,
-                    sourceAccountId: String(formData.get("source_account_id") || "").trim() || undefined,
+                    originalFileId: originalFileId || undefined,
+                    originalGenId: originalGenId || undefined,
+                    previousResponseId: previousResponseId || undefined,
+                    imageGenerationCallId: imageGenerationCallId || undefined,
+                    conversationId: conversationId || undefined,
+                    parentMessageId: parentMessageId || undefined,
+                    sourceAccountId: sourceAccountId || undefined,
                 };
             }
         } else {
@@ -89,6 +96,7 @@ export async function POST(request: NextRequest) {
             prompt,
             promptLength: prompt.length,
             contentType,
+            hasSourceReference: Boolean(sourceReference?.conversationId && sourceReference.parentMessageId && sourceReference.sourceAccountId),
         });
 
         const imageApiService = getImageApiServiceConfig();
@@ -114,6 +122,15 @@ export async function POST(request: NextRequest) {
                 imageSize: size,
                 imageQuality: quality,
                 imageFormat: outputFormat,
+                sourceReference: sourceReference ? {
+                    originalFileId: sourceReference.originalFileId,
+                    originalGenId: sourceReference.originalGenId,
+                    previousResponseId: sourceReference.previousResponseId,
+                    imageGenerationCallId: sourceReference.imageGenerationCallId,
+                    conversationId: sourceReference.conversationId,
+                    parentMessageId: sourceReference.parentMessageId,
+                    sourceAccountId: sourceReference.sourceAccountId,
+                } : null,
                 signal: request.signal,
             });
         }

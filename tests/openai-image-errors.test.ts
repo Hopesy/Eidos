@@ -108,6 +108,7 @@ describe("openai image error policy", () => {
       retryable: true,
       stage: "poll",
       upstreamConversationId: "conv-1",
+      upstreamParentMessageId: undefined,
       upstreamResponseId: undefined,
       imageGenerationCallId: undefined,
       sourceAccountId: undefined,
