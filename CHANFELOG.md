@@ -1,5 +1,25 @@
 # CHANFELOG
 
+## [v0.1.13] - 2026-05-18
+
+### Fixed
+- 修复账号池生成的图片在 Responses apiStyle 下编辑时 `gen_id` 会被当成 `previous_response_id` 发往上游导致请求失败的问题。
+- 修复 `/v1/chat/completions` 图片返回的 data URL MIME 永远是 `image/png`，不随 `output_format` 变化的问题。
+- 修复 v1 通道直连 OpenAI 时 `gpt-image-1` / `gpt-image-2` 因为附带 `response_format` 字段被判为非法参数的问题。
+- 修复 `/v1/responses` 和 `/v1/chat/completions` 客户端断开后上游请求继续运行，以及重试策略把上游错误文本里的 "400ms" 等数字误判为不可重试状态码的问题。
+
+### Changed
+- 重写 `/v1/responses` 端点：支持解析 `input_image`（data URL）、`image_generation` 工具配置（size/quality/output_format）和 `previous_response_id`；遇到 `file_id` 或远程 URL 时返回 400 而非静默丢弃。
+- `/v1/images/edits` 与 `/v1/images/upscale` 改为强制 `multipart/form-data`，非该类型直接 415；新增上传张数（≤4）和单张大小（≤32MB）限制，edits 的 `quality` 走 schema 校验。
+- v1 三条 images 路由的 dispatch 统一到 `account-service.editImage` / `upscaleImage` 包装函数；upscale 在 API service 通道也开始透传 `sourceReference`。
+- 图像 API 单次任务总耗时上限 180s，到点放弃后续重试。
+- "高画质" 档位的尺寸映射调整为符合 4K UHD 像素预算（1:1→2880x2880、3:2→3520x2336、2:3→2336x3520），同步收紧 `ImageGenerationSize` 类型与 size schema。
+- Responses 通道输出 `id` 改用 `crypto.randomUUID()`；并发部分失败原因聚合到 warn 日志；`parallel_tool_calls` 改为回显请求值，不再硬编码 false。
+
+### Improved
+- 路由与 adapter 不再把 prompt 全文写入日志，仅记 `promptLength`；上游错误回显的 body 预览从 400 字节收紧到 200 字节。
+- `/v1/images/generations` 的 `n` 参数现支持字符串数字。
+
 ## [v0.1.12] - 2026-05-10
 
 ### Changed
