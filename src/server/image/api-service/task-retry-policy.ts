@@ -4,9 +4,13 @@ import {
 import { abortableDelay } from "@/server/image/abort";
 
 export const API_MAX_ATTEMPTS = 3;
+export const API_MAX_TOTAL_MS = 180_000;
 const API_RETRY_BASE_DELAY_MS = 1500;
 const RATE_LIMIT_FLOOR_MS = 15000;
 const RATE_LIMIT_MAX_MS = 60000;
+
+const NON_RETRYABLE_STATUS_PATTERN = /\b(40[0-3])\b/;
+const RETRYABLE_STATUS_PATTERN = /\b(50[2-4])\b/;
 
 export function isRetryableApiError(error: unknown) {
   if (error instanceof ImageGenerationError) {
@@ -26,9 +30,7 @@ export function isRetryableApiError(error: unknown) {
     normalized.includes("unsupported") ||
     normalized.includes("invalid_image") ||
     normalized.includes("invalid image") ||
-    normalized.includes("400") ||
-    normalized.includes("401") ||
-    normalized.includes("403")
+    NON_RETRYABLE_STATUS_PATTERN.test(normalized)
   ) {
     return false;
   }
@@ -44,10 +46,8 @@ export function isRetryableApiError(error: unknown) {
     normalized.includes("etimedout") ||
     normalized.includes("und_err") ||
     normalized.includes("socket") ||
-    normalized.includes("502") ||
-    normalized.includes("503") ||
-    normalized.includes("504") ||
-    normalized.includes("service unavailable")
+    normalized.includes("service unavailable") ||
+    RETRYABLE_STATUS_PATTERN.test(normalized)
   );
 }
 

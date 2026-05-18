@@ -134,13 +134,13 @@ export function resolveImageGenerationSize(
   const mapping: Record<string, ImageGenerationSize> = {
     "1:1:low": "1024x1024",
     "1:1:medium": "2048x2048",
-    "1:1:high": "4096x4096",
+    "1:1:high": "2880x2880",
     "3:2:low": "1536x1024",
     "3:2:medium": "3072x2048",
-    "3:2:high": "6144x4096",
+    "3:2:high": "3520x2336",
     "2:3:low": "1024x1536",
     "2:3:medium": "2048x3072",
-    "2:3:high": "4096x6144",
+    "2:3:high": "2336x3520",
     "16:9:low": "1920x1088",
     "16:9:medium": "2560x1440",
     "16:9:high": "3840x2160",
@@ -158,19 +158,16 @@ export function resolveImageRatioFromSize(size?: ImageGenerationSize): ImageRati
     case "1024x1024":
     case "2048x2048":
     case "2880x2880":
-    case "4096x4096":
       return "1:1";
     case "1792x1024":
     case "1536x1024":
     case "3072x2048":
     case "3520x2336":
-    case "6144x4096":
       return "3:2";
     case "1024x1792":
     case "1024x1536":
     case "2048x3072":
     case "2336x3520":
-    case "4096x6144":
       return "2:3";
     case "1920x1088":
     case "2560x1440":

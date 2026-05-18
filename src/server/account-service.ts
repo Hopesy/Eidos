@@ -322,6 +322,15 @@ export async function upscaleWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    sourceReference?: {
+      originalFileId?: string;
+      originalGenId?: string;
+      previousResponseId?: string;
+      imageGenerationCallId?: string;
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    } | null;
     signal?: AbortSignal;
   } = {},
 ) {
@@ -342,11 +351,57 @@ export async function upscaleWithApiService(
       imageSize: options.imageSize,
       imageQuality: options.imageQuality,
       imageFormat: options.imageFormat,
+      sourceReference: options.sourceReference,
       startedAt,
       startedAtMs,
       signal: options.signal,
     },
   );
+}
+
+type ImageSourceReference = {
+  originalFileId?: string;
+  originalGenId?: string;
+  previousResponseId?: string;
+  imageGenerationCallId?: string;
+  conversationId?: string;
+  parentMessageId?: string;
+  sourceAccountId?: string;
+};
+
+export async function editImage(
+  prompt: string,
+  model: string,
+  images: File[],
+  mask: File | null | undefined,
+  options: {
+    imageSize?: ImageGenerationSize;
+    imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
+    sourceReference?: ImageSourceReference | null;
+    signal?: AbortSignal;
+  } = {},
+) {
+  return getImageApiServiceConfig()
+    ? editWithApiService(prompt, model, images, mask, options)
+    : editWithPool(prompt, model, images, mask, options);
+}
+
+export async function upscaleImage(
+  prompt: string,
+  model: string,
+  image: File,
+  options: {
+    imageSize?: ImageGenerationSize;
+    imageQuality?: ImageGenerationQuality;
+    imageFormat?: ImageOutputFormat;
+    sourceReference?: ImageSourceReference | null;
+    signal?: AbortSignal;
+  } = {},
+) {
+  return getImageApiServiceConfig()
+    ? upscaleWithApiService(prompt, model, image, options)
+    : upscaleWithPool(prompt, model, image, options);
 }
 
 export async function ensureAccountWatcherStarted(options: { reload?: boolean } = {}) {

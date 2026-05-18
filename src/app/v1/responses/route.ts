@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     await ensureAccountWatcherStarted();
-    return jsonOk(await createResponse(await parseJsonBody(request, recordBodySchema)));
+    return jsonOk(await createResponse(await parseJsonBody(request, recordBodySchema), { signal: request.signal }));
   } catch (error) {
     return jsonError(error);
   }

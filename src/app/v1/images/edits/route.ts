@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 
-import { editWithApiService, editWithPool, ensureAccountWatcherStarted, getImageApiServiceConfig } from "@/server/account-service";
+import { editImage, ensureAccountWatcherStarted } from "@/server/account-service";
 import { isAbortError } from "@/server/image/abort";
 import { createImageApiError } from "@/server/image/error-response";
+import { validateMaskFile, validateUploadedImages } from "@/server/image/upload-validation";
 import { logger } from "@/server/logger";
-import { parseJsonBody, recordBodySchema } from "@/server/request-validation";
-import { ApiError, jsonError, jsonOk } from "@/server/response";
 import {
     getImageErrorMeta,
     ImageGenerationError,
 } from "@/server/providers/openai-client";
+import { imageQualitySchema } from "@/server/request-validation";
+import { ApiError, jsonError, jsonOk } from "@/server/response";
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 import { normalizeImageGenerationSize, normalizeImageOutputFormat, resolveImageGenerationSize } from "@/shared/image-generation";
 
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest) {
         await ensureAccountWatcherStarted();
 
         const contentType = request.headers.get("content-type") || "";
+        if (!contentType.includes("multipart/form-data")) {
+            throw new ApiError(415, "image edits require multipart/form-data with an image file");
+        }
+
         let prompt = "";
         let model = "gpt-image-1";
         let size: ImageGenerationSize = "auto";
@@ -39,43 +44,39 @@ export async function POST(request: NextRequest) {
             }
             | null = null;
 
-        if (contentType.includes("multipart/form-data")) {
-            const formData = await request.formData();
-            prompt = String(formData.get("prompt") || "").trim();
-            model = String(formData.get("model") || "gpt-image-1").trim() || "gpt-image-1";
-            size = (String(formData.get("size") || "auto").trim() || "auto") as ImageGenerationSize;
-            quality = (String(formData.get("quality") || "auto").trim() || "auto") as ImageGenerationQuality;
-            outputFormat = normalizeImageOutputFormat(formData.get("output_format"));
-            images = formData.getAll("image").filter((item): item is File => item instanceof File);
-            const maskValue = formData.get("mask");
-            mask = maskValue instanceof File ? maskValue : null;
-            const originalFileId = String(formData.get("original_file_id") || "").trim();
-            const originalGenId = String(formData.get("original_gen_id") || "").trim();
-            const previousResponseId = String(formData.get("previous_response_id") || "").trim();
-            const imageGenerationCallId = String(formData.get("image_generation_call_id") || "").trim();
-            const conversationId = String(formData.get("conversation_id") || "").trim();
-            const parentMessageId = String(formData.get("parent_message_id") || "").trim();
-            const sourceAccountId = String(formData.get("source_account_id") || "").trim();
-            const hasResponsesReference = Boolean(originalGenId || previousResponseId || imageGenerationCallId);
-            const hasConversationReference = Boolean(conversationId && parentMessageId && sourceAccountId);
-            if (hasResponsesReference || hasConversationReference) {
-                sourceReference = {
-                    originalFileId: originalFileId || undefined,
-                    originalGenId: originalGenId || undefined,
-                    previousResponseId: previousResponseId || undefined,
-                    imageGenerationCallId: imageGenerationCallId || undefined,
-                    conversationId: conversationId || undefined,
-                    parentMessageId: parentMessageId || undefined,
-                    sourceAccountId: sourceAccountId || undefined,
-                };
-            }
-        } else {
-            const body = await parseJsonBody(request, recordBodySchema);
-            prompt = String(body.prompt || "").trim();
-            model = String(body.model || "gpt-image-1").trim() || "gpt-image-1";
-            size = (String(body.size || "auto").trim() || "auto") as ImageGenerationSize;
-            quality = (String(body.quality || "auto").trim() || "auto") as ImageGenerationQuality;
-            outputFormat = normalizeImageOutputFormat(body.output_format);
+        const formData = await request.formData();
+        prompt = String(formData.get("prompt") || "").trim();
+        model = String(formData.get("model") || "gpt-image-1").trim() || "gpt-image-1";
+        size = (String(formData.get("size") || "auto").trim() || "auto") as ImageGenerationSize;
+        const rawQuality = String(formData.get("quality") || "auto").trim();
+        const qualityResult = imageQualitySchema.safeParse(rawQuality);
+        if (!qualityResult.success) {
+            throw new ApiError(400, `invalid quality: ${rawQuality}`);
+        }
+        quality = qualityResult.data;
+        outputFormat = normalizeImageOutputFormat(formData.get("output_format"));
+        images = formData.getAll("image").filter((item): item is File => item instanceof File);
+        const maskValue = formData.get("mask");
+        mask = maskValue instanceof File ? maskValue : null;
+        const originalFileId = String(formData.get("original_file_id") || "").trim();
+        const originalGenId = String(formData.get("original_gen_id") || "").trim();
+        const previousResponseId = String(formData.get("previous_response_id") || "").trim();
+        const imageGenerationCallId = String(formData.get("image_generation_call_id") || "").trim();
+        const conversationId = String(formData.get("conversation_id") || "").trim();
+        const parentMessageId = String(formData.get("parent_message_id") || "").trim();
+        const sourceAccountId = String(formData.get("source_account_id") || "").trim();
+        const hasResponsesReference = Boolean(originalGenId || previousResponseId || imageGenerationCallId);
+        const hasConversationReference = Boolean(conversationId && parentMessageId && sourceAccountId);
+        if (hasResponsesReference || hasConversationReference) {
+            sourceReference = {
+                originalFileId: originalFileId || undefined,
+                originalGenId: originalGenId || undefined,
+                previousResponseId: previousResponseId || undefined,
+                imageGenerationCallId: imageGenerationCallId || undefined,
+                conversationId: conversationId || undefined,
+                parentMessageId: parentMessageId || undefined,
+                sourceAccountId: sourceAccountId || undefined,
+            };
         }
 
         if (!prompt) {
@@ -84,6 +85,8 @@ export async function POST(request: NextRequest) {
         if (images.length === 0) {
             throw new ApiError(400, "edit image is required");
         }
+        validateUploadedImages(images);
+        validateMaskFile(mask);
         size = size === "auto" ? resolveImageGenerationSize("auto", quality) : normalizeImageGenerationSize(size);
 
         logger.info("images.edits.route", "request:start", {
@@ -93,47 +96,18 @@ export async function POST(request: NextRequest) {
             outputFormat,
             imageCount: images.length,
             hasMask: Boolean(mask),
-            prompt,
             promptLength: prompt.length,
             contentType,
             hasSourceReference: Boolean(sourceReference?.conversationId && sourceReference.parentMessageId && sourceReference.sourceAccountId),
         });
 
-        const imageApiService = getImageApiServiceConfig();
-        let result;
-        if (imageApiService) {
-            result = await editWithApiService(prompt, model, images, mask, {
-                imageSize: size,
-                imageQuality: quality,
-                imageFormat: outputFormat,
-                sourceReference: sourceReference ? {
-                    originalFileId: sourceReference.originalFileId,
-                    originalGenId: sourceReference.originalGenId,
-                    previousResponseId: sourceReference.previousResponseId,
-                    imageGenerationCallId: sourceReference.imageGenerationCallId,
-                    conversationId: sourceReference.conversationId,
-                    parentMessageId: sourceReference.parentMessageId,
-                    sourceAccountId: sourceReference.sourceAccountId,
-                } : null,
-                signal: request.signal,
-            });
-        } else {
-            result = await editWithPool(prompt, model, images, mask, {
-                imageSize: size,
-                imageQuality: quality,
-                imageFormat: outputFormat,
-                sourceReference: sourceReference ? {
-                    originalFileId: sourceReference.originalFileId,
-                    originalGenId: sourceReference.originalGenId,
-                    previousResponseId: sourceReference.previousResponseId,
-                    imageGenerationCallId: sourceReference.imageGenerationCallId,
-                    conversationId: sourceReference.conversationId,
-                    parentMessageId: sourceReference.parentMessageId,
-                    sourceAccountId: sourceReference.sourceAccountId,
-                } : null,
-                signal: request.signal,
-            });
-        }
+        const result = await editImage(prompt, model, images, mask, {
+            imageSize: size,
+            imageQuality: quality,
+            imageFormat: outputFormat,
+            sourceReference,
+            signal: request.signal,
+        });
 
         logger.info("images.edits.route", "request:success", {
             model,

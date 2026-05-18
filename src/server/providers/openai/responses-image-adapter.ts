@@ -116,7 +116,7 @@ export async function generateImageResultWithResponsesApiService(
       });
 
       if (!response.ok) {
-        const bodyText = (await response.text()).slice(0, 400);
+        const bodyText = (await response.text()).slice(0, 200);
         throw buildHttpImageError(
           bodyText || `responses api failed: ${response.status}`,
           response.status,
@@ -162,6 +162,9 @@ export async function generateImageResultWithResponsesApiService(
   const fulfilled = settled
     .filter((entry): entry is PromiseFulfilledResult<ParsedResponsesImageItem[]> => entry.status === "fulfilled")
     .flatMap((entry) => entry.value);
+  const rejections = settled
+    .filter((entry): entry is PromiseRejectedResult => entry.status === "rejected")
+    .map((entry) => (entry.reason instanceof Error ? entry.reason.message : String(entry.reason)).slice(0, 200));
   if (fulfilled.length === 0) {
     const rejected = settled.find((entry): entry is PromiseRejectedResult => entry.status === "rejected");
     if (rejected) {
@@ -172,6 +175,15 @@ export async function generateImageResultWithResponsesApiService(
       retryAction: "resubmit",
       retryable: true,
       stage: "api_service",
+    });
+  }
+  if (rejections.length > 0) {
+    logger.warn("openai-client", "responses-service:generate:partial-failures", {
+      endpoint,
+      requested: count,
+      fulfilled: fulfilled.length,
+      failed: rejections.length,
+      reasons: rejections,
     });
   }
 
@@ -192,6 +204,7 @@ export async function editImageResultWithResponsesApiService(
     format?: ImageOutputFormat;
     continuation?: ResponsesContinuationOptions | null;
     signal?: AbortSignal;
+    operation?: "edit" | "upscale";
   },
 ) {
   const apiKey = cleanToken(serviceConfig.apiKey);
@@ -203,6 +216,7 @@ export async function editImageResultWithResponsesApiService(
   const quality = params.quality ?? "auto";
   const outputFormat = params.format ?? "png";
   const images = params.images.filter(Boolean);
+  const operation = params.operation ?? "edit";
   throwIfAborted(params.signal);
   if (!apiKey) {
     throw createImageError("image api key is required", {
@@ -254,7 +268,7 @@ export async function editImageResultWithResponsesApiService(
 
   const controller = createLinkedAbortController(params.signal, 120000);
   try {
-    logger.info("openai-client", "responses-service:edit:start", {
+    logger.info("openai-client", `responses-service:${operation}:start`, {
       endpoint,
       model,
       imageCount: images.length,
@@ -265,7 +279,6 @@ export async function editImageResultWithResponsesApiService(
       size,
       quality,
       outputFormat,
-      prompt,
       promptLength: prompt.length,
     });
 
@@ -309,9 +322,9 @@ export async function editImageResultWithResponsesApiService(
     });
 
     if (!response.ok) {
-      const bodyText = (await response.text()).slice(0, 400);
+      const bodyText = (await response.text()).slice(0, 200);
       throw buildHttpImageError(
-        bodyText || `responses edit api failed: ${response.status}`,
+        bodyText || `responses ${operation} api failed: ${response.status}`,
         response.status,
         "api_service",
         "submit_failed",
@@ -322,7 +335,7 @@ export async function editImageResultWithResponsesApiService(
     const payload = (await response.json()) as Record<string, unknown>;
     const items = parseResponsesImageOutputs(payload);
     if (items.length === 0) {
-      throw createImageError("no image returned from responses edit api service", {
+      throw createImageError(`no image returned from responses ${operation} api service`, {
         kind: "submit_failed",
         retryAction: "resubmit",
         retryable: true,
@@ -343,7 +356,7 @@ export async function editImageResultWithResponsesApiService(
     }
     const isAbort = isAbortError(error);
     const message = error instanceof Error ? error.message : String(error);
-    throw createImageError(isAbort ? "responses edit request timed out" : message, {
+    throw createImageError(isAbort ? `responses ${operation} request timed out` : message, {
       kind: "submit_failed",
       retryAction: "resubmit",
       retryable: true,

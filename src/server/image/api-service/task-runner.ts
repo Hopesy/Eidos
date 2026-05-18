@@ -47,7 +47,7 @@ export function runApiEditTask(
         signal: options.signal,
         continuation: options.sourceReference
           ? {
-            previousResponseId: options.sourceReference.previousResponseId || options.sourceReference.originalGenId,
+            previousResponseId: options.sourceReference.previousResponseId,
             imageGenerationCallId: options.sourceReference.imageGenerationCallId,
           }
           : null,
@@ -85,6 +85,15 @@ export function runApiUpscaleTask(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    sourceReference?: {
+      originalFileId?: string;
+      originalGenId?: string;
+      previousResponseId?: string;
+      imageGenerationCallId?: string;
+      conversationId?: string;
+      parentMessageId?: string;
+      sourceAccountId?: string;
+    } | null;
     startedAt: string;
     startedAtMs: number;
     signal?: AbortSignal;
@@ -100,6 +109,13 @@ export function runApiUpscaleTask(
         quality: options.imageQuality,
         format: options.imageFormat,
         signal: options.signal,
+        operation: "upscale",
+        continuation: options.sourceReference
+          ? {
+            previousResponseId: options.sourceReference.previousResponseId,
+            imageGenerationCallId: options.sourceReference.imageGenerationCallId,
+          }
+          : null,
       })
       : editImageResultWithApiService(imageApiService, {
         prompt,

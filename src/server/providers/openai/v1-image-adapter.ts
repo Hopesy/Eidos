@@ -15,6 +15,12 @@ import {
   type ImageGenerationOptions,
 } from "./api-service-shared";
 
+const GPT_IMAGE_MODELS = new Set(["gpt-image-1", "gpt-image-2"]);
+
+function supportsResponseFormat(model: string) {
+  return !GPT_IMAGE_MODELS.has(cleanToken(model).toLowerCase());
+}
+
 export async function generateImageResultWithApiService(
   serviceConfig: ImageApiServiceConfig,
   prompt: string,
@@ -68,7 +74,7 @@ export async function generateImageResultWithApiService(
         prompt: normalizedPrompt,
         model: requestedModel,
         n: count,
-        response_format: "b64_json",
+        ...(supportsResponseFormat(requestedModel) ? { response_format: "b64_json" } : {}),
         output_format: outputFormat,
         ...(size !== "auto" ? { size } : {}),
         ...(quality !== "auto" ? { quality } : {}),
@@ -78,7 +84,7 @@ export async function generateImageResultWithApiService(
     });
 
     if (!response.ok) {
-      const bodyText = (await response.text()).slice(0, 400);
+      const bodyText = (await response.text()).slice(0, 200);
       logger.error("openai-client", "api-service:failed", {
         endpoint,
         status: response.status,
@@ -188,7 +194,9 @@ export async function editImageResultWithApiService(
   const formData = new FormData();
   formData.append("prompt", prompt);
   formData.append("model", model);
-  formData.append("response_format", "b64_json");
+  if (supportsResponseFormat(model)) {
+    formData.append("response_format", "b64_json");
+  }
   formData.append("output_format", outputFormat);
   if (size !== "auto") {
     formData.append("size", size);
@@ -211,7 +219,6 @@ export async function editImageResultWithApiService(
       size,
       quality,
       outputFormat,
-      prompt,
       promptLength: prompt.length,
     });
 
@@ -226,7 +233,7 @@ export async function editImageResultWithApiService(
     });
 
     if (!response.ok) {
-      const bodyText = (await response.text()).slice(0, 400);
+      const bodyText = (await response.text()).slice(0, 200);
       logger.error("openai-client", "api-service:edit:failed", {
         endpoint,
         status: response.status,

@@ -148,9 +148,6 @@ function normalizeSize(value: unknown): GalleryImageItem["imageSize"] | undefine
     normalized === "3520x2336" ||
     normalized === "2336x3520" ||
     normalized === "3840x2160" ||
-    normalized === "4096x4096" ||
-    normalized === "6144x4096" ||
-    normalized === "4096x6144" ||
     normalized === "1088x1920" ||
     normalized === "1440x2560" ||
     normalized === "2160x3840"

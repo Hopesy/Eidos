@@ -12,6 +12,7 @@ import { addRequestLog } from "@/server/repositories/request-log";
 
 import {
   API_MAX_ATTEMPTS,
+  API_MAX_TOTAL_MS,
   delay,
   getApiRetryDelayMs,
   isRetryableApiError,
@@ -69,6 +70,14 @@ export async function runApiGenerateTask(
 
   for (let attempt = 1; attempt <= API_MAX_ATTEMPTS && collected.length < count; attempt += 1) {
     throwIfAborted(options.signal);
+    if (Date.now() - options.startedAtMs >= API_MAX_TOTAL_MS) {
+      logger.warn("account-service", "图像 API 任务超过总耗时上限，提前结束重试", {
+        model,
+        elapsedMs: Date.now() - options.startedAtMs,
+        maxTotalMs: API_MAX_TOTAL_MS,
+      });
+      break;
+    }
     attemptCount = attempt;
     const needed = count - collected.length;
     logger.info("account-service", `图像 API 第 ${attempt} 次请求，还需 ${needed} 张`, {

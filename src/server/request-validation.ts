@@ -32,9 +32,6 @@ export const imageSizeSchema = z.enum([
   "3520x2336",
   "2336x3520",
   "3840x2160",
-  "4096x4096",
-  "6144x4096",
-  "4096x6144",
   "1088x1920",
   "1440x2560",
   "2160x3840",
@@ -48,7 +45,7 @@ export const imageSizeSchema = z.enum([
 export const imageGenerationBodySchema = z.object({
   prompt: z.string().trim().min(1, "prompt is required"),
   model: z.string().trim().optional(),
-  n: z.number().int().optional(),
+  n: z.coerce.number().int().optional(),
   response_format: z.string().optional(),
   size: imageSizeSchema.optional(),
   quality: imageQualitySchema.optional(),

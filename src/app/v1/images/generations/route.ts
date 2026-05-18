@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
     logger.info("images.generations.route", "request:start", {
       model,
       count,
-      prompt,
       promptLength: prompt.length,
       hasResponseFormat: Boolean(body.response_format),
       size,
