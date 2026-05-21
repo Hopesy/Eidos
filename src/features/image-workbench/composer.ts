@@ -8,8 +8,8 @@ import type { EditorTarget } from "./submission";
 import { buildImageDataUrl, createSourceImageFromResult, fileToDataUrl, makeId } from "./utils";
 
 const DEFAULT_GENERATE_IMAGE_RATIO: ImageRatioOption = "auto";
-const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "medium";
-const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "medium";
+const DEFAULT_IMAGE_QUALITY: ImageGenerationQuality = "high";
+const DEFAULT_UPSCALE_QUALITY: ImageGenerationQuality = "high";
 
 export type PromptExample = {
   model: ImageModel;

@@ -6,7 +6,6 @@ import {
   Copy,
   ExternalLink,
   GalleryThumbnails,
-  GalleryVerticalEnd,
   RotateCcw,
   Search,
   Trash2,
@@ -119,13 +118,14 @@ export function GalleryClient({ initialItems }: GalleryClientProps) {
       <header className="shrink-0 border-b border-stone-200/80 bg-[#f7f7f5]/95 px-4 py-4 backdrop-blur-xl sm:px-6 dark:border-stone-800 dark:bg-stone-950/92">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/70 px-2.5 py-1 text-[11px] font-medium text-stone-500 dark:border-stone-700 dark:bg-stone-900/80 dark:text-stone-400">
-              <GalleryVerticalEnd className="size-3.5 text-amber-500" />
-              {items.length} 张收藏
+            <div className="flex items-end gap-4">
+              <h1 className="text-[28px] font-semibold tracking-tight text-stone-950 sm:text-[34px] dark:text-stone-50">
+                收藏画廊
+              </h1>
+              <span className="pb-1 text-sm font-medium text-stone-400 dark:text-stone-500">
+                {items.length} 张收藏
+              </span>
             </div>
-            <h1 className="mt-3 text-[28px] font-semibold tracking-tight text-stone-950 sm:text-[34px] dark:text-stone-50">
-              收藏画廊
-            </h1>
           </div>
 
           <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-center xl:w-auto xl:min-w-[520px]">
@@ -166,18 +166,17 @@ export function GalleryClient({ initialItems }: GalleryClientProps) {
 
       <div className="hide-scrollbar min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-5 lg:px-6">
         {filteredItems.length > 0 ? (
-          <div className="flex flex-wrap items-start gap-3">
+          <div className="columns-2 gap-3 sm:columns-3 md:columns-4 lg:columns-5 xl:columns-6">
             <AnimatePresence initial={false}>
               {filteredItems.map((item, index) => {
                 return (
                   <motion.article
                     key={item.favoriteId}
-                    layout
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     transition={{ duration: 0.22, delay: Math.min(index * 0.015, 0.12) }}
-                    className="group w-[132px] shrink-0 overflow-hidden rounded-[14px] border border-stone-200 bg-white shadow-[0_14px_34px_-30px_rgba(15,23,42,0.65)] transition sm:w-[150px] dark:border-stone-800 dark:bg-stone-900"
+                    className="group mb-3 inline-block w-full overflow-hidden rounded-[14px] break-inside-avoid border border-stone-200 bg-white shadow-[0_14px_34px_-30px_rgba(15,23,42,0.65)] transition dark:border-stone-800 dark:bg-stone-900"
                   >
                     <div className="relative overflow-hidden bg-stone-100 dark:bg-stone-900">
                       <Image

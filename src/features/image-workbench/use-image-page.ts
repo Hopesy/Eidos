@@ -158,7 +158,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const [imageCount, setImageCount] = useState("1");
   const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
   const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
-  const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("medium");
+  const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("high");
   const [imageFormat, setImageFormat] = useState<ImageOutputFormat>(
     normalizeImageOutputFormat(options.initialImageFormat),
   );

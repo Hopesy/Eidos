@@ -253,7 +253,7 @@ export function ComposerPanel({
                 </div>
 
                 <div
-                    className="overflow-hidden rounded-[18px] border border-stone-200 bg-[#fafaf9] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-stone-700 dark:bg-stone-800"
+                    className="overflow-hidden rounded-[18px] border border-stone-200 bg-[#fafaf9] transition-colors has-[:focus]:border-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:has-[:focus]:border-stone-500"
                     onClick={() => {
                         textareaRef.current?.focus();
                     }}

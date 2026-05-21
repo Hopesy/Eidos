@@ -22,7 +22,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
           "flex w-full items-center rounded-2xl border transition-all",
           "border-stone-200 bg-white text-stone-600",
           "dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400",
-          collapsed ? "justify-center px-0 py-3" : "justify-center gap-2 px-4 py-3"
+          collapsed ? "justify-center px-0 py-2.5" : "justify-center gap-2 px-4 py-2.5"
         )}
         disabled
       >
@@ -40,7 +40,7 @@ export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
         "flex w-full items-center rounded-2xl border transition-all",
         "border-stone-200 bg-white text-stone-700 hover:bg-stone-50",
         "dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-100",
-        collapsed ? "justify-center px-0 py-3" : "justify-center gap-2 px-4 py-3"
+        collapsed ? "justify-center px-0 py-2.5" : "justify-center gap-2 px-4 py-2.5"
       )}
       title={collapsed ? (theme === "dark" ? "切换到亮色模式" : "切换到暗色模式") : undefined}
     >

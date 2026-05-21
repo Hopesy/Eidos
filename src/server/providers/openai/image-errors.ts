@@ -190,6 +190,7 @@ export function isAccountBlockedMessage(message: string) {
     normalized.includes("authentication token has been invalidated") ||
     normalized.includes("invalidated oauth token") ||
     normalized.includes("rate limit") ||
+    normalized.includes("free plan limit") ||
     normalized.includes("quota") ||
     normalized.includes("429") ||
     normalized.includes("401") ||

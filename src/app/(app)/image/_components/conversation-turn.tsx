@@ -219,7 +219,7 @@ export function ConversationTurn({
                             ))}
                         </div>
                     ) : null}
-                    <div className="max-w-full break-words rounded-[16px] bg-[#f2f2f1] px-3 py-2.5 text-[15px] leading-7 text-stone-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:bg-stone-800 dark:text-stone-200">
+                    <div className="max-w-full break-words rounded-[16px] bg-[#f2f2f1] px-3 py-2.5 text-[15px] leading-7 text-stone-800 dark:bg-stone-800 dark:text-stone-200">
                         {turn.prompt || "无额外提示词"}
                     </div>
                     <div className="flex items-center gap-1.5 pr-1">
