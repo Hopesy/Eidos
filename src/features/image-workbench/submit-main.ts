@@ -318,7 +318,7 @@ export async function runSubmit(ctx: SubmitContext) {
       } else {
         if (parsedCount > 1) {
           const slotCount = parsedCount;
-          const slotConcurrency = ctx.usesImageApiService ? slotCount : 1;
+          const slotConcurrency = slotCount;
           let succeededCount = 0;
           let failedCount = 0;
           let nextSlotIndex = 0;
@@ -367,14 +367,13 @@ export async function runSubmit(ctx: SubmitContext) {
                   size: turnImageSize,
                   quality: turnImageQuality,
                   format: imageFormat,
-                  upstreamContext,
+                  upstreamContext: null,
                   signal,
                 });
                 const resultImage = createResultImage(
                   draftLoadingImages[slotIndex]?.id || `${turnId}-${slotIndex}`,
                   data.data?.[0],
                 );
-                upstreamContext = buildImageContinuation(resultImage) ?? upstreamContext;
                 settledSlotIndexes.add(slotIndex);
                 if (resultImage.status === "success") {
                   succeededCount += 1;

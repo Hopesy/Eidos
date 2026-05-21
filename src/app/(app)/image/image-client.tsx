@@ -18,6 +18,7 @@ import { useImagePage } from "@/features/image-workbench/use-image-page";
 import type { ImageOutputFormat, RecoverableImageTaskItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ImageFileListItem } from "@/server/repositories/image/file-repository";
+import { isImageTaskActive } from "@/store/image-active-tasks";
 import type { ImageConversation } from "@/store/image-conversations";
 
 import { ComposerPanel } from "./_components/composer-panel";
@@ -296,10 +297,11 @@ export function ImageClient({
                   turn={turn}
                   conversationId={selectedConversation.id}
                   isProcessing={Boolean(
-                    isSubmitting &&
+                    (isSubmitting &&
                       activeRequest &&
                       activeRequest.conversationId === selectedConversation.id &&
-                      activeRequest.turnId === turn.id,
+                      activeRequest.turnId === turn.id) ||
+                    isImageTaskActive(selectedConversation.id, turn.id),
                   )}
                   processingStatus={processingStatus}
                   submitElapsedSeconds={submitElapsedSeconds}
