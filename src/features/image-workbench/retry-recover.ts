@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { editImage, generateImage, recoverImageTask, upscaleImage, type ImageConversationContinuation } from "@/lib/api";
 import { normalizeImageOutputFormat, resolveUpscaleQuality } from "@/shared/image-generation";
 import { finishImageTask, startImageTask } from "@/store/image-active-tasks";
-import type { ImageConversationTurn } from "@/store/image-conversations";
+import type { ImageConversationTurn, StoredImage } from "@/store/image-conversations";
 
 import type { RetryTurnContext } from "./submission-types";
 import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "./turn-patches";
@@ -82,6 +82,10 @@ export function buildSharedRecoverableRetryResult(
         stage: "download",
         upstreamConversationId: turn.upstreamConversationId,
         upstreamParentMessageId: turn.upstreamParentMessageId,
+        upstreamResponseId: turn.upstreamResponseId,
+        imageGenerationCallId: turn.imageGenerationCallId,
+        sourceAccountId: turn.sourceAccountId,
+        fileIds: remainingFileIds,
       },
     ],
     failedCount: remainingFileIds.length,
@@ -147,6 +151,56 @@ function failureKindSeverity(kind: string | undefined) {
   return index === -1 ? FAILURE_KIND_SEVERITY_ORDER.length : index;
 }
 
+function cleanOptionalString(value: unknown) {
+  const normalized = String(value || "").trim();
+  return normalized || undefined;
+}
+
+function cleanFileIds(value: unknown) {
+  return Array.isArray(value)
+    ? value.map((item) => String(item || "").trim()).filter(Boolean)
+    : undefined;
+}
+
+function getImageRetryContext(image: StoredImage | null) {
+  if (!image) {
+    return {
+      upstreamConversationId: undefined,
+      upstreamParentMessageId: undefined,
+      upstreamResponseId: undefined,
+      imageGenerationCallId: undefined,
+      sourceAccountId: undefined,
+      fileIds: undefined,
+    };
+  }
+
+  const singleFileId = cleanOptionalString(image.file_id);
+  return {
+    upstreamConversationId: cleanOptionalString(image.upstreamConversationId ?? image.conversation_id),
+    upstreamParentMessageId: cleanOptionalString(image.upstreamParentMessageId ?? image.parent_message_id),
+    upstreamResponseId: cleanOptionalString(image.upstreamResponseId ?? image.response_id),
+    imageGenerationCallId: cleanOptionalString(image.imageGenerationCallId ?? image.image_generation_call_id),
+    sourceAccountId: cleanOptionalString(image.sourceAccountId ?? image.source_account_id),
+    fileIds: cleanFileIds(image.fileIds) ?? (singleFileId ? [singleFileId] : undefined),
+  };
+}
+
+export function resolveRetrySourceContext(turn: ImageConversationTurn, targetImage: StoredImage | null) {
+  const imageContext = getImageRetryContext(targetImage);
+  if (targetImage) {
+    return imageContext;
+  }
+
+  return {
+    upstreamConversationId: turn.upstreamConversationId,
+    upstreamParentMessageId: turn.upstreamParentMessageId,
+    upstreamResponseId: turn.upstreamResponseId,
+    imageGenerationCallId: turn.imageGenerationCallId,
+    sourceAccountId: turn.sourceAccountId,
+    fileIds: turn.fileIds,
+  };
+}
+
 function buildTurnContinuation(turn: ImageConversationTurn): ImageConversationContinuation | null {
   const conversationId = String(turn.upstreamConversationId || "").trim();
   const parentMessageId = String(turn.upstreamParentMessageId || "").trim();
@@ -184,13 +238,14 @@ export async function runRetryTurn(
   const targetImage = imageId != null
     ? turn.images.find((image) => image.id === imageId) ?? null
     : null;
+  const retryContext = resolveRetrySourceContext(turn, targetImage);
   const effectiveRetryAction = targetImage?.retryAction ?? turn.retryAction;
-  const effectiveUpstreamConversationId = targetImage?.upstreamConversationId ?? turn.upstreamConversationId;
-  const effectiveUpstreamParentMessageId = targetImage?.upstreamParentMessageId ?? turn.upstreamParentMessageId;
-  const effectiveUpstreamResponseId = targetImage?.upstreamResponseId ?? turn.upstreamResponseId;
-  const effectiveImageGenerationCallId = targetImage?.imageGenerationCallId ?? turn.imageGenerationCallId;
-  const effectiveSourceAccountId = targetImage?.sourceAccountId ?? turn.sourceAccountId;
-  const effectiveFileIds = targetImage?.fileIds ?? turn.fileIds;
+  const effectiveUpstreamConversationId = retryContext.upstreamConversationId;
+  const effectiveUpstreamParentMessageId = retryContext.upstreamParentMessageId;
+  const effectiveUpstreamResponseId = retryContext.upstreamResponseId;
+  const effectiveImageGenerationCallId = retryContext.imageGenerationCallId;
+  const effectiveSourceAccountId = retryContext.sourceAccountId;
+  const effectiveFileIds = retryContext.fileIds;
   const prompt = turn.prompt?.trim() ?? "";
   const turnMode = turn.mode || "generate";
   const turnSourceImages = Array.isArray(turn.sourceImages) ? turn.sourceImages : [];

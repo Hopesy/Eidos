@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { applyTurnCanceled, applyTurnFailure, applyTurnGenerating, applyTurnSuccess } from "../src/features/image-workbench/turn-patches.ts";
-import { buildSharedRecoverableRetryResult } from "../src/features/image-workbench/retry-recover.ts";
+import { buildSharedRecoverableRetryResult, resolveRetrySourceContext } from "../src/features/image-workbench/retry-recover.ts";
+import { createResultImage } from "../src/features/image-workbench/utils.ts";
 import type { ImageConversationTurn } from "../src/store/image-conversations.ts";
 
 function createTurn(overrides: Partial<ImageConversationTurn> = {}): ImageConversationTurn {
@@ -134,6 +135,8 @@ describe("image turn recoverable failures", () => {
       retryable: true,
       stage: "download",
       upstreamConversationId: "conversation-1",
+      upstreamParentMessageId: "parent-1",
+      sourceAccountId: "account-1",
       fileIds: ["file-a", "file-b"],
     });
 
@@ -147,6 +150,10 @@ describe("image turn recoverable failures", () => {
     assert.equal(result.images.length, 2);
     assert.equal(result.images[0]?.status, "success");
     assert.equal(result.images[1]?.status, "error");
+    assert.equal(result.images[1]?.upstreamConversationId, "conversation-1");
+    assert.equal(result.images[1]?.upstreamParentMessageId, "parent-1");
+    assert.equal(result.images[1]?.sourceAccountId, "account-1");
+    assert.deepEqual(result.images[1]?.fileIds, ["file-b"]);
     assert.equal(result.failedCount, 1);
     assert.deepEqual(result.remainingFileIds, ["file-b"]);
   });
@@ -172,5 +179,62 @@ describe("image turn recoverable failures", () => {
     } finally {
       Date.now = originalNow;
     }
+  });
+
+  it("preserves image-level upstream context for later card retry", () => {
+    const image = createResultImage("image-a", {
+      b64_json: "ZmFrZQ==",
+      conversation_id: "image-conversation",
+      parent_message_id: "image-parent",
+      source_account_id: "image-account",
+      response_id: "image-response",
+      image_generation_call_id: "image-call",
+    });
+
+    assert.equal(image.upstreamConversationId, "image-conversation");
+    assert.equal(image.upstreamParentMessageId, "image-parent");
+    assert.equal(image.sourceAccountId, "image-account");
+    assert.equal(image.upstreamResponseId, "image-response");
+    assert.equal(image.imageGenerationCallId, "image-call");
+  });
+
+  it("does not borrow turn-level upstream context when retrying an individual card", () => {
+    const turn = createTurn({
+      upstreamConversationId: "turn-conversation",
+      upstreamParentMessageId: "turn-parent",
+      sourceAccountId: "turn-account",
+      images: [
+        {
+          id: "image-a",
+          status: "error",
+          error: "失败",
+          conversation_id: "image-conversation",
+          parent_message_id: "image-parent",
+          source_account_id: "image-account",
+        },
+        {
+          id: "image-b",
+          status: "error",
+          error: "失败",
+        },
+      ],
+    });
+
+    assert.deepEqual(resolveRetrySourceContext(turn, turn.images[0]!), {
+      upstreamConversationId: "image-conversation",
+      upstreamParentMessageId: "image-parent",
+      upstreamResponseId: undefined,
+      imageGenerationCallId: undefined,
+      sourceAccountId: "image-account",
+      fileIds: undefined,
+    });
+    assert.deepEqual(resolveRetrySourceContext(turn, turn.images[1]!), {
+      upstreamConversationId: undefined,
+      upstreamParentMessageId: undefined,
+      upstreamResponseId: undefined,
+      imageGenerationCallId: undefined,
+      sourceAccountId: undefined,
+      fileIds: undefined,
+    });
   });
 });

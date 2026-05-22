@@ -28,7 +28,11 @@ type ResultItemPayload = {
   conversation_id?: string;
   parent_message_id?: string;
   source_account_id?: string;
+  upstreamConversationId?: string;
   upstreamParentMessageId?: string;
+  upstreamResponseId?: string;
+  imageGenerationCallId?: string;
+  sourceAccountId?: string;
 };
 
 export function cloneSourceImagesForComposer(sourceImages: StoredSourceImage[] = []) {
@@ -261,8 +265,11 @@ export function createResultImage(
       retryAction: undefined,
       retryable: undefined,
       stage: undefined,
-      upstreamConversationId: undefined,
-      upstreamParentMessageId: item.upstreamParentMessageId,
+      upstreamConversationId: item.conversation_id ?? item.upstreamConversationId,
+      upstreamParentMessageId: item.parent_message_id ?? item.upstreamParentMessageId,
+      upstreamResponseId: item.response_id ?? item.upstreamResponseId,
+      imageGenerationCallId: item.image_generation_call_id ?? item.imageGenerationCallId,
+      sourceAccountId: item.source_account_id ?? item.sourceAccountId,
     };
   }
 
