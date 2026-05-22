@@ -23,13 +23,23 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useSettingsPage } from "@/features/settings/use-settings-page";
-import type { ImageApiStyle, ImageOutputFormat } from "@/lib/api";
+import type { ImageApiStyle, ImageOutputFormat, ResponsesReasoningEffort } from "@/lib/api";
 import type { ConfigPayload } from "@/shared/app-config";
 
 const imageFormatOptions: Array<{ label: string; value: ImageOutputFormat }> = [
     { label: "PNG", value: "png" },
     { label: "JPEG", value: "jpeg" },
     { label: "WebP", value: "webp" },
+];
+
+const responsesReasoningEffortOptions: Array<{ label: string; value: ResponsesReasoningEffort }> = [
+    { label: "默认", value: "default" },
+    { label: "None", value: "none" },
+    { label: "Minimal", value: "minimal" },
+    { label: "Low", value: "low" },
+    { label: "Medium", value: "medium" },
+    { label: "High", value: "high" },
+    { label: "XHigh", value: "xhigh" },
 ];
 
 function HintTooltip({ text }: { text: string }) {
@@ -251,7 +261,29 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
 
                             <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-3 md:col-span-2 dark:border-stone-700 dark:bg-stone-800/50">
                                 <div className="flex flex-col gap-3">
-                                    <div className="grid gap-3 md:grid-cols-2 md:items-end">
+                                    <div className="grid gap-3 md:grid-cols-2 md:items-end xl:grid-cols-4">
+                                        <Field
+                                            id="chatgpt-image-format"
+                                            label="图片格式"
+                                            hint="生成页只显示当前格式，修改后新任务使用这个输出格式"
+                                        >
+                                            <Select
+                                                value={String(config.chatgpt?.imageFormat || "png")}
+                                                onValueChange={(value) => setSection("chatgpt", { imageFormat: value as ImageOutputFormat })}
+                                            >
+                                                <SelectTrigger id="chatgpt-image-format" className="h-9 w-full rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {imageFormatOptions.map((item) => (
+                                                        <SelectItem key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </Field>
+
                                         <Field
                                             id="chatgpt-api-style"
                                             label="图像 API 风格"
@@ -286,23 +318,22 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                                 disabled={!config.chatgpt?.enabled || config.chatgpt?.apiStyle !== "responses"}
                                             />
                                         </Field>
-                                    </div>
 
-                                    <div className="w-full sm:w-[156px]">
                                         <Field
-                                            id="chatgpt-image-format"
-                                            label="图片格式"
-                                            hint="生成页只显示当前格式，修改后新任务使用这个输出格式"
+                                            id="chatgpt-responses-reasoning-effort"
+                                            label="推理强度"
+                                            hint="仅在 Responses API 下使用；默认表示不向上游发送 reasoning.effort"
                                         >
                                             <Select
-                                                value={String(config.chatgpt?.imageFormat || "png")}
-                                                onValueChange={(value) => setSection("chatgpt", { imageFormat: value as ImageOutputFormat })}
+                                                value={String(config.chatgpt?.responsesReasoningEffort ?? "default")}
+                                                onValueChange={(value) => setSection("chatgpt", { responsesReasoningEffort: value as ResponsesReasoningEffort })}
+                                                disabled={!config.chatgpt?.enabled || config.chatgpt?.apiStyle !== "responses"}
                                             >
-                                                <SelectTrigger id="chatgpt-image-format" className="h-9 w-full rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900">
+                                                <SelectTrigger id="chatgpt-responses-reasoning-effort" className="h-9 w-full rounded-xl border-stone-200 bg-white shadow-none dark:border-stone-700 dark:bg-stone-900">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {imageFormatOptions.map((item) => (
+                                                    {responsesReasoningEffortOptions.map((item) => (
                                                         <SelectItem key={item.value} value={item.value}>
                                                             {item.label}
                                                         </SelectItem>

@@ -1,4 +1,9 @@
-import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import type {
+  ImageGenerationQuality,
+  ImageGenerationSize,
+  ImageOutputFormat,
+  ResponsesReasoningEffort,
+} from "@/lib/api";
 import { createAccountAdminService } from "@/server/account/admin-service";
 import { createAccountSelector } from "@/server/account/selection-service";
 import { createAccountPoolImageRunner } from "@/server/account/pool/image-runner";
@@ -159,6 +164,7 @@ export async function generateWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     upstreamContext?: {
       conversationId?: string;
       parentMessageId?: string;
@@ -198,6 +204,7 @@ export async function generateWithPool(
       imageSize,
       imageQuality,
       imageFormat,
+      responsesReasoningEffort: options.responsesReasoningEffort,
       startedAt,
       startedAtMs: startTime,
       signal: options.signal,
@@ -229,6 +236,7 @@ export async function editWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -253,6 +261,7 @@ export async function editWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -283,6 +292,7 @@ export async function editWithApiService(
       imageSize: options.imageSize,
       imageQuality: options.imageQuality,
       imageFormat: options.imageFormat,
+      responsesReasoningEffort: options.responsesReasoningEffort,
       sourceReference: options.sourceReference,
       startedAt,
       startedAtMs,
@@ -299,6 +309,7 @@ export async function upscaleWithPool(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -322,6 +333,7 @@ export async function upscaleWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -351,6 +363,7 @@ export async function upscaleWithApiService(
       imageSize: options.imageSize,
       imageQuality: options.imageQuality,
       imageFormat: options.imageFormat,
+      responsesReasoningEffort: options.responsesReasoningEffort,
       sourceReference: options.sourceReference,
       startedAt,
       startedAtMs,
@@ -378,6 +391,7 @@ export async function editImage(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: ImageSourceReference | null;
     signal?: AbortSignal;
   } = {},
@@ -395,6 +409,7 @@ export async function upscaleImage(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: ImageSourceReference | null;
     signal?: AbortSignal;
   } = {},

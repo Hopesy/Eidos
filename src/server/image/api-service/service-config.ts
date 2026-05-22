@@ -1,6 +1,6 @@
 import type { ImageApiStyle } from "@/lib/api";
 import { getSavedConfig } from "@/server/repositories/config";
-import { getDefaultConfigPayload } from "@/shared/app-config";
+import { getDefaultConfigPayload, normalizeResponsesReasoningEffort } from "@/shared/app-config";
 
 function cleanToken(value: unknown) {
   return String(value || "").trim();
@@ -16,6 +16,7 @@ export function getImageApiServiceConfig() {
         apiKey?: string;
         apiStyle?: ImageApiStyle;
         responsesModel?: string;
+        responsesReasoningEffort?: string;
       };
     }
     | null;
@@ -25,6 +26,9 @@ export function getImageApiServiceConfig() {
   const apiStyle = (cleanToken(savedConfig?.chatgpt?.apiStyle) || cleanToken(defaultChatgptConfig?.apiStyle) || "v1") as ImageApiStyle;
   const responsesModel =
     cleanToken(savedConfig?.chatgpt?.responsesModel) || cleanToken(defaultChatgptConfig?.responsesModel) || "gpt-5.5";
+  const responsesReasoningEffort = normalizeResponsesReasoningEffort(
+    savedConfig?.chatgpt?.responsesReasoningEffort ?? defaultChatgptConfig?.responsesReasoningEffort,
+  );
   if (!enabled) {
     return null;
   }
@@ -33,6 +37,7 @@ export function getImageApiServiceConfig() {
     apiKey,
     apiStyle,
     responsesModel,
+    responsesReasoningEffort,
   };
 }
 

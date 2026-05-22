@@ -1,4 +1,9 @@
-import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import type {
+  ImageGenerationQuality,
+  ImageGenerationSize,
+  ImageOutputFormat,
+  ResponsesReasoningEffort,
+} from "@/lib/api";
 import {
   editImageResultWithApiService,
   editImageResultWithResponsesApiService,
@@ -20,6 +25,7 @@ export function runApiEditTask(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -44,6 +50,7 @@ export function runApiEditTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        responsesReasoningEffort: options.responsesReasoningEffort,
         signal: options.signal,
         continuation: options.sourceReference
           ? {
@@ -85,6 +92,7 @@ export function runApiUpscaleTask(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     sourceReference?: {
       originalFileId?: string;
       originalGenId?: string;
@@ -108,6 +116,7 @@ export function runApiUpscaleTask(
         size: options.imageSize,
         quality: options.imageQuality,
         format: options.imageFormat,
+        responsesReasoningEffort: options.responsesReasoningEffort,
         signal: options.signal,
         operation: "upscale",
         continuation: options.sourceReference

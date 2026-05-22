@@ -1,4 +1,9 @@
-import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import type {
+  ImageGenerationQuality,
+  ImageGenerationSize,
+  ImageOutputFormat,
+  ResponsesReasoningEffort,
+} from "@/lib/api";
 import { createLinkedAbortController, isAbortError, throwIfAborted } from "@/server/image/abort";
 import {
   buildHttpImageError,
@@ -12,12 +17,14 @@ export type ImageApiServiceConfig = {
   baseUrl?: string;
   apiStyle?: "v1" | "responses";
   responsesModel?: string;
+  responsesReasoningEffort?: ResponsesReasoningEffort;
 };
 
 export type ImageGenerationOptions = {
   size?: ImageGenerationSize;
   quality?: ImageGenerationQuality;
   format?: ImageOutputFormat;
+  responsesReasoningEffort?: ResponsesReasoningEffort;
   continuation?: {
     conversationId?: string;
     parentMessageId?: string;

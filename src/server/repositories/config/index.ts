@@ -12,6 +12,7 @@ export type ConfigStore = {
         apiKey?: string;
         apiStyle?: "v1" | "responses";
         responsesModel?: string;
+        responsesReasoningEffort?: "default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
         imageFormat?: "png" | "jpeg" | "webp";
         [key: string]: unknown;
     };

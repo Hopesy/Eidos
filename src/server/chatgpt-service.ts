@@ -7,6 +7,7 @@ import {
   imageSizeSchema,
 } from "@/server/request-validation";
 import { ApiError } from "@/server/response";
+import { extractResponsesReasoningEffortFromBody } from "@/server/providers/openai/responses-reasoning";
 import { normalizeImageOutputFormat } from "@/shared/image-generation";
 import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
 
@@ -370,6 +371,11 @@ export async function createResponse(body: Record<string, unknown>, options: { s
   const previousResponseId = String(body.previous_response_id || "").trim() || undefined;
   const requestModel = String(body.model || "").trim();
   const parallelToolCalls = body.parallel_tool_calls === true;
+  const reasoningResult = extractResponsesReasoningEffortFromBody(body);
+  if (!reasoningResult.ok) {
+    throw new ApiError(400, "unsupported reasoning.effort");
+  }
+  const responsesReasoningEffort = reasoningResult.effort;
 
   try {
     let data: Array<Record<string, unknown>>;
@@ -380,6 +386,7 @@ export async function createResponse(body: Record<string, unknown>, options: { s
         imageSize: toolConfig.size,
         imageQuality: toolConfig.quality,
         imageFormat: toolConfig.outputFormat,
+        responsesReasoningEffort,
         sourceReference: previousResponseId || imageGenerationCallId
           ? {
             previousResponseId,
@@ -395,6 +402,7 @@ export async function createResponse(body: Record<string, unknown>, options: { s
         imageSize: toolConfig.size,
         imageQuality: toolConfig.quality,
         imageFormat: toolConfig.outputFormat,
+        responsesReasoningEffort,
         signal: options.signal,
       });
       data = Array.isArray(result.data) ? result.data : [];

@@ -25,6 +25,7 @@ export type ImageGenerationSize =
 export type ImageGenerationQuality = "auto" | "low" | "medium" | "high";
 export type ImageOutputFormat = "png" | "jpeg" | "webp";
 export type ImageApiStyle = "v1" | "responses";
+export type ResponsesReasoningEffort = "default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
 export type SyncStatus =
   | "synced"
   | "pending_upload"

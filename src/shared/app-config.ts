@@ -1,4 +1,4 @@
-import type { ImageOutputFormat } from "@/lib/api";
+import type { ImageOutputFormat, ResponsesReasoningEffort } from "@/lib/api";
 
 export type ConfigPayload = {
   chatgpt?: {
@@ -7,6 +7,7 @@ export type ConfigPayload = {
     apiKey?: string;
     apiStyle?: "v1" | "responses";
     responsesModel?: string;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     imageFormat?: ImageOutputFormat;
     [key: string]: unknown;
   };
@@ -45,6 +46,7 @@ export function getDefaultConfigPayload(): ConfigPayload {
       apiKey: "",
       apiStyle: "v1",
       responsesModel: "gpt-5.5",
+      responsesReasoningEffort: "default",
       imageFormat: "png",
     },
     accounts: {
@@ -82,6 +84,28 @@ function normalizeImageFormat(value: unknown): ImageOutputFormat {
   return "png";
 }
 
+const RESPONSES_REASONING_EFFORTS = new Set<ResponsesReasoningEffort>([
+  "default",
+  "none",
+  "minimal",
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+]);
+
+export function isResponsesReasoningEffort(value: unknown): value is ResponsesReasoningEffort {
+  return RESPONSES_REASONING_EFFORTS.has(String(value || "").trim().toLowerCase() as ResponsesReasoningEffort);
+}
+
+export function normalizeResponsesReasoningEffort(value: unknown): ResponsesReasoningEffort {
+  const normalized = String(value || "default").trim().toLowerCase();
+  if (normalized === "auto" || !normalized) {
+    return "default";
+  }
+  return isResponsesReasoningEffort(normalized) ? normalized : "default";
+}
+
 function normalizeAccountRefreshInterval(value: unknown, fallback: number) {
   const interval = Number(value);
   if (!Number.isFinite(interval)) {
@@ -111,6 +135,9 @@ export function sanitizeConfigPayload(value: Record<string, unknown> | null | un
       ...defaults.chatgpt,
       ...chatgpt,
       imageFormat: normalizeImageFormat(chatgpt.imageFormat ?? defaults.chatgpt?.imageFormat),
+      responsesReasoningEffort: normalizeResponsesReasoningEffort(
+        chatgpt.responsesReasoningEffort ?? defaults.chatgpt?.responsesReasoningEffort,
+      ),
     },
     accounts: {
       ...defaults.accounts,

@@ -1,4 +1,9 @@
-import type { ImageGenerationQuality, ImageGenerationSize, ImageOutputFormat } from "@/lib/api";
+import type {
+  ImageGenerationQuality,
+  ImageGenerationSize,
+  ImageOutputFormat,
+  ResponsesReasoningEffort,
+} from "@/lib/api";
 import { persistImageResponseItems } from "@/server/repositories/image/file-repository";
 import { isAbortError, throwIfAborted } from "@/server/image/abort";
 import { logger } from "@/server/logger";
@@ -28,6 +33,7 @@ async function invokeGenerateWithApiService(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     signal?: AbortSignal;
   } = {},
 ) {
@@ -36,6 +42,7 @@ async function invokeGenerateWithApiService(
       size: options.imageSize,
       quality: options.imageQuality,
       format: options.imageFormat,
+      responsesReasoningEffort: options.responsesReasoningEffort,
       signal: options.signal,
     })
     : generateImageResultWithApiService(imageApiService, prompt, model, count, {
@@ -57,6 +64,7 @@ export async function runApiGenerateTask(
     imageSize?: ImageGenerationSize;
     imageQuality?: ImageGenerationQuality;
     imageFormat?: ImageOutputFormat;
+    responsesReasoningEffort?: ResponsesReasoningEffort;
     startedAt: string;
     startedAtMs: number;
     signal?: AbortSignal;
@@ -91,6 +99,7 @@ export async function runApiGenerateTask(
         imageSize: options.imageSize,
         imageQuality: options.imageQuality,
         imageFormat: options.imageFormat,
+        responsesReasoningEffort: options.responsesReasoningEffort,
         signal: options.signal,
       }) as ImageApiTaskResult;
       throwIfAborted(options.signal);

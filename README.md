@@ -38,11 +38,28 @@
 
 1. **账号池模式**
 
-   向上游走的是 **ChatGPT 会话链**，也就是项目内部维护的 `chatgpt.com/backend-api/*` 路径，例如：
+   向上游走的是 **ChatGPT Web 会话链**。本质上，`chatgpt.com` 网页本身是一个前端应用：用户在网页里点击发送时，浏览器会带着当前账号的登录态、设备信息和校验 token 请求 ChatGPT 的 Web 后端。账号池模式不打开浏览器、不模拟鼠标点击，而是在服务端使用账号池里已经保存的 `access_token` 和浏览器指纹信息，把 Eidos 自己作为一个非浏览器客户端，直接构造 ChatGPT Web 前端会发出的请求。
 
-   - `backend-api/conversation`
-   - `backend-api/conversation/init`
-   - 文件下载相关 `backend-api/files/*` / `backend-api/conversation/*/attachment/*/download`
+   因此，这条链不是“免登录”或“绕过登录”。它依赖账号池里已有的有效 ChatGPT 登录凭证：
+
+   - `Authorization: Bearer <access_token>` 用于代表具体 ChatGPT 账号
+   - `oai-device-id`、`oai-session-id`、`user-agent`、`sec-ch-ua*` 用于补齐 Web 客户端上下文
+   - `openai-sentinel-chat-requirements-token` / `openai-sentinel-proof-token` 用于满足 ChatGPT Web 后端的请求校验
+
+   生图时，Eidos 会把本地 `/v1/images/*` 请求翻译成一条 ChatGPT conversation 消息。ChatGPT 后端在该会话中执行图片生成工具，返回 SSE 流、会话状态和图片资源指针；Eidos 再解析 `conversation_id`、`parent_message_id`、图片文件 ID，轮询会话结果，下载图片，并包装成 OpenAI 风格响应返回给下游。
+
+   当前账号池模式会用到的 ChatGPT Web 上游接口包括：
+
+   - `GET /`：初始化 ChatGPT Web 会话，捕获前端构建信息和 Cookie
+   - `POST /backend-api/sentinel/chat-requirements`：获取发送会话消息前需要的校验 token / proof 要求
+   - `POST /backend-api/conversation`：发送会话消息，触发对话式生图
+   - `GET /backend-api/conversation/{conversation_id}`：轮询会话 mapping，查找图片生成工具输出
+   - `GET /backend-api/conversation/{conversation_id}/attachment/{file_id}/download`：获取会话附件图片下载地址
+   - `GET /backend-api/files/{file_id}/download`：获取普通文件下载地址
+   - `POST /backend-api/files`：注册编辑/增强图片时上传的源图或遮罩
+   - `POST /backend-api/files/{file_id}/uploaded` / `POST /backend-api/files/process_upload_stream`：完成上传文件处理
+   - `GET /backend-api/me`：刷新账号身份信息
+   - `POST /backend-api/conversation/init`：刷新账号模型、套餐和 `image_gen` 额度信息
 
    这条链**不是官方公开 `/v1` API**，而是账号池模式下的会话式上游实现。
 
@@ -71,6 +88,24 @@
   - 账号池模式 -> ChatGPT 会话链
   - API 服务模式 -> 官方 `/v1/images/*`
 - **`/v1/responses` 已实现，但不是图片工作台当前主链路**
+
+#### Responses API SSE 流式保活
+
+当图像 API 服务模式选择 `responses` 风格时，上游请求使用 **SSE（Server-Sent Events）流式传输**而非一次性 JSON 响应。
+
+**解决的问题**：大多数中转站架在 Cloudflare 后面，而图像模型推理需要 30~120 秒。Cloudflare 网关在连接空闲 100 秒后会切断连接返回 524 错误。传统的一次性请求在整个推理期间没有数据流动，极易触发此超时。
+
+**工作原理**：
+
+1. 请求时带 `stream: true`，上游不再等推理完成才返回，而是边推理边发送事件
+2. 模型推理期间持续收到心跳事件（`response.in_progress`、`image_generation_call.generating` 等），保持 TCP 连接活跃
+3. Cloudflare 看到连接上有持续数据流过，不会判定空闲超时
+
+**降级保护**：
+
+- 如果最终结果（`response.output_item.done`）未能送达，会使用推理过程中收到的 `partial_image_b64`（部分图片数据）作为兜底结果
+- 如果上游不支持流式响应（返回的不是 `text/event-stream`），自动退回 JSON 解析，不影响兼容性
+- 流式模式超时从 120 秒提升到 300 秒（因为流式连接有持续流量，不会被网关掐断）
 
 ### 图片工作台比例 / 分辨率档位说明
 
@@ -112,6 +147,7 @@
 - 4K 档会继续经过安全上限规整：最大边长不超过 `3840px`、宽高比不超过 `3:1`、总像素不超过 `8294400`
 - `background` 参数当前**未在图片工作台暴露，也不主动设置**
 - 如果当前请求走标准 Images API 服务路径，会直接传计算后的 `size` / `quality`
+- 如果当前请求走标准 Responses API 服务路径，并且在设置页选择了推理强度，会把该值作为 `reasoning.effort` 传给上游主模型；默认档位不主动发送 `reasoning`
 - 如果当前请求走本地 ChatGPT 会话链路，则会把最终分辨率 / 画质要求补进 prompt，保证两条链路都能吃到这个设置
 
 ### 图片结果增强动作说明
