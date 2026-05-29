@@ -9,7 +9,9 @@ import {
     LoaderCircle,
     RefreshCcw,
     Save,
+    Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useSettingsPage } from "@/features/settings/use-settings-page";
 import type { ImageApiStyle, ImageOutputFormat, ResponsesReasoningEffort } from "@/lib/api";
+import { testImageApi } from "@/lib/api/config";
 import type { ConfigPayload } from "@/shared/app-config";
 
 const imageFormatOptions: Array<{ label: string; value: ImageOutputFormat }> = [
@@ -155,6 +158,7 @@ type SettingsClientProps = {
 
 export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfigAction }: SettingsClientProps) {
     const [showChatgptApiKey, setShowChatgptApiKey] = useState(false);
+    const [testingApi, setTestingApi] = useState(false);
     const {
         config,
         loading,
@@ -165,6 +169,38 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
         saveConfig,
         setSection,
     } = useSettingsPage({ initialConfig, initialDefaultConfig, saveConfigAction });
+
+    async function handleTestApi() {
+        const baseUrl = (config.chatgpt?.baseUrl ?? "").trim();
+        const apiKey = (config.chatgpt?.apiKey ?? "").trim();
+        if (!baseUrl) {
+            toast.error("请先填写图像 API 地址");
+            return;
+        }
+        if (!apiKey) {
+            toast.error("请先填写图像 API Key");
+            return;
+        }
+        setTestingApi(true);
+        try {
+            const result = await testImageApi({ baseUrl, apiKey });
+            if (result.ok) {
+                toast.success("API 配置正常", {
+                    description: `连接通过，耗时 ${result.durationMs}ms`,
+                });
+            } else {
+                toast.error("API 配置异常", {
+                    description: result.hint || result.message,
+                });
+            }
+        } catch (error) {
+            toast.error("测试请求失败", {
+                description: error instanceof Error ? error.message : "网络异常",
+            });
+        } finally {
+            setTestingApi(false);
+        }
+    }
 
     return (
         <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none sm:rounded-[30px] sm:border sm:border-stone-200 sm:bg-[#fcfcfb] sm:px-5 sm:py-6 sm:shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:px-6 lg:py-7 dark:sm:border-stone-700 dark:sm:bg-stone-950">
@@ -214,22 +250,34 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                     <div className="relative">
                                         <Input
                                             id="chatgpt-base-url"
-                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[104px] shadow-none dark:border-stone-700 dark:bg-stone-800"
+                                            className="h-9 rounded-xl border-stone-200 bg-white pr-[170px] shadow-none dark:border-stone-700 dark:bg-stone-800"
                                             value={config.chatgpt?.baseUrl ?? ""}
                                             onChange={(e) => setSection("chatgpt", { baseUrl: e.target.value })}
                                             placeholder="https://api.openai.com/v1"
                                         />
-                                        <label
-                                            htmlFor="chatgpt-enabled"
-                                            className="absolute right-2 top-1/2 inline-flex h-6 -translate-y-1/2 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
-                                        >
-                                            <Checkbox
-                                                id="chatgpt-enabled"
-                                                checked={!!config.chatgpt?.enabled}
-                                                onCheckedChange={(v) => setSection("chatgpt", { enabled: Boolean(v) })}
-                                            />
-                                            <span className="whitespace-nowrap">启用</span>
-                                        </label>
+                                        <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => void handleTestApi()}
+                                                disabled={testingApi}
+                                                className="inline-flex h-6 cursor-pointer items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-600 dark:hover:bg-stone-800"
+                                                title="使用当前地址和 Key 测试连通性"
+                                            >
+                                                {testingApi ? <LoaderCircle className="size-3.5 animate-spin" /> : <Zap className="size-3.5" />}
+                                                <span className="whitespace-nowrap">测试</span>
+                                            </button>
+                                            <label
+                                                htmlFor="chatgpt-enabled"
+                                                className="inline-flex h-6 cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-stone-50 px-2.5 text-xs font-medium text-stone-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300"
+                                            >
+                                                <Checkbox
+                                                    id="chatgpt-enabled"
+                                                    checked={!!config.chatgpt?.enabled}
+                                                    onCheckedChange={(v) => setSection("chatgpt", { enabled: Boolean(v) })}
+                                                />
+                                                <span className="whitespace-nowrap">启用</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex-1">

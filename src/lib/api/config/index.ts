@@ -17,3 +17,19 @@ export async function updateConfig(config: ConfigPayload) {
     body: config,
   });
 }
+
+export type TestImageApiResult = {
+  ok: boolean;
+  status?: number;
+  endpoint: string;
+  durationMs: number;
+  message: string;
+  hint?: string;
+};
+
+export async function testImageApi(input: { baseUrl: string; apiKey: string }) {
+  return httpRequest<TestImageApiResult>("/api/config/test-image-api", {
+    method: "POST",
+    body: input,
+  });
+}
