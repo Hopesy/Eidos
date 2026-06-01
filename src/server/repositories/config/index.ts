@@ -10,6 +10,7 @@ export type ConfigStore = {
         enabled?: boolean;
         baseUrl?: string;
         apiKey?: string;
+        imageModels?: string[];
         apiStyle?: "v1" | "responses";
         responsesModel?: string;
         responsesReasoningEffort?: "default" | "none" | "minimal" | "low" | "medium" | "high" | "xhigh";

@@ -94,7 +94,7 @@ function normalizeMode(value: unknown): GalleryImageItem["mode"] {
 }
 
 function normalizeModel(value: unknown): GalleryImageItem["model"] {
-  return cleanString(value) === "gpt-image-1" ? "gpt-image-1" : "gpt-image-2";
+  return cleanString(value) || "gpt-image-2";
 }
 
 function normalizeRatio(value: unknown): GalleryImageItem["imageRatio"] | undefined {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ClipboardEvent, RefObject } from "react";
+import { useMemo, type ClipboardEvent, type RefObject } from "react";
 import { ArrowUp, ImagePlus, LoaderCircle, Sparkles, Upload, SquarePen, Maximize2, Square, RectangleVertical, Monitor, Smartphone, Cpu, Tv, Hash, Ratio, FileImage, X } from "lucide-react";
 
 import { AppImage as Image } from "@/components/app-image";
@@ -126,6 +126,20 @@ export function ComposerPanel({
     onOpenMaskEditor,
 }: ComposerPanelProps) {
     const uploadLabel = mode === "generate" ? "上传参考图" : "上传源图";
+    const uniqueImageModelOptions = useMemo(() => {
+        const byValue = new Map<string, ImageModelOption>();
+        for (const item of imageModelOptions) {
+            const value = String(item.value || "").trim();
+            if (value) {
+                byValue.set(value, { label: item.label || value, value });
+            }
+        }
+        const currentValue = String(imageModel || "").trim();
+        if (currentValue && !byValue.has(currentValue)) {
+            byValue.set(currentValue, { label: currentValue, value: currentValue });
+        }
+        return [...byValue.values()];
+    }, [imageModel, imageModelOptions]);
 
     return (
         <div className="shrink-0 border-t border-stone-200/60 bg-white py-2.5 sm:py-3 dark:border-stone-700 dark:bg-stone-900">
@@ -160,15 +174,15 @@ export function ComposerPanel({
 
                     <div className="flex w-full flex-wrap items-center gap-1 sm:flex-1 sm:justify-end sm:gap-2">
                         <Select value={imageModel} onValueChange={(value) => onImageModelChange(value as ImageModel)}>
-                            <SelectTrigger className="h-8 w-[112px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <SelectTrigger className="h-8 w-[108px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[140px] sm:px-2.5 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {imageModelOptions.map((item) => (
+                                {uniqueImageModelOptions.map((item) => (
                                     <SelectItem key={item.value} value={item.value}>
-                                        <div className="flex items-center gap-2">
-                                            <Cpu className="size-3.5" />
-                                            <span>{item.label}</span>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <Cpu className="size-3.5 shrink-0" />
+                                            <span className="truncate">{item.label}</span>
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -176,7 +190,7 @@ export function ComposerPanel({
                         </Select>
 
                         {mode === "generate" && !hasGenerateReferences ? (
-                            <div className="flex h-8 w-[52px] shrink-0 items-center gap-0.5 rounded-lg border border-stone-200/80 bg-white px-1.5 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 sm:w-auto sm:gap-1.5 sm:px-2.5 dark:border-stone-700 dark:bg-stone-800 dark:ring-stone-700 dark:hover:border-stone-600">
+                            <div className="flex h-8 w-[48px] shrink-0 items-center gap-0.5 rounded-lg border border-stone-200/80 bg-white px-1.5 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 sm:w-[64px] sm:gap-1 sm:px-2 dark:border-stone-700 dark:bg-stone-800 dark:ring-stone-700 dark:hover:border-stone-600">
                                 <Hash className="size-3.5 text-stone-400 dark:text-stone-500" />
                                 <Input
                                     type="number"
@@ -185,7 +199,7 @@ export function ComposerPanel({
                                     step="1"
                                     value={imageCount}
                                     onChange={(event) => onImageCountChange(event.target.value)}
-                                    className="h-6 w-[22px] border-0 bg-transparent px-0 text-center text-[11px] font-semibold text-stone-900 shadow-none focus-visible:ring-0 sm:w-[42px] sm:text-sm dark:text-stone-100"
+                                    className="h-6 w-[20px] border-0 bg-transparent px-0 text-center text-[11px] font-semibold text-stone-900 shadow-none focus-visible:ring-0 sm:w-[32px] sm:text-sm dark:text-stone-100"
                                 />
                             </div>
                         ) : null}
@@ -193,7 +207,7 @@ export function ComposerPanel({
                         {mode !== "upscale" ? (
                             <>
                                 <Select value={imageSize} onValueChange={(value) => onImageSizeChange(value as ToolbarImageSize)}>
-                                    <SelectTrigger className="h-8 w-[96px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[124px] sm:px-3 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
+                                    <SelectTrigger className="h-8 w-[86px] shrink-0 rounded-lg border-stone-200/80 bg-white px-1.5 text-[11px] font-medium text-stone-700 ring-1 ring-stone-900/5 transition-all hover:border-stone-300 focus-visible:ring-2 focus-visible:ring-stone-900/10 sm:w-[108px] sm:px-2.5 sm:text-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700 dark:hover:border-stone-600">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

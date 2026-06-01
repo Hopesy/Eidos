@@ -1,4 +1,6 @@
+import { getSavedConfig } from "@/server/repositories/config";
 import { jsonOk } from "@/server/response";
+import { normalizeImageModels, sanitizeConfigPayload } from "@/shared/app-config";
 
 export const runtime = "nodejs";
 
@@ -12,8 +14,10 @@ function buildModelItem(modelId: string) {
 }
 
 export async function GET() {
+  const savedConfig = sanitizeConfigPayload(getSavedConfig());
+  const modelIds = normalizeImageModels(savedConfig.chatgpt?.imageModels);
   return jsonOk({
     object: "list",
-    data: [buildModelItem("gpt-image-1"), buildModelItem("gpt-image-2")],
+    data: modelIds.map(buildModelItem),
   });
 }

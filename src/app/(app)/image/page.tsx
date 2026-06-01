@@ -7,7 +7,7 @@ import { normalizeImageConversationRuntimeRecords } from "@/server/repositories/
 import { listImageFiles } from "@/server/repositories/image/file-repository";
 import { listRecoverableImageUpstreamTasks } from "@/server/repositories/image/upstream-task-repository";
 import { normalizeImageOutputFormat } from "@/shared/image-generation";
-import { sanitizeConfigPayload } from "@/shared/app-config";
+import { normalizeImageModels, sanitizeConfigPayload } from "@/shared/app-config";
 import type { ImageConversation } from "@/store/image-conversations";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +26,9 @@ export default async function ImagePage() {
   const initialUsesImageApiService = Boolean(getImageApiServiceConfig());
   const savedConfig = sanitizeConfigPayload(getSavedConfig());
   const initialImageFormat = normalizeImageOutputFormat(savedConfig.chatgpt?.imageFormat);
+  const initialImageModels = normalizeImageModels(savedConfig.chatgpt?.imageModels);
+  const initialImageModel = initialImageModels[0] || "gpt-image-2";
+  const initialImageModelOptions = initialImageModels.map((modelId) => ({ label: modelId, value: modelId }));
 
   return (
     <ImageClient
@@ -35,6 +38,8 @@ export default async function ImagePage() {
       initialAvailableQuota={formatAvailableQuota(accounts)}
       initialUsesImageApiService={initialUsesImageApiService}
       initialImageFormat={initialImageFormat}
+      initialImageModel={initialImageModel}
+      initialImageModelOptions={initialImageModelOptions}
     />
   );
 }

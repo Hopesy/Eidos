@@ -89,6 +89,7 @@ type UseImagePageOptions = {
   initialAvailableQuota?: string;
   initialUsesImageApiService?: boolean;
   initialImageFormat?: ImageOutputFormat;
+  initialImageModel?: ImageModel;
 };
 
 const DRAFT_REUSE_LATEST_PREFERENCE_KEY = "__draft__";
@@ -156,7 +157,7 @@ export function useImagePage(options: UseImagePageOptions = {}) {
   const [mode, setMode] = useState<ImageMode>("generate");
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageCount, setImageCount] = useState("1");
-  const [imageModel, setImageModel] = useState<ImageModel>("gpt-image-2");
+  const [imageModel, setImageModel] = useState<ImageModel>(options.initialImageModel || "gpt-image-2");
   const [imageSize, setImageSize] = useState<ToolbarImageSize>("auto");
   const [imageQuality, setImageQuality] = useState<ImageGenerationQuality>("high");
   const [imageFormat, setImageFormat] = useState<ImageOutputFormat>(

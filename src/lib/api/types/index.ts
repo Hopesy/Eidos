@@ -1,6 +1,6 @@
 export type AccountType = "Free" | "Plus" | "Pro" | "Team";
 export type AccountStatus = "正常" | "限流" | "异常" | "禁用";
-export type ImageModel = "gpt-image-1" | "gpt-image-2";
+export type ImageModel = string;
 export type ImageGenerationSize =
   | "auto"
   | "1024x1024"

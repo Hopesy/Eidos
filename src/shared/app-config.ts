@@ -5,6 +5,7 @@ export type ConfigPayload = {
     enabled?: boolean;
     baseUrl?: string;
     apiKey?: string;
+    imageModels?: string[];
     apiStyle?: "v1" | "responses";
     responsesModel?: string;
     responsesReasoningEffort?: ResponsesReasoningEffort;
@@ -38,12 +39,15 @@ export type ConfigPayload = {
   [key: string]: unknown;
 };
 
+export const DEFAULT_IMAGE_MODEL_IDS = ["gpt-image-2", "gpt-image-1"];
+
 export function getDefaultConfigPayload(): ConfigPayload {
   return {
     chatgpt: {
       enabled: false,
       baseUrl: "https://api.openai.com/v1",
       apiKey: "",
+      imageModels: DEFAULT_IMAGE_MODEL_IDS,
       apiStyle: "v1",
       responsesModel: "gpt-5.5",
       responsesReasoningEffort: "default",
@@ -82,6 +86,15 @@ function normalizeImageFormat(value: unknown): ImageOutputFormat {
     return normalized;
   }
   return "png";
+}
+
+export function normalizeImageModels(value: unknown, fallback: string[] = DEFAULT_IMAGE_MODEL_IDS) {
+  const source = Array.isArray(value) ? value : fallback;
+  const modelIds = source
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+  const deduped = [...new Set(modelIds)];
+  return deduped.length > 0 ? deduped : fallback;
 }
 
 const RESPONSES_REASONING_EFFORTS = new Set<ResponsesReasoningEffort>([
@@ -134,6 +147,7 @@ export function sanitizeConfigPayload(value: Record<string, unknown> | null | un
     chatgpt: {
       ...defaults.chatgpt,
       ...chatgpt,
+      imageModels: normalizeImageModels(chatgpt.imageModels ?? defaults.chatgpt?.imageModels),
       imageFormat: normalizeImageFormat(chatgpt.imageFormat ?? defaults.chatgpt?.imageFormat),
       responsesReasoningEffort: normalizeResponsesReasoningEffort(
         chatgpt.responsesReasoningEffort ?? defaults.chatgpt?.responsesReasoningEffort,

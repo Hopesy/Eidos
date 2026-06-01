@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import {
     CircleHelp,
+    Check,
+    ChevronDown,
     Eye,
     EyeOff,
     LoaderCircle,
@@ -26,8 +28,8 @@ import {
 } from "@/components/ui/select";
 import { useSettingsPage } from "@/features/settings/use-settings-page";
 import type { ImageApiStyle, ImageOutputFormat, ResponsesReasoningEffort } from "@/lib/api";
-import { testImageApi } from "@/lib/api/config";
-import type { ConfigPayload } from "@/shared/app-config";
+import { fetchImageModels, testImageApi } from "@/lib/api/config";
+import { DEFAULT_IMAGE_MODEL_IDS, normalizeImageModels, type ConfigPayload } from "@/shared/app-config";
 
 const imageFormatOptions: Array<{ label: string; value: ImageOutputFormat }> = [
     { label: "PNG", value: "png" },
@@ -44,6 +46,22 @@ const responsesReasoningEffortOptions: Array<{ label: string; value: ResponsesRe
     { label: "High", value: "high" },
     { label: "XHigh", value: "xhigh" },
 ];
+
+function normalizeModelId(value: unknown) {
+    return String(value || "").trim();
+}
+
+function getConfiguredImageModels(value: unknown) {
+    return normalizeImageModels(value, DEFAULT_IMAGE_MODEL_IDS);
+}
+
+function mergeImageModels(models: string[], modelId: string) {
+    const next = normalizeModelId(modelId);
+    if (!next) {
+        return models;
+    }
+    return [next, ...models.filter((item) => item !== next)];
+}
 
 function HintTooltip({ text }: { text: string }) {
     return (
@@ -159,6 +177,9 @@ type SettingsClientProps = {
 export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfigAction }: SettingsClientProps) {
     const [showChatgptApiKey, setShowChatgptApiKey] = useState(false);
     const [testingApi, setTestingApi] = useState(false);
+    const [fetchingImageModels, setFetchingImageModels] = useState(false);
+    const [imageModelMenuOpen, setImageModelMenuOpen] = useState(false);
+    const [customImageModel, setCustomImageModel] = useState(() => getConfiguredImageModels(initialConfig.chatgpt?.imageModels)[0] || "gpt-image-2");
     const {
         config,
         loading,
@@ -202,6 +223,64 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
         }
     }
 
+    async function handleRestoreDefaults() {
+        await restoreDefaults();
+        setCustomImageModel(getConfiguredImageModels(initialDefaultConfig.chatgpt?.imageModels)[0] || "gpt-image-2");
+    }
+
+    async function handleFetchImageModels() {
+        const baseUrl = (config.chatgpt?.baseUrl ?? "").trim();
+        const apiKey = (config.chatgpt?.apiKey ?? "").trim();
+        if (!baseUrl) {
+            toast.error("请先填写图像 API 地址");
+            return;
+        }
+        if (!apiKey) {
+            toast.error("请先填写图像 API Key");
+            return;
+        }
+        setFetchingImageModels(true);
+        try {
+            const result = await fetchImageModels({ baseUrl, apiKey });
+            const modelIds = normalizeImageModels(
+                (Array.isArray(result.data) ? result.data : []).map((item) => item.id),
+                [],
+            );
+            if (modelIds.length === 0) {
+                toast.error("未从 /models 读取到可用模型 ID");
+                return;
+            }
+            setCustomImageModel(modelIds[0] || "");
+            setSection("chatgpt", { imageModels: modelIds });
+            toast.success("模型列表已拉取", {
+                description: `读取到 ${modelIds.length} 个模型，保存配置后生效`,
+            });
+        } catch (error) {
+            toast.error("拉取模型列表失败", {
+                description: error instanceof Error ? error.message : "网络异常",
+            });
+        } finally {
+            setFetchingImageModels(false);
+        }
+    }
+
+    const imageModels = getConfiguredImageModels(config.chatgpt?.imageModels);
+    const selectedImageModel = normalizeModelId(customImageModel) || imageModels[0] || "gpt-image-2";
+
+    function handleSelectImageModel(modelId: string) {
+        const nextModels = mergeImageModels(imageModels, modelId);
+        setCustomImageModel(modelId);
+        setSection("chatgpt", { imageModels: nextModels });
+        setImageModelMenuOpen(false);
+    }
+
+    function handleCustomImageModelBlur() {
+        const modelId = normalizeModelId(customImageModel);
+        if (modelId) {
+            setSection("chatgpt", { imageModels: mergeImageModels(imageModels, modelId) });
+        }
+    }
+
     return (
         <div className="hide-scrollbar flex h-full min-h-0 flex-col gap-3 overflow-y-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none sm:rounded-[30px] sm:border sm:border-stone-200 sm:bg-[#fcfcfb] sm:px-5 sm:py-6 sm:shadow-[0_14px_40px_rgba(15,23,42,0.05)] lg:px-6 lg:py-7 dark:sm:border-stone-700 dark:sm:bg-stone-950">
             <div className="hidden sm:flex sm:flex-col sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -217,7 +296,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                         type="button"
                         variant="outline"
                         className="h-9 rounded-full border-stone-300/60 bg-white px-3 text-sm font-medium text-stone-700 shadow-sm transition-all hover:border-stone-400 hover:bg-stone-50 hover:shadow dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:border-stone-600 dark:hover:bg-stone-700"
-                        onClick={() => void restoreDefaults()}
+                        onClick={() => void handleRestoreDefaults()}
                         disabled={loading || saving || restoringDefaults}
                     >
                         {restoringDefaults ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCcw className="size-4" />}
@@ -244,8 +323,8 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                 ) : (
                     <>
                         <ConfigSection title="图片与接入">
-                            <div className="flex flex-col gap-2 md:col-span-2 md:flex-row md:items-end">
-                                <div className="flex-1">
+                            <div className="grid gap-2 md:col-span-2 md:grid-cols-2 md:items-end xl:grid-cols-4">
+                                <div className="md:col-span-2">
                                     <LabelWithHint id="chatgpt-base-url" label="图像 API 地址" hint="地址和 Key 可以预先填写；只有勾选启用后，图片生成/编辑/放大才会只走 API 通道" />
                                     <div className="relative">
                                         <Input
@@ -280,7 +359,7 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex-1">
+                                <div>
                                     <LabelWithHint id="chatgpt-api-key" label="图像 API Key" hint="启用后所有图片请求都只走这里配置的 API，不再回退账号池" />
                                     <div className="relative">
                                         <Input
@@ -303,6 +382,62 @@ export function SettingsClient({ initialConfig, initialDefaultConfig, saveConfig
                                         >
                                             {showChatgptApiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                                         </Button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <LabelWithHint id="chatgpt-image-model" label="图像模型" hint="选择保存到图像工作台的默认模型，也可在下拉内输入自定义模型 ID" />
+                                    <div className="relative">
+                                        <button
+                                            id="chatgpt-image-model"
+                                            type="button"
+                                            className="flex h-9 w-full items-center justify-between gap-2 rounded-xl border border-stone-200 bg-white px-3 text-left text-sm text-stone-800 shadow-none transition-colors hover:border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200"
+                                            onClick={() => setImageModelMenuOpen((prev) => !prev)}
+                                        >
+                                            <span className="min-w-0 truncate">{selectedImageModel}</span>
+                                            <ChevronDown className="size-4 shrink-0 text-stone-400" />
+                                        </button>
+                                        {imageModelMenuOpen ? (
+                                            <div className="absolute right-0 top-full z-30 mt-1 w-[300px] rounded-xl border border-stone-200 bg-white p-1.5 shadow-lg dark:border-stone-700 dark:bg-stone-900">
+                                                <button
+                                                    type="button"
+                                                    className="flex h-8 w-full items-center gap-2 rounded-lg px-2 text-left text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-60 dark:text-stone-300 dark:hover:bg-stone-800"
+                                                    onClick={() => void handleFetchImageModels()}
+                                                    disabled={fetchingImageModels}
+                                                >
+                                                    {fetchingImageModels ? <LoaderCircle className="size-3.5 animate-spin" /> : <RefreshCcw className="size-3.5" />}
+                                                    从 /models 拉取
+                                                </button>
+                                                <div className="my-1 h-px bg-stone-100 dark:bg-stone-800" />
+                                                <div className="max-h-44 overflow-y-auto">
+                                                    {imageModels.map((modelId) => (
+                                                        <button
+                                                            key={modelId}
+                                                            type="button"
+                                                            className="flex h-8 w-full items-center justify-between gap-2 rounded-lg px-2 text-left text-xs text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+                                                            onClick={() => handleSelectImageModel(modelId)}
+                                                        >
+                                                            <span className="min-w-0 truncate">{modelId}</span>
+                                                            {modelId === selectedImageModel ? <Check className="size-3.5 shrink-0" /> : null}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-1 border-t border-stone-100 pt-1.5 dark:border-stone-800">
+                                                    <Input
+                                                        value={customImageModel}
+                                                        onChange={(event) => setCustomImageModel(event.target.value)}
+                                                        onBlur={handleCustomImageModelBlur}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === "Enter") {
+                                                                event.preventDefault();
+                                                                handleSelectImageModel(customImageModel);
+                                                            }
+                                                        }}
+                                                        placeholder="自定义模型 ID"
+                                                        className="h-8 rounded-lg border-stone-200 bg-white text-xs shadow-none dark:border-stone-700 dark:bg-stone-900"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : null}
                                     </div>
                                 </div>
                             </div>

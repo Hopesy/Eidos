@@ -7,7 +7,6 @@ import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen } from "
 import { ImageEditModal } from "@/components/image-edit-modal";
 import { ImagePreviewModal } from "@/components/image-preview-modal";
 import {
-  imageModelOptions,
   imageQualityOptions,
   imageSizeOptions,
   inspirationExamples,
@@ -15,7 +14,7 @@ import {
   upscaleQualityOptions,
 } from "@/features/image-workbench/page-options";
 import { useImagePage } from "@/features/image-workbench/use-image-page";
-import type { ImageOutputFormat, RecoverableImageTaskItem } from "@/lib/api";
+import type { ImageModel, ImageOutputFormat, RecoverableImageTaskItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ImageFileListItem } from "@/server/repositories/image/file-repository";
 import { isImageTaskActive } from "@/store/image-active-tasks";
@@ -34,6 +33,8 @@ type ImageClientProps = {
   initialAvailableQuota: string;
   initialUsesImageApiService: boolean;
   initialImageFormat: ImageOutputFormat;
+  initialImageModel: ImageModel;
+  initialImageModelOptions: Array<{ label: string; value: ImageModel }>;
 };
 
 export function ImageClient({
@@ -43,6 +44,8 @@ export function ImageClient({
   initialAvailableQuota,
   initialUsesImageApiService,
   initialImageFormat,
+  initialImageModel,
+  initialImageModelOptions,
 }: ImageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,6 +56,9 @@ export function ImageClient({
   const focusedConversationRef = useRef<string | null>(null);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
   const [mobileFilesOpen, setMobileFilesOpen] = useState(false);
+  const imageModelOptions = initialImageModelOptions.length > 0
+    ? initialImageModelOptions
+    : [{ label: initialImageModel, value: initialImageModel }];
   const {
     uploadInputRef,
     textareaRef,
@@ -127,6 +133,7 @@ export function ImageClient({
     initialAvailableQuota,
     initialUsesImageApiService,
     initialImageFormat,
+    initialImageModel,
   });
 
   useEffect(() => {
